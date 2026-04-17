@@ -24,6 +24,20 @@ docker pull iclexi/ritmohub
 sudo docker run -d -p 5155:5155 --name ritmohub iclexi/ritmohub
 ```
 
+Version con persistencia de logs y cache:
+
+```bash
+sudo docker run -d -p 5155:5155 --name ritmohub \
+	--env-file .env \
+	-v ritmohub_logs:/app/logs \
+	-v ritmohub_next_cache:/app/.next/cache \
+	iclexi/ritmohub sh -c "node server.js 2>&1 | tee -a /app/logs/app.log"
+```
+
+Si usas Docker Compose, ya esta configurado en [docker-compose.yml](docker-compose.yml) con los volumenes `app_logs` y `app_next_cache`.
+
 3. Abrir en el navegador:
 
 http://localhost:5155
+
+Nota: si usas Windows o no necesitas privilegios de superusuario, puedes ejecutar el mismo comando sin `sudo`.
