@@ -34,6 +34,16 @@ sudo docker run -d -p 5155:5155 --name ritmohub \
 	iclexi/ritmohub sh -c "node server.js 2>&1 | tee -a /ritmohub/logs/ritmohub.log"
 ```
 
+Version que funciona sola (sin archivo `.env`):
+
+```bash
+sudo docker rm -f ritmohub 2>/dev/null || true
+sudo docker run -d -p 5155:5155 --name ritmohub \
+  -v ritmohub_logs:/ritmohub/logs \
+  -v ritmohub_next_cache:/ritmohub/.next/cache \
+  iclexi/ritmohub sh -c "node server.js 2>&1 | tee -a /ritmohub/logs/ritmohub.log"
+```
+
 Si usas Docker Compose, ya esta configurado en [docker-compose.yml](docker-compose.yml) con los volumenes `ritmohub_logs` y `ritmohub_next_cache`.
 
 3. Abrir en el navegador:
