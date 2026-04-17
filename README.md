@@ -18,7 +18,7 @@ La pagina incluye espacios para:
 docker pull iclexi/ritmohub
 ```
 
-2. Levantar contenedor con logs de volumenes persistentes
+2. Levantar contenedor con logs de volumenes persistentes (Linux)
 ```bash
 sudo docker rm -f ritmohub 2>/dev/null || true && \
 sudo docker run -d -p 5155:5155 --name ritmohub \
