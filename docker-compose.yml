@@ -9,5 +9,13 @@ services:
       NODE_ENV: production
       PORT: 5155
       DB_INIT_SCHEMA: "false"
+    command: sh -c "node server.js 2>&1 | tee -a /app/logs/app.log"
     ports:
       - "5155:5155"
+    volumes:
+      - app_logs:/ritmohub/logs
+      - app_next_cache:/ritmohub/.next/cache
+
+volumes:
+  app_logs:
+  app_next_cache:
