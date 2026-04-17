@@ -28,7 +28,7 @@ sudo docker run -d -p 5155:5155 --name ritmohub \
   iclexi/ritmohub sh -c "mkdir -p /ritmohub/logs && chmod -R 777 /ritmohub/logs && node server.js 2>&1 | tee -a /ritmohub/logs/ritmohub.log" && \
 sudo docker logs -f ritmohub
 ```
-3. Levantar contenedor en windows (Volumen persistente siempre presente por la DB en el VPS;)
+3. Levantar contenedor en Windows (Volumen persistente siempre presente por la DB en el VPS)
 ```bas
 sudo docker run -d -p 5155:5155 --name ritmohub iclexi/ritmohub
 ```
