@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#220a0f"/>
+      <stop offset="60%" stop-color="#5b1824"/>
+      <stop offset="100%" stop-color="#E94F37"/>
+    </linearGradient>
+  </defs>
+  <rect width="700" height="1000" fill="url(#bg)"/>
+  <circle cx="350" cy="288" r="150" fill="#F6F7EB" fill-opacity="0.15"/>
+  <circle cx="350" cy="288" r="98" fill="#F6F7EB" fill-opacity="0.28"/>
+  <text x="82" y="548" fill="#F6F7EB" font-size="82" font-family="Arial, Helvetica, sans-serif" font-weight="700">BEATLINE</text>
+  <text x="82" y="632" fill="#3F88C5" font-size="82" font-family="Arial, Helvetica, sans-serif" font-weight="700">KICKOFF</text>
+  <text x="82" y="698" fill="#F6F7EB" font-size="30" font-family="Arial, Helvetica, sans-serif">TOUR OPENING NIGHT</text>
+  <rect x="82" y="742" width="536" height="168" rx="22" fill="#0f0f10" fill-opacity="0.62"/>
+  <text x="120" y="812" fill="#F6F7EB" font-size="34" font-family="Arial, Helvetica, sans-serif" font-weight="700">19 MAYO, 7:30 PM</text>
+  <text x="120" y="862" fill="#F6F7EB" font-size="28" font-family="Arial, Helvetica, sans-serif">PARQUE DE LA MUSICA, STI</text>
+</svg>

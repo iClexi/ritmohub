@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(cmd:*)",
+      "Bash(echo \"---EXIT---$?\")",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(npx next *)",
+      "Bash(node -e ' *)",
+      "Bash(0x94: 0x201D, // ' *)",
+      "Bash(node fix-encoding.mjs)",
+      "Bash(node *)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(curl *)",
+      "Bash(ls -la \"D:/Tareas ITLA/Cuatrimestre 4 ITLA/Seguridad de Aplicaciones/Proyecto Final V1/musisec-network/.env\"*)",
+      "Bash(python3 *)"
+    ]
+  }
+}

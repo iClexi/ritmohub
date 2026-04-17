@@ -1,0 +1,13 @@
+services:
+  app:
+    image: iclexi/musisec-network:latest
+    container_name: musisec-network
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 5155
+      DB_INIT_SCHEMA: "false"
+    ports:
+      - "5155:5155"
