@@ -30,7 +30,7 @@ sudo docker logs -f ritmohub
 ```
 3. Levantar contenedor en Windows (Volumen persistente siempre presente por la DB en el VPS)
 ```bas
-sudo docker run -d -p 5155:5155 --name ritmohub iclexi/ritmohub
+docker run -d -p 5155:5155 --name ritmohub iclexi/ritmohub
 ```
 Si usas Docker Compose, ya esta configurado en [docker-compose.yml](docker-compose.yml) con los volumenes `ritmohub_logs` y `ritmohub_next_cache`.
 
