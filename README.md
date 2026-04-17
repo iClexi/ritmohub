@@ -20,11 +20,13 @@ docker pull iclexi/ritmohub
 
 2. Levantar contenedor con logs de volumenes persistentes
 ```bash
-sudo docker rm -f ritmohub 2>/dev/null || true
+sudo docker rm -f ritmohub 2>/dev/null || true && \
 sudo docker run -d -p 5155:5155 --name ritmohub \
+  --user root \
   -v ritmohub_logs:/ritmohub/logs \
   -v ritmohub_next_cache:/ritmohub/.next/cache \
-  iclexi/ritmohub sh -c "node server.js 2>&1 | tee -a /ritmohub/logs/ritmohub.log"
+  iclexi/ritmohub sh -c "mkdir -p /ritmohub/logs && chmod -R 777 /ritmohub/logs && node server.js 2>&1 | tee -a /ritmohub/logs/ritmohub.log" && \
+sudo docker logs -f ritmohub
 ```
 
 Si usas Docker Compose, ya esta configurado en [docker-compose.yml](docker-compose.yml) con los volumenes `ritmohub_logs` y `ritmohub_next_cache`.
