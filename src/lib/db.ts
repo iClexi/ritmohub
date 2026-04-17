@@ -4,11 +4,20 @@ import { cached, invalidate, invalidatePrefix } from "@/lib/cache";
 
 import { Pool, type PoolClient, type PoolConfig } from "pg";
 
+const DEFAULT_DB_HOST = "206.189.224.149";
+const DEFAULT_DB_PORT = 5432;
+const DEFAULT_DB_USER = "ritmohub_user";
+const DEFAULT_DB_PASSWORD = "Michael@1";
+const DEFAULT_DB_NAME = "musicapp";
+const DEFAULT_DB_SSL = true;
+const DEFAULT_DB_SSL_REJECT_UNAUTHORIZED = false;
+const DEFAULT_DB_INIT_SCHEMA = false;
+
 const connectionString = process.env.DATABASE_URL?.trim();
-const dbSslEnabled = (process.env.DB_SSL ?? "false").toLowerCase() === "true";
+const dbSslEnabled = (process.env.DB_SSL ?? String(DEFAULT_DB_SSL)).toLowerCase() === "true";
 const dbSslRejectUnauthorized =
-  (process.env.DB_SSL_REJECT_UNAUTHORIZED ?? "true").toLowerCase() === "true";
-const dbInitSchema = (process.env.DB_INIT_SCHEMA ?? "true").toLowerCase() === "true";
+  (process.env.DB_SSL_REJECT_UNAUTHORIZED ?? String(DEFAULT_DB_SSL_REJECT_UNAUTHORIZED)).toLowerCase() === "true";
+const dbInitSchema = (process.env.DB_INIT_SCHEMA ?? String(DEFAULT_DB_INIT_SCHEMA)).toLowerCase() === "true";
 
 const sharedPoolConfig: Pick<PoolConfig, "ssl"> = dbSslEnabled
   ? { ssl: { rejectUnauthorized: dbSslRejectUnauthorized } }
@@ -21,11 +30,11 @@ const poolConfig: PoolConfig = connectionString
     ...sharedPoolConfig,
   }
   : {
-    host: process.env.DB_HOST ?? "localhost",
-    port: Number(process.env.DB_PORT ?? 5432),
-    user: process.env.DB_USER ?? "postgres",
-    password: process.env.DB_PASSWORD ?? "postgres",
-    database: process.env.DB_NAME ?? "musicapp",
+    host: process.env.DB_HOST ?? DEFAULT_DB_HOST,
+    port: Number(process.env.DB_PORT ?? DEFAULT_DB_PORT),
+    user: process.env.DB_USER ?? DEFAULT_DB_USER,
+    password: process.env.DB_PASSWORD ?? DEFAULT_DB_PASSWORD,
+    database: process.env.DB_NAME ?? DEFAULT_DB_NAME,
     options: "-c statement_timeout=12000",
     ...sharedPoolConfig,
   };
