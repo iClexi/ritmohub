@@ -32,5 +32,3 @@ Si usas Docker Compose, ya esta configurado en [docker-compose.yml](docker-compo
 3. Abrir en el navegador:
 
 http://localhost:5155
-
-Nota: si usas Windows o no necesitas privilegios de superusuario, puedes ejecutar el mismo comando sin `sudo`.
