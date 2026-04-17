@@ -18,14 +18,7 @@ La pagina incluye espacios para:
 docker pull iclexi/ritmohub
 ```
 
-2. Levantar el contenedor:
-
-```bash
-sudo docker run -d -p 5155:5155 --name ritmohub iclexi/ritmohub
-```
-
-Version que funciona sola (sin archivo `.env`):
-
+2. Levantar contenedor con logs de volumenes persistentes
 ```bash
 sudo docker rm -f ritmohub 2>/dev/null || true
 sudo docker run -d -p 5155:5155 --name ritmohub \
