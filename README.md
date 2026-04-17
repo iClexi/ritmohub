@@ -24,16 +24,6 @@ docker pull iclexi/ritmohub
 sudo docker run -d -p 5155:5155 --name ritmohub iclexi/ritmohub
 ```
 
-Version con persistencia de logs y cache:
-
-```bash
-sudo docker run -d -p 5155:5155 --name ritmohub \
-	--env-file .env \
-	-v ritmohub_logs:/ritmohub/logs \
-	-v ritmohub_next_cache:/ritmohub/.next/cache \
-	iclexi/ritmohub sh -c "node server.js 2>&1 | tee -a /ritmohub/logs/ritmohub.log"
-```
-
 Version que funciona sola (sin archivo `.env`):
 
 ```bash
