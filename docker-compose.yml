@@ -1,13 +1,52 @@
 services:
-  app:
-    image: iclexi/musisec-network:latest
-    container_name: musisec-network
+  postgres:
+    image: postgres:16-alpine
+    container_name: ritmohub-postgres
     restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-musicapp}
+      POSTGRES_USER: ${DB_USER:-ritmohub_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - ritmohub_postgres_data:/var/lib/postgresql/data
+
+  ritmohub:
+    build:
+      context: .
+    image: ritmohub:local
+    container_name: ritmohub
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     env_file:
       - .env
     environment:
       NODE_ENV: production
       PORT: 5155
-      DB_INIT_SCHEMA: "false"
+      DATABASE_URL: ""
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-musicapp}
+      DB_USER: ${DB_USER:-ritmohub_user}
+      DB_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
+      DB_SSL: "false"
+      DB_SSL_REJECT_UNAUTHORIZED: "false"
+      DB_INIT_SCHEMA: "true"
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:5155}
+    command: sh -c "node server.js 2>&1 | tee -a /ritmohub/logs/ritmohub.log"
     ports:
       - "5155:5155"
+    volumes:
+      - ritmohub_logs:/ritmohub/logs
+      - ritmohub_next_cache:/ritmohub/.next/cache
+
+volumes:
+  ritmohub_postgres_data:
+  ritmohub_logs:
+  ritmohub_next_cache:

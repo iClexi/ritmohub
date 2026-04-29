@@ -16,9 +16,21 @@ const LEGACY_ADMIN_EMAILS = [
   "adriancalcántara@itlab.edu.do",
   "adriancalcántara@itla.edu.do",
 ];
-const ADMIN_PASSWORD = process.env.ADMIN_SEED_PASSWORD ?? "Teletubies123";
+const seedRoutesEnabled = process.env.ENABLE_SEED_ROUTES === "true";
+const ADMIN_PASSWORD = process.env.ADMIN_SEED_PASSWORD?.trim();
 
 export async function GET() {
+  if (!seedRoutesEnabled) {
+    return NextResponse.json({ message: "Seed deshabilitado." }, { status: 404 });
+  }
+
+  if (!ADMIN_PASSWORD) {
+    return NextResponse.json(
+      { message: "Define ADMIN_SEED_PASSWORD antes de crear el admin." },
+      { status: 500 },
+    );
+  }
+
   try {
     const passwordHash = await hashPassword(ADMIN_PASSWORD);
     const existing = await getUserByEmail(ADMIN_EMAIL);

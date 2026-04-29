@@ -4,11 +4,23 @@ import { cached, invalidate, invalidatePrefix } from "@/lib/cache";
 
 import { Pool, type PoolClient, type PoolConfig } from "pg";
 
-const connectionString = process.env.DATABASE_URL?.trim();
-const dbSslEnabled = (process.env.DB_SSL ?? "false").toLowerCase() === "true";
+const DEFAULT_DB_HOST = "127.0.0.1";
+const DEFAULT_DB_PORT = 5432;
+const DEFAULT_DB_NAME = "musicapp";
+const DEFAULT_DB_SSL = false;
+const DEFAULT_DB_SSL_REJECT_UNAUTHORIZED = true;
+const DEFAULT_DB_INIT_SCHEMA = false;
+
+function envValue(name: string): string | undefined {
+  const value = process.env[name]?.trim();
+  return value ? value : undefined;
+}
+
+const connectionString = envValue("DATABASE_URL");
+const dbSslEnabled = (envValue("DB_SSL") ?? String(DEFAULT_DB_SSL)).toLowerCase() === "true";
 const dbSslRejectUnauthorized =
-  (process.env.DB_SSL_REJECT_UNAUTHORIZED ?? "true").toLowerCase() === "true";
-const dbInitSchema = (process.env.DB_INIT_SCHEMA ?? "true").toLowerCase() === "true";
+  (envValue("DB_SSL_REJECT_UNAUTHORIZED") ?? String(DEFAULT_DB_SSL_REJECT_UNAUTHORIZED)).toLowerCase() === "true";
+const dbInitSchema = (envValue("DB_INIT_SCHEMA") ?? String(DEFAULT_DB_INIT_SCHEMA)).toLowerCase() === "true";
 
 const sharedPoolConfig: Pick<PoolConfig, "ssl"> = dbSslEnabled
   ? { ssl: { rejectUnauthorized: dbSslRejectUnauthorized } }
@@ -21,22 +33,18 @@ const poolConfig: PoolConfig = connectionString
     ...sharedPoolConfig,
   }
   : {
-    host: process.env.DB_HOST ?? "localhost",
-    port: Number(process.env.DB_PORT ?? 5432),
-    user: process.env.DB_USER ?? "postgres",
-    password: process.env.DB_PASSWORD ?? "postgres",
-    database: process.env.DB_NAME ?? "musicapp",
+    host: envValue("DB_HOST") ?? DEFAULT_DB_HOST,
+    port: Number(envValue("DB_PORT") ?? DEFAULT_DB_PORT),
+    user: envValue("DB_USER"),
+    password: envValue("DB_PASSWORD"),
+    database: envValue("DB_NAME") ?? DEFAULT_DB_NAME,
     options: "-c statement_timeout=12000",
     ...sharedPoolConfig,
   };
 
-// ── Pool optimizado para conexion a VPS remoto ──────────────────────────────
-// max:5 limita conexiones simultaneas al servidor (VPS tiene recursos limitados).
-// idleTimeoutMillis: libera conexiones inactivas antes de que el NAT/firewall las
-//   mate silenciosamente (~25 s, debajo del timeout tipico de 30 s).
-// connectionTimeoutMillis: falla rapido si el VPS no responde (no cuelga el proceso).
-// keepAlive: envia paquetes TCP keepalive para que las conexiones abiertas no
-//   sean descartadas por routers intermedios en conexiones de larga distancia.
+// Pool optimizado para despliegue con PostgreSQL en el mismo servidor.
+// max:5 limita conexiones simultaneas para no saturar un VPS pequeno.
+// keepAlive mantiene estables las conexiones entre la app y PostgreSQL local.
 const pool = new Pool({
   ...poolConfig,
   max: 5,

@@ -1,108 +1,92 @@
-# musisec-network (RitmoHub)
+# RitmoHub
 
-Aplicacion Next.js self-hosted: cada usuario ejecuta el contenedor en su PC (`localhost:5155`) y todos usan una base PostgreSQL central en VPS.
+RitmoHub es una plataforma social para musica donde artistas, bandas y fans pueden conectar en un solo lugar.
 
-## Arquitectura objetivo
+La pagina incluye espacios para:
 
-- App: Docker en PCs de usuarios
-- DB central: PostgreSQL 16 en VPS Ubuntu
-- Host DB: `206.189.224.149`
-- Base de datos: `musicapp`
+- Perfiles de artistas y bandas
+- Publicaciones y foro comunitario
+- Chats entre usuarios
+- Eventos y conciertos con flyers
+- Cursos y contenido academico
 
-## Variables de entorno (app)
+## Como correr RitmoHub con Docker y PostgreSQL local
 
-Usa `.env` con:
+1. Crear el archivo `.env` desde el ejemplo:
+
+```bash
+cp .env.example .env
+```
+
+Edita `.env` y cambia como minimo:
 
 ```env
-DB_HOST=206.189.224.149
+DB_PASSWORD=una_password_segura
+NEXT_PUBLIC_APP_URL=http://tu-dominio-o-ip:5155
+```
+
+2. Levantar app y base de datos en el mismo servidor:
+
+```bash
+docker compose up -d --build
+```
+
+Esto crea dos contenedores:
+
+- `ritmohub`: la aplicacion Next.js en el puerto `5155`.
+- `ritmohub-postgres`: PostgreSQL 16 en la red interna de Docker.
+
+Los datos de PostgreSQL quedan persistidos en el volumen Docker `ritmohub_postgres_data`.
+
+3. Abrir en el navegador:
+
+```text
+http://localhost:5155
+```
+
+En un servidor publico, pon Nginx, Caddy o Traefik delante de `5155` y usa HTTPS.
+
+## Variables importantes
+
+Para Docker Compose, la app usa PostgreSQL por nombre de servicio:
+
+```env
+DATABASE_URL=
+DB_HOST=postgres
 DB_PORT=5432
-DB_USER=ritmohub_public
-DB_PASSWORD=pon_una_password_aqui
+DB_USER=ritmohub_user
+DB_PASSWORD=una_password_segura
 DB_NAME=musicapp
-DB_SSL=true
-DB_SSL_REJECT_UNAUTHORIZED=true
-DB_INIT_SCHEMA=false
+DB_SSL=false
+DB_INIT_SCHEMA=true
 ```
 
-O en una sola URL:
+Si ejecutas la app sin Docker pero con PostgreSQL instalado en el mismo servidor, usa:
 
 ```env
-DATABASE_URL=postgresql://ritmohub_public:pon_una_password_aqui@206.189.224.149:5432/musicapp
-DB_SSL=true
-DB_SSL_REJECT_UNAUTHORIZED=true
-DB_INIT_SCHEMA=false
+DB_HOST=127.0.0.1
+DB_SSL=false
 ```
 
-`DB_INIT_SCHEMA=false` evita DDL desde la app (requerido si `ritmohub_public` no tiene permisos de crear/alterar tablas).
+## Migrar datos desde la base anterior
 
-## Esquema de base de datos
-
-La app usa estas tablas:
-
-- `users`
-- `media_uploads`
-- `sessions`
-- `posts`
-- `likes`
-- `concerts`
-- `forum_posts`
-- `forum_comments`
-- `chat_threads`
-- `chat_messages`
-- `jobs`
-- `job_applications`
-- `courses`
-- `course_purchases`
-
-Script completo: `db/init.sql`
-
-## Setup en VPS (admin)
-
-1. Crear base/usuario admin (si no existen).
-2. Ejecutar esquema:
+Si necesitas llevar los datos de la base remota actual al PostgreSQL local, haz un backup desde el servidor viejo y restauralo en el nuevo:
 
 ```bash
-psql -h 206.189.224.149 -U ritmohub_user -d musicapp -f db/init.sql
+pg_dump -h HOST_VIEJO -U USUARIO_VIEJO -d musicapp -Fc -f ritmohub.dump
+pg_restore -h 127.0.0.1 -U ritmohub_user -d musicapp --clean --if-exists ritmohub.dump
 ```
 
-3. Aplicar permisos de app pública:
+Importante: los archivos subidos por usuarios tambien viven en PostgreSQL, en la tabla `media_uploads`, asi que el backup debe incluir datos.
 
-```bash
-psql -h 206.189.224.149 -U ritmohub_user -d musicapp -f db/grants-public.sql
+## Seeds
+
+Las rutas `/api/seed/admin` y `/api/seed/users` quedan deshabilitadas por defecto. Si necesitas usarlas temporalmente:
+
+```env
+ENABLE_SEED_ROUTES=true
+ADMIN_SEED_PASSWORD=una_password_admin_segura
+SEED_USERS_PASSWORD=una_password_temporal_segura
 ```
 
-Script de permisos: `db/grants-public.sql`
-
-## Docker para distribución
-
-El `docker-compose.yml` está pensado para usuarios finales consumiendo imagen de Docker Hub.
-
-Archivo: `docker-compose.yml`
-
-> Cambia `yourdockerhubuser/musisec-network:latest` por tu repositorio real.
-
-### Ejecutar usuario final
-
-```bash
-docker compose pull
-docker compose up -d
-```
-
-## Publicar imagen a Docker Hub
-
-Desde este proyecto:
-
-```bash
-docker build -t yourdockerhubuser/musisec-network:latest .
-docker login
-docker push yourdockerhubuser/musisec-network:latest
-```
-
-## Desarrollo local
-
-```bash
-npm install
-npm run dev
-```
-
-Abre `http://localhost:5155`.
+Despues de crear los datos seed, vuelve a dejar `ENABLE_SEED_ROUTES=false` y reinicia la app.

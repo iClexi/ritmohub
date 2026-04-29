@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getSessionFromCookie } from "@/lib/auth/session";
 import { decrementForumPostVote, incrementForumPostVote } from "@/lib/db";
 import { forumVoteSchema } from "@/lib/validations/workspace";
 
@@ -9,6 +10,11 @@ type VoteRouteProps = {
 
 export async function POST(request: Request, { params }: VoteRouteProps) {
   try {
+    const sessionPayload = await getSessionFromCookie();
+    if (!sessionPayload) {
+      return NextResponse.json({ message: "Debes iniciar sesion." }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json().catch(() => null);
     const parsed = forumVoteSchema.safeParse(body);

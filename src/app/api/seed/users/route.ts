@@ -98,7 +98,18 @@ const SEED_USERS = [
 ];
 
 export async function GET() {
-  const password = "Test1234!";
+  if (process.env.ENABLE_SEED_ROUTES !== "true") {
+    return NextResponse.json({ message: "Seed deshabilitado." }, { status: 404 });
+  }
+
+  const password = process.env.SEED_USERS_PASSWORD?.trim();
+  if (!password) {
+    return NextResponse.json(
+      { message: "Define SEED_USERS_PASSWORD antes de crear usuarios seed." },
+      { status: 500 },
+    );
+  }
+
   const passwordHash = await bcrypt.hash(password, 12);
 
   const results: Array<{ name: string; email: string; status: string }> = [];
@@ -125,7 +136,6 @@ export async function GET() {
 
   return NextResponse.json({
     message: "Seed de usuarios completado.",
-    password: "Test1234!",
     results,
   });
 }
