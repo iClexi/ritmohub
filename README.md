@@ -35,13 +35,3 @@ RitmoHub esta creado para personas que viven la musica desde distintos lugares:
 La vision de RitmoHub es convertirse en un hogar digital para la musica: un lugar donde el talento se vea, las conexiones ocurran de forma natural y cada proyecto tenga mas oportunidades de crecer.
 
 Mas que una pagina, RitmoHub busca ser una comunidad viva para crear, colaborar, aprender y compartir musica.
-
-## Google OAuth
-
-Para activar el boton de Google en login y registro, crea un cliente OAuth de tipo `Web application` en Google Cloud Console y configura:
-
-- `Authorized JavaScript origins`: `http://localhost:5155` para desarrollo y `https://ritmohub.iclexi.tech` para produccion.
-- `Authorized redirect URIs`: `http://localhost:5155/api/auth/oauth/google/callback` para desarrollo y `https://ritmohub.iclexi.tech/api/auth/oauth/google/callback` para produccion.
-- Variables del servidor: `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
-
-El scope usado por la app es `openid email profile`; no solicita permisos de Drive, Calendar ni otros datos sensibles.
