@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a2b45"/>
+      <stop offset="50%" stop-color="#3F88C5"/>
+      <stop offset="100%" stop-color="#44BBA4"/>
+    </linearGradient>
+  </defs>
+  <rect width="700" height="1000" fill="url(#bg)"/>
+  <g fill="none" stroke="#F6F7EB" stroke-opacity="0.45" stroke-width="3">
+    <path d="M84 268h532"/>
+    <path d="M84 332h532"/>
+    <path d="M84 396h532"/>
+  </g>
+  <text x="84" y="202" fill="#F6F7EB" font-size="34" font-family="Arial, Helvetica, sans-serif">SHOWCASE 2026</text>
+  <text x="84" y="500" fill="#F6F7EB" font-size="86" font-family="Arial, Helvetica, sans-serif" font-weight="700">INDIE</text>
+  <text x="84" y="588" fill="#E94F37" font-size="86" font-family="Arial, Helvetica, sans-serif" font-weight="700">PULSE</text>
+  <rect x="84" y="706" width="532" height="188" rx="24" fill="#0e1728" fill-opacity="0.66"/>
+  <text x="120" y="780" fill="#F6F7EB" font-size="34" font-family="Arial, Helvetica, sans-serif" font-weight="700">11 MAYO, 8:00 PM</text>
+  <text x="120" y="832" fill="#F6F7EB" font-size="28" font-family="Arial, Helvetica, sans-serif">TERRAZA 34, SDQ</text>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F6F7EB"/>
+      <stop offset="40%" stop-color="#f9ddbf"/>
+      <stop offset="100%" stop-color="#E94F37"/>
+    </linearGradient>
+  </defs>
+  <rect width="700" height="1000" fill="url(#bg)"/>
+  <circle cx="350" cy="360" r="190" fill="#3F88C5" fill-opacity="0.2"/>
+  <circle cx="350" cy="360" r="130" fill="#3F88C5" fill-opacity="0.35"/>
+  <path d="M180 620c70-42 132-64 170-64 42 0 102 22 170 64" stroke="#393E41" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <text x="88" y="170" fill="#393E41" font-size="54" font-family="Arial, Helvetica, sans-serif" font-weight="700">ACUSTICO</text>
+  <text x="88" y="232" fill="#393E41" font-size="54" font-family="Arial, Helvetica, sans-serif" font-weight="700">PLAZA NORTE</text>
+  <text x="88" y="300" fill="#393E41" font-size="30" font-family="Arial, Helvetica, sans-serif">SESSIONS &amp; STORIES</text>
+  <rect x="88" y="742" width="524" height="154" rx="24" fill="#393E41" fill-opacity="0.82"/>
+  <text x="118" y="804" fill="#F6F7EB" font-size="34" font-family="Arial, Helvetica, sans-serif" font-weight="700">26 ABRIL 2026, 6:00 PM</text>
+  <text x="118" y="854" fill="#F6F7EB" font-size="28" font-family="Arial, Helvetica, sans-serif">FORO PLAZA NORTE, STI</text>
+</svg>
