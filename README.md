@@ -36,4 +36,12 @@ No es otra red social mas. Es la red pensada por y para personas que viven la mu
 
 Queremos que RitmoHub sea el hogar digital de la musica. Un lugar donde:
 
-Mas que una pagina, RitmoHub busca ser una comunidad viva para crear, colaborar, aprender y compartir musica.
+- El talento se vea.
+- Las conexiones ocurran de forma natural.
+- Cada proyecto tenga mas oportunidades de crecer.
+
+Mas que una plataforma, una comunidad viva donde crear, colaborar, aprender y compartir musica.
+
+---
+
+**Unete y empieza a sonar.** Crea tu perfil en minutos y conoce a las personas que ya estan construyendo la proxima escena.
