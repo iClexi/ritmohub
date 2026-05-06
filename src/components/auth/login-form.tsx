@@ -128,10 +128,16 @@ export function LoginForm() {
         {errors.password?.message ? <p className="text-sm text-[var(--ui-danger)]">{errors.password.message}</p> : null}
       </label>
 
+      <div className="flex justify-end">
+        <Link href="/forgot-password" className="text-sm font-semibold text-[var(--ui-primary)] hover:underline">
+          Se te olvido la contrasena?
+        </Link>
+      </div>
+
       <button
         type="submit"
         disabled={isSubmitting}
-        className="rh-btn-primary inline-flex w-full items-center justify-center rounded-2xl bg-[var(--ui-primary)] px-5 py-3 font-semibold text-[var(--ui-on-primary)] transition hover:bg-[var(--ui-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="rh-btn-primary flex w-full items-center justify-center rounded-2xl bg-[var(--ui-primary)] px-5 py-3 font-semibold text-[var(--ui-on-primary)] transition hover:bg-[var(--ui-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isSubmitting ? "Entrando..." : "Iniciar sesion"}
       </button>

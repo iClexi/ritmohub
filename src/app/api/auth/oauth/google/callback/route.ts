@@ -64,6 +64,7 @@ async function createUserFromGoogleProfile(input: { email: string; name?: string
         username: buildUsernameCandidate(usernameBase, attempt),
         email: input.email,
         passwordHash,
+        authProvider: "google",
       });
     } catch (error) {
       if (!isPgUniqueViolation(error)) {

@@ -1,16 +1,17 @@
 import Link from "next/link";
 import { listCourses } from "@/lib/db";
 import { getSessionFromCookie } from "@/lib/auth/session";
+import { AcademiaIcon, type AcademiaIconName } from "@/components/academiax/academiax-icons";
 
-const CATEGORIES = [
-  { emoji: "🎹", label: "Producción" },
-  { emoji: "🎸", label: "Guitarra" },
-  { emoji: "🎤", label: "Voz & Canto" },
-  { emoji: "🎚️", label: "Mezcla & Master" },
-  { emoji: "📱", label: "Marketing Musical" },
-  { emoji: "💼", label: "Negocio Musical" },
-  { emoji: "🎛️", label: "Ableton Live" },
-  { emoji: "🎵", label: "Teoría Musical" },
+const CATEGORIES: Array<{ icon: AcademiaIconName; label: string }> = [
+  { icon: "piano", label: "Producción" },
+  { icon: "guitar", label: "Guitarra" },
+  { icon: "mic", label: "Voz & Canto" },
+  { icon: "sliders", label: "Mezcla & Master" },
+  { icon: "megaphone", label: "Marketing Musical" },
+  { icon: "briefcase", label: "Negocio Musical" },
+  { icon: "grid", label: "Ableton Live" },
+  { icon: "music", label: "Teoría Musical" },
 ];
 
 const TESTIMONIALS = [
@@ -502,7 +503,7 @@ export default async function AcademiaXHomePage() {
                   color: "var(--ui-muted)",
                 }}
               >
-                <span>{cat.emoji}</span>
+                <AcademiaIcon name={cat.icon} className="h-4 w-4 transition-colors group-hover:text-white" />
                 <span className="group-hover:text-white transition-colors">{cat.label}</span>
               </Link>
             ))}

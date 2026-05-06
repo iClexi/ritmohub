@@ -7,11 +7,12 @@ type LandingImageProps = {
   alt: string;
   className: string;
   fallbackSrc?: string;
+  loading?: "lazy" | "eager";
 };
 
 const DEFAULT_FALLBACK_SRC = "/artists/default-artist.svg";
 
-export function LandingImage({ src, alt, className, fallbackSrc = DEFAULT_FALLBACK_SRC }: LandingImageProps) {
+export function LandingImage({ src, alt, className, fallbackSrc = DEFAULT_FALLBACK_SRC, loading = "lazy" }: LandingImageProps) {
   const [currentSrc, setCurrentSrc] = useState(src);
 
   useEffect(() => {
@@ -26,7 +27,6 @@ export function LandingImage({ src, alt, className, fallbackSrc = DEFAULT_FALLBA
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={currentSrc} alt={alt} loading="lazy" className={className} onError={handleError} />
+    <img src={currentSrc} alt={alt} loading={loading} className={className} onError={handleError} />
   );
 }
-

@@ -4,6 +4,7 @@ import { verifyPassword } from "@/lib/auth/password";
 import { createSession, setSessionCookie } from "@/lib/auth/session";
 import { getUserByEmail } from "@/lib/db";
 import { loginSchema } from "@/lib/validations/auth";
+import { extractClientIp, recordServerVisit, recordSiteVisit } from "@/lib/visit-tracking";
 
 export async function POST(request: Request) {
   try {
@@ -48,6 +49,24 @@ export async function POST(request: Request) {
     const { token, expiresAt } = await createSession(user.id);
     await setSessionCookie(token, expiresAt);
 
+    const ip = extractClientIp(request.headers);
+    const userAgent = request.headers.get("user-agent");
+    const referrer = request.headers.get("referer");
+    const visitId = await recordServerVisit({
+      userId: user.id,
+      source: "login",
+      ip,
+      userAgent,
+      referrer,
+    });
+    await recordSiteVisit({
+      userId: user.id,
+      source: "login",
+      ip,
+      userAgent,
+      payload: { pagePath: "/login", referrer },
+    });
+
     return NextResponse.json({
       message: "Sesion iniciada.",
       user: {
@@ -55,6 +74,7 @@ export async function POST(request: Request) {
         name: user.name,
         email: user.email,
       },
+      visitId,
     });
   } catch (error) {
     console.error("login error", error);

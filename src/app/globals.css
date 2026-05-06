@@ -1054,6 +1054,7 @@ body.stage-scroll-locked {
 
 .showcase-card {
   flex: 0 0 clamp(320px, 28vw, 440px);
+  scroll-snap-stop: always;
   scroll-snap-align: center;
   transform-origin: center bottom;
   transition:
@@ -1599,6 +1600,46 @@ body.stage-scroll-locked {
   .stage-wave-box {
     height: 84px;
   }
+
+  .showcase-stage-section {
+    min-height: 48rem;
+  }
+
+  .showcase-stage-left {
+    align-items: flex-start;
+    padding: 1.5rem 1rem 0.5rem;
+  }
+
+  .showcase-rail {
+    gap: 0.75rem;
+    padding: 0 0.75rem 0.35rem;
+    scroll-padding-inline: 0.75rem;
+  }
+
+  .showcase-card {
+    flex: 0 0 clamp(240px, 78vw, 300px);
+  }
+
+  .artist-detail-left {
+    padding: 4.1rem 1rem 0.85rem;
+  }
+
+  .artist-detail-right {
+    padding: 1rem 1rem 1.35rem;
+  }
+
+  .artist-profile-main-card {
+    margin-top: 1rem;
+  }
+
+  .artist-profile-card-text {
+    font-size: 0.98rem;
+    line-height: 1.55;
+  }
+
+  .artist-profile-media {
+    height: 13.5rem;
+  }
 }
 
 /* ── AcademiaX ── */
@@ -1626,4 +1667,895 @@ body.stage-scroll-locked {
 .ax-tilt-right img {
   display: block;
   backface-visibility: hidden;
+}
+
+.rh-phone-field {
+  display: flex;
+  width: 100%;
+  border: 1px solid var(--ui-border);
+  border-radius: 1rem;
+  background: var(--ui-surface-soft);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rh-phone-field:focus-within {
+  border-color: var(--ui-primary);
+  box-shadow: 0 0 0 4px rgb(var(--ui-glow-primary) / 0.2);
+}
+
+.rh-phone-field .react-international-phone-country-selector-button {
+  height: auto !important;
+  border: 0 !important;
+  border-right: 1px solid var(--ui-border) !important;
+  border-radius: 1rem 0 0 1rem !important;
+  background-color: transparent !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  padding: 0.75rem 1rem !important;
+  color: var(--ui-text) !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+.rh-phone-field .react-international-phone-country-selector-button:hover {
+  background: color-mix(in oklab, var(--ui-surface-soft) 80%, var(--ui-primary) 20%);
+}
+
+.rh-phone-field .react-international-phone-input {
+  flex: 1 !important;
+  height: auto !important;
+  min-width: 0 !important;
+  border: 0 !important;
+  border-radius: 0 1rem 1rem 0 !important;
+  background-color: transparent !important;
+  color: var(--ui-text) !important;
+  padding: 0.75rem 1rem !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+.rh-phone-field .react-international-phone-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* react-international-phone — theme integration (v4 class names + CSS vars) */
+:root {
+  --react-international-phone-background-color: var(--ui-surface-soft);
+  --react-international-phone-text-color: var(--ui-text);
+  --react-international-phone-border-color: var(--ui-border);
+  --react-international-phone-disabled-background-color: var(--ui-surface-soft);
+  --react-international-phone-disabled-text-color: var(--ui-muted);
+  --react-international-phone-country-selector-background-color: transparent;
+  --react-international-phone-country-selector-background-color-hover: color-mix(in oklab, var(--ui-surface-soft) 80%, var(--ui-primary) 20%);
+  --react-international-phone-country-selector-arrow-color: var(--ui-muted);
+  --react-international-phone-dropdown-item-background-color: transparent;
+  --react-international-phone-dropdown-item-text-color: var(--ui-text);
+  --react-international-phone-dropdown-item-background-color-hover: color-mix(in oklab, var(--ui-surface-soft) 75%, var(--ui-primary) 25%);
+  --react-international-phone-selected-dropdown-item-background-color: color-mix(in oklab, var(--ui-surface-soft) 55%, var(--ui-primary) 45%);
+  --react-international-phone-selected-dropdown-item-text-color: var(--ui-text);
+  --react-international-phone-selected-dropdown-item-background-color-focus: color-mix(in oklab, var(--ui-surface-soft) 45%, var(--ui-primary) 55%);
+  --react-international-phone-dropdown-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* Dropdown container is itself the scrollable list (v4) */
+.react-international-phone-country-selector-dropdown {
+  background: var(--ui-surface-soft) !important;
+  color: var(--ui-text) !important;
+  border: 1px solid var(--ui-border) !important;
+  border-radius: 0.875rem !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.18) !important;
+  z-index: 60 !important;
+  min-width: 18rem !important;
+  max-height: 22rem !important;
+  margin-top: 0.5rem !important;
+  padding: 0.375rem !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-border) transparent;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+.react-international-phone-country-selector-dropdown::-webkit-scrollbar {
+  width: 10px;
+}
+
+.react-international-phone-country-selector-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.react-international-phone-country-selector-dropdown::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--ui-border) 60%, transparent);
+  border-radius: 999px;
+  border: 2px solid var(--ui-surface-soft);
+}
+
+.react-international-phone-country-selector-dropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--ui-muted);
+}
+
+.react-international-phone-country-selector-dropdown__list-item {
+  background: transparent !important;
+  color: var(--ui-text) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.625rem !important;
+  padding: 0.625rem 0.75rem !important;
+  margin: 0.125rem 0 !important;
+  border-radius: 0.5rem !important;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.react-international-phone-country-selector-dropdown__list-item-flag-emoji {
+  flex-shrink: 0;
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.react-international-phone-country-selector-dropdown__list-item-country-name {
+  flex: 1;
+  min-width: 0;
+  color: var(--ui-text) !important;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.react-international-phone-country-selector-dropdown__list-item-dial-code {
+  flex-shrink: 0;
+  color: var(--ui-muted) !important;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.react-international-phone-country-selector-dropdown__list-item:hover,
+.react-international-phone-country-selector-dropdown__list-item--focused {
+  background: color-mix(in oklab, var(--ui-surface-soft) 75%, var(--ui-primary) 25%) !important;
+}
+
+.react-international-phone-country-selector-dropdown__list-item--selected,
+.react-international-phone-country-selector-dropdown__list-item--selected:hover {
+  background: color-mix(in oklab, var(--ui-surface-soft) 55%, var(--ui-primary) 45%) !important;
+  color: var(--ui-text) !important;
+}
+
+.react-international-phone-country-selector-dropdown__list-item--selected .react-international-phone-country-selector-dropdown__list-item-dial-code {
+  color: var(--ui-text) !important;
+}
+
+.react-international-phone-country-selector-dropdown__preferred-list-divider {
+  border-color: var(--ui-border) !important;
+  margin: 0.25rem 0 !important;
+}
+
+.react-international-phone-flag-emoji {
+  font-size: 1rem;
+}
+
+.react-international-phone-input::placeholder {
+  color: var(--ui-muted);
+  opacity: 0.7;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Mobile responsive normalisations — evita que elementos se solapen,
+   asegura scroll en modales, inputs accesibles a 44px y dropdowns que
+   no rebasan el viewport.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Permite que elementos flexibles trunquen en lugar de empujar a otros */
+.rh-app-shell *,
+.rh-nav-glass * {
+  min-width: 0;
+}
+
+/* Asegura que dropdowns nunca rebasen el viewport en mobile */
+@media (max-width: 640px) {
+  /* Header mas compacto en mobile */
+  .rh-nav-glass {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  .rh-nav-glass > div {
+    gap: 0.4rem !important;
+    padding: 0.55rem 0.75rem !important;
+  }
+
+  /* Botones en la barra superior con tamaño tactil minimo */
+  .rh-icon-button {
+    height: 2.4rem !important;
+    width: 2.4rem !important;
+  }
+
+  /* Logo: oculta texto y deja solo icono para no apretar */
+  .rh-logo-button {
+    padding: 0.5rem 0.6rem !important;
+    gap: 0.4rem !important;
+  }
+
+  /* El input de busqueda no debe quedar microscopico */
+  .rh-nav-glass input {
+    font-size: 0.92rem;
+  }
+
+  /* Dropdowns del header: limita ancho al viewport */
+  .rh-nav-glass .absolute[class*="z-["],
+  .rh-nav-glass .absolute.z-50 {
+    max-width: calc(100vw - 1rem);
+  }
+
+  /* Inputs/textarea: 16px minimo para evitar zoom de iOS */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: max(16px, 1rem);
+  }
+
+  /* Modal genericos: header (cover) mas bajo, padding interno reducido */
+  .fixed.inset-0 > div[class*="rounded-"] {
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+  }
+
+  /* Asides sticky: forzar a flujo normal en mobile */
+  aside.sticky,
+  aside[class*="sticky"] {
+    position: static !important;
+  }
+
+  /* Tablas: scroll horizontal en lugar de overflow oculto */
+  .rh-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Tablet ajustes */
+@media (max-width: 768px) {
+  /* Stat tiles del admin se compactan un poco */
+  article[class*="from-[color:rgb(var(--ui-glow"] {
+    padding: 1rem !important;
+  }
+
+  /* Asegura que modales no excedan el alto del viewport */
+  .fixed.inset-0.flex.items-center > div {
+    max-height: 92dvh;
+  }
+}
+
+/* Evita que avatares grandes empujen el layout */
+@media (max-width: 480px) {
+  .ring-4.ring-\[var\(--ui-surface\)\] > * {
+    transform: scale(0.85);
+    transform-origin: top left;
+  }
+}
+
+/* Dropdowns globales: altura maxima razonable */
+.rh-app-shell .absolute[class*="z-[200]"],
+.rh-app-shell .absolute[class*="z-[220]"] {
+  max-height: min(70vh, 70dvh);
+  overflow-y: auto;
+}
+
+/* Modal de detalle del admin panel: que sea scrollable en mobile */
+.fixed.inset-0.z-\[220\] > div {
+  max-height: calc(100dvh - 1rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.fixed.inset-0.z-\[220\] > div > div.max-h-\[58vh\] {
+  max-height: none !important;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Scrollbar horizontal de tabs sin barra visible */
+[class*="[scrollbar-width:none]"]::-webkit-scrollbar { display: none; }
+
+/* Forms en pantallas pequeñas: grids 2-col -> 1 */
+@media (max-width: 480px) {
+  .grid.gap-3.sm\:grid-cols-2,
+  .grid.gap-2.sm\:grid-cols-2,
+  .grid.gap-2.sm\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Long emails / tokens: permite envoltura */
+.font-mono.text-xs {
+  word-break: break-all;
+}
+
+/* Search dropdown: en mobile no fuerces ancho minimo */
+@media (max-width: 380px) {
+  .min-w-\[320px\] {
+    min-width: 0 !important;
+  }
+  .w-\[min\(92vw\2c 24rem\)\] {
+    width: calc(100vw - 1rem) !important;
+  }
+}
+
+/* Asegura que el header este por encima de cualquier seccion */
+.rh-nav-glass {
+  z-index: 60;
+}
+
+/* Touch targets: cualquier boton/link inline debe ser tactil-friendly */
+@media (max-width: 640px) {
+  button, a[role="button"], [type="button"], [type="submit"] {
+    min-height: 36px;
+  }
+}
+
+/* Imagen de cover de modales: reducir altura en mobile para liberar espacio */
+@media (max-width: 480px) {
+  .fixed.inset-0 .h-32 {
+    height: 5.5rem !important;
+  }
+  .fixed.inset-0 .-mt-12 {
+    margin-top: -2rem !important;
+  }
+}
+
+/* Forum/post images en mobile no deben causar overflow horizontal */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Anti-overflow global en cualquier seccion */
+section, article {
+  min-width: 0;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Refinamientos responsive adicionales para móviles 360–414px
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Container de la landing: padding más generoso pero sin desbordar */
+@media (max-width: 640px) {
+  .landing-container {
+    padding-inline: 0.85rem;
+    width: 100%;
+  }
+
+  /* Header de landing: compactar */
+  .landing-nav > div {
+    padding: 0.55rem 0.7rem !important;
+    gap: 0.4rem !important;
+    border-radius: 1.25rem !important;
+  }
+
+  /* En la barra de la landing, los CTA deben encogerse */
+  .landing-nav .rh-btn-primary,
+  .landing-nav .landing-ghost-btn {
+    padding-inline: 0.65rem !important;
+    padding-block: 0.45rem !important;
+    font-size: 0.78rem !important;
+    border-radius: 0.85rem !important;
+  }
+
+  /* Hero spacing más compacto en mobile */
+  .landing-hero {
+    padding-top: 6.2rem !important;
+    padding-bottom: 1.4rem !important;
+  }
+
+  /* Métricas: número grande pero no roto */
+  .landing-stat-card p:first-child {
+    font-size: clamp(1.6rem, 7vw, 2.1rem) !important;
+  }
+
+  /* Why-shell padding interno */
+  .landing-why-shell h2,
+  .landing-why-shell .text-4xl {
+    font-size: clamp(1.55rem, 6vw, 2.1rem) !important;
+    line-height: 1.18 !important;
+  }
+  .landing-why-footer {
+    padding: 0.9rem !important;
+  }
+  .landing-why-footer .rh-btn-primary {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Headings de secciones (text-4xl/-5xl) en mobile */
+  section h3.text-4xl,
+  section h3.text-5xl,
+  section h2.text-4xl,
+  section h2.text-5xl {
+    font-size: clamp(1.55rem, 6.4vw, 2.1rem) !important;
+    line-height: 1.18 !important;
+  }
+
+  /* CTA final: padding razonable */
+  .landing-final-cta {
+    padding: 1.6rem 1rem !important;
+  }
+  .landing-final-cta h3 {
+    font-size: clamp(1.7rem, 7vw, 2.4rem) !important;
+    line-height: 1.16 !important;
+  }
+  .landing-final-cta .rh-btn-primary,
+  .landing-final-cta .landing-ghost-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Marquee tiles más cortas */
+  .landing-media-tile {
+    height: 8.5rem;
+    width: 9.6rem;
+  }
+
+  /* Card de ciudades títulos */
+  .landing-city-card .landing-city-title {
+    font-size: 1.25rem;
+  }
+
+  /* Ax (academiax) hero */
+  .ax-float {
+    max-width: 80vw !important;
+  }
+}
+
+/* Header del workspace: en mobile usar safe areas y reducir spacing */
+@media (max-width: 480px) {
+  .rh-nav-glass > div {
+    padding: 0.5rem 0.55rem !important;
+    gap: 0.35rem !important;
+  }
+  .rh-nav-glass .rh-logo-button {
+    padding: 0.5rem 0.55rem !important;
+  }
+  /* ThemeToggle y LogoutButton deben encogerse */
+  .rh-nav-glass [aria-label*="Cerrar sesi"],
+  .rh-nav-glass [aria-label*="cambiar tema"i],
+  .rh-nav-glass [aria-label*="Notificaciones"] {
+    height: 2.2rem !important;
+    width: 2.2rem !important;
+  }
+}
+
+/* Profile menu dropdown: nunca debe desbordar el viewport */
+.rh-app-shell .relative.z-\[70\] > div.absolute,
+aside > .relative.z-\[70\] > div.absolute {
+  max-width: calc(100vw - 1.25rem);
+}
+@media (max-width: 480px) {
+  /* Dropdown del profile-menu: ancla a 100vw y posicion relativa */
+  div.relative.z-\[70\] > div.absolute.right-0 {
+    right: 0;
+    width: min(22rem, calc(100vw - 1rem));
+  }
+}
+
+/* Modales de cualquier tipo: en mobile, padding reducido y ancho fluido */
+@media (max-width: 640px) {
+  /* Reduce padding del wrapper full-screen del modal */
+  .fixed.inset-0.z-\[140\],
+  .fixed.inset-0.z-\[161\],
+  .fixed.inset-0.z-\[200\],
+  .fixed.inset-0.z-\[220\] {
+    padding: 0.5rem !important;
+  }
+
+  /* Cards de modal: usar todo el alto disponible y nunca exceder viewport */
+  .modal-card {
+    max-height: calc(100dvh - 1rem) !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* Dropdown de busqueda y notificaciones: ancho seguro */
+  .rh-nav-glass div.absolute.z-\[200\],
+  .rh-nav-glass div.absolute.z-\[220\] {
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+    left: auto !important;
+    right: auto !important;
+  }
+}
+
+/* Forms en mobile: reduce gap y padding */
+@media (max-width: 480px) {
+  /* Auth pages card más compacta */
+  main > .rh-card {
+    padding: 1.5rem !important;
+    border-radius: 1.25rem !important;
+  }
+  /* Headings de auth cards */
+  main > .rh-card h1 {
+    font-size: 1.6rem !important;
+    line-height: 1.18 !important;
+  }
+  main > .rh-card h2 {
+    font-size: 1.4rem !important;
+    line-height: 1.2 !important;
+  }
+}
+
+/* Imágenes de cover en cards: aspect ratio claro y nunca deformar */
+.rh-media-card img,
+.rh-hero-card img,
+.landing-city-media img,
+.landing-collab-media img,
+.landing-media-tile img,
+.landing-story-image-main {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Course player: panel/sidebar fluidos en mobile */
+@media (max-width: 640px) {
+  /* En el reproductor: que el contenido tenga aire vertical */
+  main .max-w-3xl {
+    padding-inline: 0.75rem;
+  }
+}
+
+/* Academiax course detail: hero más compacto */
+@media (max-width: 768px) {
+  /* hero del curso (h-[80vh] o min-h-screen) en mobile */
+  section.relative.flex.min-h-screen.items-center {
+    min-height: 70vh !important;
+    padding-top: 4rem !important;
+    padding-bottom: 2rem !important;
+  }
+  /* Texto h1 del hero del curso */
+  section.relative.flex.min-h-screen h1 {
+    font-size: clamp(1.85rem, 7vw, 2.6rem) !important;
+    line-height: 1.12 !important;
+  }
+}
+
+/* Sticky headers internos en mobile pueden taparse: relax z-index conflicts */
+@media (max-width: 768px) {
+  .sticky.top-\[72px\] {
+    top: 64px !important;
+  }
+}
+
+/* Botones primarios touch-friendly */
+@media (max-width: 640px) {
+  .rh-btn-primary {
+    min-height: 42px;
+  }
+}
+
+/* Ajuste de avatares grandes para que no rompan layout */
+@media (max-width: 480px) {
+  .h-24.w-24 { height: 5rem !important; width: 5rem !important; }
+  .h-20.w-20 { height: 4.5rem !important; width: 4.5rem !important; }
+}
+
+/* Tabs horizontales que no caben: deslizables */
+.flex.gap-2.overflow-x-auto,
+.flex.gap-3.overflow-x-auto,
+.flex.gap-4.overflow-x-auto {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.flex.gap-2.overflow-x-auto::-webkit-scrollbar,
+.flex.gap-3.overflow-x-auto::-webkit-scrollbar,
+.flex.gap-4.overflow-x-auto::-webkit-scrollbar { display: none; }
+
+/* Phone field: en mobile, prevenir overflow del selector */
+@media (max-width: 480px) {
+  .rh-phone-field {
+    border-radius: 0.85rem;
+  }
+  .react-international-phone-country-selector-dropdown {
+    min-width: calc(100vw - 2rem) !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Hardening responsive — barrido global anti-overlap (2026-05-05)
+   Objetivo: eliminar superposiciones visibles en móviles 360–480px
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Anti-overflow horizontal global */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Cualquier descendiente directo del shell de la app o landing nunca causa
+   scroll horizontal (las imágenes y videos ya tienen max-width: 100%). */
+.rh-app-shell, .landing-shell {
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
+/* En mobile, force-wrap de cualquier flex row genérico para que botones,
+   chips, tags o badges no se superpongan al título o al contador. */
+@media (max-width: 640px) {
+  .rh-app-shell .flex:not(.flex-col):not(.flex-nowrap):not(.overflow-x-auto):not(.landing-marquee-track):not(.showcase-rail):not(.artist-carousel-rail):not([class*="snap-"]) {
+    flex-wrap: wrap;
+  }
+  .landing-shell .flex:not(.flex-col):not(.flex-nowrap):not(.overflow-x-auto):not(.landing-marquee-track):not(.showcase-rail):not(.artist-carousel-rail):not([class*="snap-"]) {
+    flex-wrap: wrap;
+  }
+}
+
+/* Los badges grandes (text-xs, rounded-full) no deben empujar el layout */
+.rh-app-shell .rounded-full,
+.landing-shell .rounded-full {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Story card: en mobile, la imagen flotante de la story se solapa con el texto.
+   La movemos a flujo normal y la reducimos. */
+@media (max-width: 640px) {
+  .landing-story-card {
+    min-height: auto !important;
+    padding-bottom: 0 !important;
+  }
+  .landing-story-image-float {
+    position: relative !important;
+    right: auto !important;
+    bottom: auto !important;
+    height: auto !important;
+    width: 100% !important;
+    max-height: 14rem !important;
+    border-width: 4px !important;
+    border-radius: 1rem !important;
+    margin-top: 0.75rem;
+  }
+}
+
+/* Vertical writing mode label en artist-detail se solapa con contenido en mobile.
+   En móviles lo escondemos. */
+@media (max-width: 768px) {
+  .artist-detail-vertical {
+    display: none !important;
+  }
+}
+
+/* Showcase stage section: era min-height: 48rem en mobile. Demasiado alto y
+   provoca solapes con la nav fija. */
+@media (max-width: 640px) {
+  .showcase-stage-section {
+    min-height: auto !important;
+    padding-bottom: 1.5rem !important;
+  }
+  .showcase-stage-left {
+    position: static !important;
+    padding: 1.25rem 1rem 0.5rem !important;
+  }
+  .stage-info-panel {
+    position: static !important;
+    width: 100% !important;
+    margin-top: 0.75rem;
+    box-shadow: none !important;
+  }
+  .stage-wave-box {
+    height: 60px !important;
+  }
+}
+
+/* Artist profile shell: side y main no deben solaparse en mobile. Forzar stack. */
+@media (max-width: 768px) {
+  .artist-profile-shell .grid,
+  .artist-profile-shell [class*="grid-cols-"] {
+    grid-template-columns: 1fr !important;
+  }
+  .artist-profile-side {
+    position: static !important;
+    height: auto !important;
+    min-height: auto !important;
+    padding: 1.25rem 1rem !important;
+  }
+  .artist-profile-side > img {
+    max-height: 18rem !important;
+    width: 100% !important;
+    object-fit: cover !important;
+  }
+  .artist-profile-side::after {
+    display: none !important;
+  }
+}
+
+/* Hero de la landing: en pantallas muy pequeñas, el padding-top deja la
+   nav fija pisando el contenido cuando hay teclado/UA chrome. */
+@media (max-width: 640px) {
+  .landing-hero {
+    padding-top: 5.5rem !important;
+    padding-bottom: 1rem !important;
+    min-height: auto !important;
+  }
+  .landing-title {
+    font-size: clamp(2rem, 9.5vw, 3.2rem) !important;
+    line-height: 1.08 !important;
+  }
+  .landing-nav {
+    top: 0.5rem !important;
+  }
+  /* La barra de la landing no debe wrap entre logo y CTAs (ya tiene
+     justify-between) — fuerza no-wrap sólo aquí. */
+  .landing-nav > div {
+    flex-wrap: nowrap !important;
+  }
+  /* Esconde links del centro en mobile (sm:flex usually) */
+  .landing-nav nav.hidden,
+  .landing-nav .landing-link.hidden {
+    display: none !important;
+  }
+}
+
+/* Stat cards y collab cards: forzar grid de 1 columna en pantallas muy
+   pequeñas para que los números no se aplasten contra el siguiente card. */
+@media (max-width: 480px) {
+  .grid.grid-cols-2.sm\:grid-cols-4,
+  .grid.grid-cols-2.md\:grid-cols-4,
+  .grid.grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.65rem !important;
+  }
+  .landing-stat-card {
+    padding: 1rem !important;
+  }
+}
+
+/* Modales: en mobile, el overlay debe usar flex-start (no center) para que
+   modales largos no se corten arriba. */
+@media (max-width: 640px) {
+  .fixed.inset-0.flex.items-center.justify-center {
+    align-items: flex-start !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    overflow-y: auto !important;
+  }
+  /* El card interno se deja crecer naturalmente */
+  .modal-card,
+  .fixed.inset-0 .rounded-3xl,
+  .fixed.inset-0 .rounded-2xl {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+}
+
+/* Profile menu y notificaciones dropdowns: nunca wrappers fuera de viewport */
+.rh-app-shell [class*="absolute"][class*="right-0"][class*="z-["],
+.rh-app-shell [class*="absolute"][class*="z-[200"],
+.rh-app-shell [class*="absolute"][class*="z-[220"] {
+  max-width: min(96vw, 26rem);
+}
+@media (max-width: 480px) {
+  .rh-app-shell [class*="absolute"][class*="z-[200"],
+  .rh-app-shell [class*="absolute"][class*="z-[220"] {
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+  }
+}
+
+/* Auth pages: el card no debe pegar contra los bordes */
+@media (max-width: 480px) {
+  main:has(> .rh-card) {
+    padding-inline: 0.75rem !important;
+  }
+  .rh-card {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* CTA final: en mobile los dos botones deben apilarse y ocupar todo el ancho */
+@media (max-width: 640px) {
+  .landing-final-cta > div,
+  .landing-final-cta .flex {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.6rem !important;
+  }
+}
+
+/* Why-shell grid de 4 cards en mobile: 2 columnas para no romper, 1 si <380 */
+@media (max-width: 640px) {
+  .landing-why-shell .grid:not(.grid-cols-1) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.55rem !important;
+  }
+}
+@media (max-width: 380px) {
+  .landing-why-shell .grid:not(.grid-cols-1) {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Tablas del admin: scroll horizontal nativo y header sticky no roto */
+.rh-table-wrap, .overflow-x-auto > table {
+  max-width: 100%;
+}
+@media (max-width: 640px) {
+  .overflow-x-auto > table {
+    font-size: 0.85rem;
+  }
+  .overflow-x-auto > table th,
+  .overflow-x-auto > table td {
+    white-space: nowrap;
+  }
+}
+
+/* Sidebar/aside del workspace: en mobile cae al flujo (ya está cubierto) pero
+   asegura que no quede flotando con z-index sobre contenido. */
+@media (max-width: 768px) {
+  aside.fixed,
+  aside[class*="fixed"]:not([class*="modal"]) {
+    position: static !important;
+    width: 100% !important;
+    transform: none !important;
+  }
+}
+
+/* Botones del header del dashboard: el nombre largo (texto + icono) puede
+   provocar overlap. Truncar nombres. */
+@media (max-width: 640px) {
+  .rh-nav-glass [data-username],
+  .rh-nav-glass .truncate {
+    max-width: 8ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Tabs sticky de detalle (course, artist, band): asegurar gap con header global */
+@media (max-width: 768px) {
+  [class*="sticky"][class*="top-"] {
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* Imagen de hero del course/artist (h-80vh, h-screen) muy grande en mobile */
+@media (max-width: 640px) {
+  [class*="h-[80vh]"], [class*="h-[70vh]"], [class*="min-h-screen"]:not(html):not(body) {
+    min-height: auto !important;
+  }
+  section[class*="min-h-screen"] {
+    min-height: 60vh !important;
+  }
+}
+
+/* Botones flotantes (FAB-like) que se solapan con CTAs principales en mobile */
+@media (max-width: 640px) {
+  .fixed.bottom-4.right-4,
+  .fixed.bottom-6.right-6,
+  .fixed.bottom-4.right-6,
+  .fixed.bottom-6.right-4 {
+    bottom: 1rem !important;
+    right: 1rem !important;
+  }
+}
+
+/* ── Fin hardening ──────────────────────────────────────────────────── */
+
+/* Fix: rh-icon-button forced 2.4rem width breaks any button that needs full
+   width. Override when w-full or sibling-of-w-full class is present. */
+@media (max-width: 640px) {
+  .rh-icon-button.w-full,
+  .rh-icon-button[class*=" w-full"],
+  .rh-icon-button[class*="w-full "] {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 36px;
+  }
 }

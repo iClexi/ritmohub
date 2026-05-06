@@ -4,14 +4,32 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import { type CountryIso2, PhoneInput } from "react-international-phone";
 import { z } from "zod";
 
 import { registerSchema, sanitizePersonNameInput, sanitizeUsernameInput } from "@/lib/validations/auth";
 
+const DEFAULT_PHONE_COUNTRY: CountryIso2 = "do";
+const phoneControlKeys = new Set(["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End"]);
+
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 type ApiValidationErrors = Partial<Record<keyof RegisterFormValues, string[]>>;
+
+function preventNonNumericPhoneInput(event: React.KeyboardEvent<HTMLInputElement>) {
+  if (event.ctrlKey || event.metaKey || event.altKey) {
+    return;
+  }
+
+  if (phoneControlKeys.has(event.key)) {
+    return;
+  }
+
+  if (!/^\d$/.test(event.key)) {
+    event.preventDefault();
+  }
+}
 
 export function RegisterForm() {
   const router = useRouter();
@@ -22,6 +40,7 @@ export function RegisterForm() {
 
   const {
     register,
+    control,
     handleSubmit,
     setError,
     setValue,
@@ -35,6 +54,8 @@ export function RegisterForm() {
       lastName: "",
       username: "",
       email: "",
+      phone: "",
+      phoneCountry: DEFAULT_PHONE_COUNTRY,
       password: "",
       confirmPassword: "",
     },
@@ -87,6 +108,7 @@ export function RegisterForm() {
           "lastName",
           "username",
           "email",
+          "phone",
           "password",
           "confirmPassword",
         ];
@@ -104,7 +126,7 @@ export function RegisterForm() {
       return;
     }
 
-    router.push("/dashboard");
+    router.push("/verify-account");
     router.refresh();
   };
 
@@ -178,6 +200,40 @@ export function RegisterForm() {
         {errors.email?.message ? <p className="text-sm text-[var(--ui-danger)]">{errors.email.message}</p> : null}
       </label>
 
+      <div className="space-y-2">
+        <span className="text-sm font-semibold text-[var(--ui-text)]">Celular</span>
+        <Controller
+          name="phone"
+          control={control}
+          render={({ field }) => (
+            <PhoneInput
+              defaultCountry={DEFAULT_PHONE_COUNTRY}
+              preferredCountries={["do", "us", "es", "mx", "co", "ar", "ve", "cl", "pe", "ec", "pa", "pr"]}
+              forceDialCode
+              value={field.value}
+              onChange={(nextPhone, meta) => {
+                field.onChange(nextPhone);
+                setValue("phoneCountry", meta.country.iso2, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                });
+                clearServerError();
+              }}
+              onBlur={field.onBlur}
+              className="rh-phone-field"
+              inputProps={{
+                name: field.name,
+                autoComplete: "tel",
+                inputMode: "numeric",
+                onKeyDown: preventNonNumericPhoneInput,
+              }}
+            />
+          )}
+        />
+        <input type="hidden" {...register("phoneCountry")} />
+        {errors.phone?.message ? <p className="text-sm text-[var(--ui-danger)]">{errors.phone.message}</p> : null}
+      </div>
+
       <label className="block space-y-2">
         <span className="text-sm font-semibold text-[var(--ui-text)]">Contrasena</span>
         <div className="relative">
@@ -249,7 +305,7 @@ export function RegisterForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="rh-btn-primary inline-flex w-full items-center justify-center rounded-2xl bg-[var(--ui-danger)] px-5 py-3 font-semibold text-[var(--ui-on-danger)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        className="rh-btn-primary flex w-full items-center justify-center rounded-2xl bg-[var(--ui-danger)] px-5 py-3 font-semibold text-[var(--ui-on-danger)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
       </button>

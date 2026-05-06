@@ -4,8 +4,11 @@ import { cookies } from "next/headers";
 import { RevealOnScroll } from "@/components/ui/reveal-on-scroll";
 import { SmoothScroll } from "@/components/ui/smooth-scroll";
 import { SessionWatchdog } from "@/components/auth/session-watchdog";
+import { VisitTracker } from "@/components/auth/visit-tracker";
+import { AnimePageEnhancer } from "@/components/ui/anime-page-enhancer";
 
 import "./globals.css";
+import "react-international-phone/style.css";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -43,6 +46,8 @@ export default async function RootLayout({
         <SmoothScroll />
         <RevealOnScroll />
         <SessionWatchdog />
+        <VisitTracker enabled />
+        <AnimePageEnhancer />
         {children}
       </body>
     </html>

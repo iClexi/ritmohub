@@ -3,6 +3,13 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 
+const PREVENT_SELECTOR = [
+  ".react-international-phone-country-selector-dropdown",
+  ".artist-detail-shell",
+  ".artist-wave-screen",
+  "[data-lenis-prevent]",
+].join(", ");
+
 export function SmoothScroll() {
   useEffect(() => {
     const lenis = new Lenis({
@@ -11,6 +18,8 @@ export function SmoothScroll() {
       smoothWheel: true,
       wheelMultiplier: 0.82,
       touchMultiplier: 1.1,
+      prevent: (node) =>
+        node instanceof Element && node.closest(PREVENT_SELECTOR) !== null,
     });
 
     const stopLenis = () => {
@@ -18,6 +27,7 @@ export function SmoothScroll() {
     };
 
     const startLenis = () => {
+      lenis.scrollTo(window.scrollY, { immediate: true });
       lenis.start();
     };
 

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { LogoutButton } from "@/components/auth/logout-button";
+import { AcademiaIcon, type AcademiaIconName } from "@/components/academiax/academiax-icons";
 import { ProfileEditor } from "@/components/profile/profile-editor";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import type { CurrentUser } from "@/lib/auth/current-user";
@@ -3487,7 +3488,7 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                   </>
                 )}
               </svg>
-              <span className="hidden sm:inline">RITMOHUB</span>
+              <img src="/brand/logo.svg" alt="" width="20" height="20" className="h-5 w-5 rounded-md shrink-0" /><span className="hidden sm:inline">RITMOHUB</span>
             </button>
 
             {menuOpen && (
@@ -3747,7 +3748,7 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
               </div>
             )}
           </div>
-          <ThemeToggle />
+          <span className="hidden sm:inline-flex"><ThemeToggle /></span>
           {isLoggedIn && user ? (
             <LogoutButton />
           ) : (
@@ -4249,7 +4250,9 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                   <div className="rounded-3xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)] overflow-hidden">
                     <div className="flex items-center justify-between gap-4 border-b border-[color:var(--ui-border)] px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ui-surface-soft)] text-2xl">🎵</div>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ui-surface-soft)] text-[var(--ui-primary)]">
+                          <AcademiaIcon name="music" className="h-6 w-6" />
+                        </div>
                         <div>
                           <h3 className="text-xl font-bold text-[var(--ui-text)]">Artista solista</h3>
                           <p className="text-xs text-[var(--ui-muted)]">Personaliza tu branding de proyecto individual.</p>
@@ -4646,7 +4649,12 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                         <label className="block space-y-1">
                           <span className="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)]">Subir archivo</span>
                           <input type="file" accept="image/*,video/*,audio/mpeg,audio/wav,audio/x-wav,audio/wave,audio/ogg" onChange={(e) => setForumFile(e.target.files?.[0] ?? null)} className="rh-input w-full rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] px-3 py-2 text-sm text-[var(--ui-text)] outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--ui-surface)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[var(--ui-text)]" />
-                          {forumFile && <p className="text-xs text-[var(--ui-muted)]">📎 {forumFile.name}</p>}
+                          {forumFile && (
+                            <p className="flex items-center gap-1.5 text-xs text-[var(--ui-muted)]">
+                              <AcademiaIcon name="note" className="h-3.5 w-3.5" />
+                              {forumFile.name}
+                            </p>
+                          )}
                         </label>
                         <div className="flex justify-end gap-2">
                           <button type="button" onClick={() => setShowForumCompose(false)} className="rounded-xl border border-[color:var(--ui-border)] px-4 py-2 text-sm font-semibold text-[var(--ui-text)]">Cancelar</button>
@@ -4660,9 +4668,16 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
 
                   {/* Sort + filter bar */}
                   <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)] px-3 py-2">
-                    {([{ key: "hot", label: "🔥 Popular" }, { key: "new", label: "✨ Nuevo" }, { key: "top", label: "⬆ Top" }] as const).map(({ key, label }) => (
+                    {([
+                      { key: "hot", label: "Popular", icon: "flame" },
+                      { key: "new", label: "Nuevo", icon: "spark" },
+                      { key: "top", label: "Top", icon: "bolt" },
+                    ] as const).map(({ key, label, icon }) => (
                       <button key={key} type="button" onClick={() => setForumSort(key)} className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${forumSort === key ? "bg-[var(--ui-primary)] text-[var(--ui-on-primary)]" : "text-[var(--ui-muted)] hover:bg-[var(--ui-surface-soft)] hover:text-[var(--ui-text)]"}`}>
-                        {label}
+                        <span className="inline-flex items-center gap-1.5">
+                          <AcademiaIcon name={icon} className="h-3.5 w-3.5" />
+                          {label}
+                        </span>
                       </button>
                     ))}
                     <div className="ml-auto flex flex-wrap gap-1.5">
@@ -4862,7 +4877,7 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                   {/* Trending */}
                   <div className="overflow-hidden rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)]">
                     <p className="border-b border-[color:var(--ui-border)] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">
-                      🔥 Trending
+                      Trending
                     </p>
                     {forumPosts
                       .slice()
@@ -4888,12 +4903,12 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                   <div className="rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)] p-4 space-y-2.5">
                     <p className="text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">Recursos</p>
                     {[
-                      { icon: "🎓", label: "Cursos", action: () => {} },
-                      { icon: "💼", label: "Empleos musicales", action: () => {} },
-                      { icon: "🎤", label: "Shows y conciertos", action: () => {} },
+                      { icon: "award" as AcademiaIconName, label: "Cursos", action: () => {} },
+                      { icon: "briefcase" as AcademiaIconName, label: "Empleos musicales", action: () => {} },
+                      { icon: "mic" as AcademiaIconName, label: "Shows y conciertos", action: () => {} },
                     ].map(({ icon, label }) => (
                       <div key={label} className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-xs text-[var(--ui-muted)] transition-colors hover:bg-[var(--ui-surface-soft)] hover:text-[var(--ui-text)] cursor-pointer">
-                        <span className="text-base">{icon}</span>
+                        <AcademiaIcon name={icon} className="h-4 w-4" />
                         <span className="font-medium">{label}</span>
                       </div>
                     ))}
@@ -4940,6 +4955,7 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                     userStageName={user.stageName ?? ""}
                     userGenre={user.genre ?? ""}
                     userTagline={user.tagline ?? ""}
+                    userPhone={user.phone ?? ""}
                   />
                 ) : (
                   <p className="text-sm text-[var(--ui-muted)]">Inicia sesion para editar tu perfil.</p>
@@ -5239,7 +5255,7 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
             {activeSection === "chats" ? (
               <div className="lg:col-span-12 flex h-[calc(100vh-7rem)] overflow-hidden rounded-3xl border border-[color:var(--ui-border)]">
                 {/*  Thread list sidebar  */}
-                <div className="flex w-72 shrink-0 flex-col border-r border-[color:var(--ui-border)] bg-[var(--ui-surface)]">
+                <div className={`${activeThread ? "hidden sm:flex" : "flex"} w-full sm:w-72 shrink-0 flex-col border-r border-[color:var(--ui-border)] bg-[var(--ui-surface)]`}>
 
                   {/* Header */}
                   <div className="border-b border-[color:var(--ui-border)] px-4 py-3">
@@ -5434,8 +5450,8 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                           className={`flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-colors ${isActive ? "bg-[color:rgb(var(--ui-glow-primary)/0.12)] ring-1 ring-[color:rgb(var(--ui-glow-primary)/0.4)]" : "hover:bg-[var(--ui-surface-soft)]"}`}
                         >
                           {thread.isGroup ? (
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] text-base">
-                              👥
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] text-[var(--ui-primary)]">
+                              <AcademiaIcon name="users" className="h-4 w-4" />
                             </span>
                           ) : (
                             <UserAvatar
@@ -5461,13 +5477,23 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                 </div>
 
                 {/*  Chat window  */}
-                <div className="flex flex-1 flex-col overflow-hidden bg-[var(--ui-bg)]">
+                <div className={`${activeThread ? "flex" : "hidden sm:flex"} flex-1 flex-col overflow-hidden bg-[var(--ui-bg)]`}>
                   {activeThread ? (
                     <>
                       {/* Header */}
                       <div className="flex items-center gap-3 border-b border-[color:var(--ui-border)] px-5 py-3">
+                        <button
+                          type="button"
+                          onClick={() => setActiveThreadId("")}
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--ui-text)] hover:bg-[var(--ui-surface-soft)] sm:hidden"
+                          aria-label="Volver"
+                        >
+                          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                        </button>
                         {activeThread.isGroup ? (
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] text-sm">👥</span>
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] text-[var(--ui-primary)]">
+                            <AcademiaIcon name="users" className="h-4 w-4" />
+                          </span>
                         ) : (
                           <UserAvatar
                             name={activeThread.contact}
@@ -6233,7 +6259,7 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                                 >
                                   {isBuying
                                     ? "Redirigiendo..."
-                                    : `Comprar  ${paymentProvider === "stripe" ? "Stripe" : "PayPal"}`}
+                                    : "Comprar"}
                                 </button>
                               </div>
                             )}

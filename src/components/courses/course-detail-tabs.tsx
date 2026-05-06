@@ -43,8 +43,8 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
       <div
         className="mb-8 flex gap-1 rounded-2xl p-1"
         style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.07)",
+          background: "var(--ui-surface-soft)",
+          border: "1px solid var(--ui-border)",
         }}
       >
         {tabs.map((tab) => (
@@ -60,7 +60,7 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
                     color: "white",
                     boxShadow: "0 4px 12px rgba(99,102,241,0.3)",
                   }
-                : { color: "#94a3b8", background: "transparent" }
+                : { color: "var(--ui-muted)", background: "transparent" }
             }
           >
             {tab.label}
@@ -71,7 +71,7 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
       {/* Tab: Vista general */}
       {activeTab === "overview" && (
         <div>
-          <h2 className="mb-5 text-xl font-bold" style={{ color: "#f0f4ff" }}>
+          <h2 className="mb-5 text-xl font-bold" style={{ color: "var(--ui-text)" }}>
             Lo que aprenderás
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -90,7 +90,7 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
                 >
                   ✓
                 </span>
-                <p className="text-sm leading-relaxed" style={{ color: "#f0f4ff" }}>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--ui-text)" }}>
                   {item}
                 </p>
               </div>
@@ -98,10 +98,10 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
           </div>
 
           <div className="mt-8">
-            <h3 className="mb-3 text-lg font-bold" style={{ color: "#f0f4ff" }}>
+            <h3 className="mb-3 text-lg font-bold" style={{ color: "var(--ui-text)" }}>
               Para quién es este curso
             </h3>
-            <p className="text-sm leading-relaxed" style={{ color: "#94a3b8" }}>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--ui-muted)" }}>
               Este curso está diseñado para músicos en todos los niveles que quieran llevar sus
               habilidades al siguiente nivel. Ya sea que estés comenzando tu camino musical o
               busques perfeccionar técnicas avanzadas, encontrarás contenido valioso y aplicable
@@ -114,21 +114,21 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
       {/* Tab: Contenido */}
       {activeTab === "content" && (
         <div>
-          <h2 className="mb-5 text-xl font-bold" style={{ color: "#f0f4ff" }}>
+          <h2 className="mb-5 text-xl font-bold" style={{ color: "var(--ui-text)" }}>
             Topicos del curso
           </h2>
           {modules.length > 0 ? (
             <div
               className="grid gap-3"
-              style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ border: "1px solid var(--ui-border)" }}
             >
               {modules.map((module) => (
                 <div
                   key={module.id}
                   className="flex items-center gap-3 rounded-2xl px-4 py-3"
                   style={{
-                    background: "rgba(255,255,255,0.03)",
-                    borderBottom: "1px solid rgba(255,255,255,0.04)",
+                    background: "var(--ui-surface-soft)",
+                    borderBottom: "1px solid var(--ui-border)",
                   }}
                 >
                   <span
@@ -138,10 +138,10 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
                     {module.position}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold" style={{ color: "#f0f4ff" }}>
+                    <p className="truncate text-sm font-semibold" style={{ color: "var(--ui-text)" }}>
                       {module.title}
                     </p>
-                    <p className="mt-0.5 text-xs" style={{ color: "#94a3b8" }}>
+                    <p className="mt-0.5 text-xs" style={{ color: "var(--ui-muted)" }}>
                       Topico {module.position}
                     </p>
                   </div>
@@ -149,7 +149,7 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
               ))}
             </div>
           ) : (
-            <p className="text-sm" style={{ color: "#94a3b8" }}>
+            <p className="text-sm" style={{ color: "var(--ui-muted)" }}>
               No hay topicos disponibles aun.
             </p>
           )}
@@ -159,15 +159,15 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
       {/* Tab: Instructor */}
       {activeTab === "instructor" && (
         <div>
-          <h2 className="mb-5 text-xl font-bold" style={{ color: "#f0f4ff" }}>
+          <h2 className="mb-5 text-xl font-bold" style={{ color: "var(--ui-text)" }}>
             Tu instructor
           </h2>
           {instructorUser ? (
             <div
               className="rounded-3xl p-6"
               style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.07)",
+                background: "var(--ui-surface-soft)",
+                border: "1px solid var(--ui-border)",
               }}
             >
               <div className="flex items-start gap-5">
@@ -181,7 +181,7 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
                   <Link
                     href={`/artist/${instructorUser.id}`}
                     className="text-lg font-bold hover:underline"
-                    style={{ color: "#f0f4ff" }}
+                    style={{ color: "var(--ui-text)" }}
                   >
                     {instructorUser.name}
                   </Link>
@@ -189,7 +189,7 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
                     Instructor certificado
                   </p>
                   {instructorUser.primaryInstrument && (
-                    <p className="mt-1 text-xs" style={{ color: "#94a3b8" }}>
+                    <p className="mt-1 text-xs" style={{ color: "var(--ui-muted)" }}>
                       {instructorUser.primaryInstrument}
                       {instructorUser.studies ? ` · ${instructorUser.studies}` : ""}
                     </p>
@@ -198,7 +198,7 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
               </div>
 
               {instructorUser.bio && (
-                <p className="mt-5 text-sm leading-relaxed" style={{ color: "#94a3b8" }}>
+                <p className="mt-5 text-sm leading-relaxed" style={{ color: "var(--ui-muted)" }}>
                   {instructorUser.bio}
                 </p>
               )}
@@ -211,10 +211,10 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
                   { label: "Calificación", value: "4.9 ★" },
                 ].map((stat) => (
                   <div key={stat.label} className="text-center">
-                    <p className="text-lg font-bold" style={{ color: "#f0f4ff" }}>
+                    <p className="text-lg font-bold" style={{ color: "var(--ui-text)" }}>
                       {stat.value}
                     </p>
-                    <p className="text-xs" style={{ color: "#94a3b8" }}>
+                    <p className="text-xs" style={{ color: "var(--ui-muted)" }}>
                       {stat.label}
                     </p>
                   </div>
@@ -225,8 +225,8 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
             <div
               className="rounded-3xl p-6"
               style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.07)",
+                background: "var(--ui-surface-soft)",
+                border: "1px solid var(--ui-border)",
               }}
             >
               <div className="flex items-start gap-4">
@@ -237,7 +237,7 @@ export function CourseDetailTabs({ modules, whatYouLearn, instructor, instructor
                   {instructor.charAt(0).toUpperCase()}
                 </span>
                 <div>
-                  <p className="text-base font-bold" style={{ color: "#f0f4ff" }}>
+                  <p className="text-base font-bold" style={{ color: "var(--ui-text)" }}>
                     {instructor}
                   </p>
                   <p className="text-sm" style={{ color: "#818cf8" }}>

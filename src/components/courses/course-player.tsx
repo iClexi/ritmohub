@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
+import { AcademiaIcon } from "@/components/academiax/academiax-icons";
 
 type Module = {
   id: string;
@@ -485,7 +486,7 @@ export function CoursePlayer({ course, modules }: Props) {
                         className="flex h-7 w-7 items-center justify-center rounded-lg text-sm"
                         style={{ background: "rgba(99,102,241,0.15)", color: "#818cf8" }}
                       >
-                        📝
+                        <AcademiaIcon name="note" className="h-4 w-4" />
                       </span>
                       <span className="text-sm font-semibold">Mis notas</span>
                       {note && (
@@ -605,7 +606,8 @@ export function CoursePlayer({ course, modules }: Props) {
                       className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90"
                       style={{ background: "linear-gradient(135deg,#10b981,#059669)" }}
                     >
-                      Finalizar curso 🎉
+                      <AcademiaIcon name="trophy" className="h-4 w-4" />
+                      Finalizar curso
                     </Link>
                   )}
                 </div>

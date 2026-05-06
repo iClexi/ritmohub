@@ -41,11 +41,19 @@ export async function POST(request: Request) {
         userId: existing.id,
         name: ADMIN_NAME,
         email: ADMIN_EMAIL,
+        phone: existing.phone ?? null,
         stageName: ADMIN_USERNAME,
         role: "admin",
         musicianType: existing.musicianType,
         primaryInstrument: existing.primaryInstrument,
         bio: existing.bio,
+        location: existing.location,
+        websiteUrl: existing.websiteUrl,
+        socialInstagram: existing.socialInstagram,
+        socialSpotify: existing.socialSpotify,
+        socialYoutube: existing.socialYoutube,
+        genre: existing.genre,
+        tagline: existing.tagline,
       });
       await updateUserPasswordHashById(existing.id, passwordHash);
       return NextResponse.json({
@@ -67,11 +75,19 @@ export async function POST(request: Request) {
         userId: legacy.id,
         name: ADMIN_NAME,
         email: ADMIN_EMAIL,
+        phone: legacy.phone ?? null,
         stageName: ADMIN_USERNAME,
         role: "admin",
         musicianType: legacy.musicianType,
         primaryInstrument: legacy.primaryInstrument,
         bio: legacy.bio,
+        location: legacy.location,
+        websiteUrl: legacy.websiteUrl,
+        socialInstagram: legacy.socialInstagram,
+        socialSpotify: legacy.socialSpotify,
+        socialYoutube: legacy.socialYoutube,
+        genre: legacy.genre,
+        tagline: legacy.tagline,
       });
       await updateUserPasswordHashById(legacy.id, passwordHash);
 

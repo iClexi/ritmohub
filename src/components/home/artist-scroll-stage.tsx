@@ -191,12 +191,17 @@ export function ArtistScrollStage() {
   const moveToIndex = useCallback((nextIndex: number) => {
     const clamped = Math.max(0, Math.min(showcaseItems.length - 1, nextIndex));
     setCurrentIndex(clamped);
-    const target = railRef.current?.querySelector<HTMLElement>(
+    const rail = railRef.current;
+    if (!rail) return;
+    const target = rail.querySelector<HTMLElement>(
       `[data-showcase-index="${clamped}"]`,
     );
-    if (target) {
-      target.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" });
-    }
+    if (!target) return;
+    const railRect = rail.getBoundingClientRect();
+    const cardRect = target.getBoundingClientRect();
+    const delta =
+      cardRect.left + cardRect.width / 2 - (railRect.left + railRect.width / 2);
+    rail.scrollTo({ left: rail.scrollLeft + delta, behavior: "smooth" });
   }, []);
 
   const isSectionActiveInViewport = useCallback(() => {
@@ -238,6 +243,14 @@ export function ArtistScrollStage() {
   useEffect(() => {
     const syncSectionState = () => {
       setIsStageInView(isSectionActiveInViewport());
+      const node = sectionRef.current;
+      if (node) {
+        const rect = node.getBoundingClientRect();
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        if (rect.top > vh * 0.6) {
+          setHasCompletedStage(false);
+        }
+      }
     };
     syncSectionState();
     window.addEventListener("scroll", syncSectionState, { passive: true });
@@ -249,10 +262,55 @@ export function ArtistScrollStage() {
   }, [isSectionActiveInViewport]);
 
   useEffect(() => {
-    const firstCard = railRef.current?.querySelector<HTMLElement>('[data-showcase-index="0"]');
-    if (firstCard) {
-      firstCard.scrollIntoView({ behavior: "auto", inline: "center", block: "nearest" });
-    }
+    const rail = railRef.current;
+    if (!rail) return;
+    const firstCard = rail.querySelector<HTMLElement>('[data-showcase-index="0"]');
+    if (!firstCard) return;
+    const railRect = rail.getBoundingClientRect();
+    const cardRect = firstCard.getBoundingClientRect();
+    const delta =
+      cardRect.left + cardRect.width / 2 - (railRect.left + railRect.width / 2);
+    rail.scrollTo({ left: rail.scrollLeft + delta, behavior: "auto" });
+  }, []);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+    let timer: number | null = null;
+    const sync = () => {
+      const cards = Array.from(rail.querySelectorAll<HTMLElement>("[data-showcase-index]"));
+      if (cards.length === 0) return;
+      const railRect = rail.getBoundingClientRect();
+      const railCenter = railRect.left + railRect.width / 2;
+      let nearest = 0;
+      let best = Number.POSITIVE_INFINITY;
+      for (const card of cards) {
+        const raw = card.dataset.showcaseIndex;
+        if (!raw) continue;
+        const n = Number.parseInt(raw, 10);
+        if (Number.isNaN(n)) continue;
+        const cardRect = card.getBoundingClientRect();
+        const c = cardRect.left + cardRect.width / 2;
+        const d = Math.abs(c - railCenter);
+        if (d < best) {
+          best = d;
+          nearest = n;
+        }
+      }
+      setCurrentIndex((prev) => (prev === nearest ? prev : nearest));
+    };
+    const onScroll = () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        sync();
+        timer = null;
+      }, 120);
+    };
+    rail.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      rail.removeEventListener("scroll", onScroll);
+      if (timer !== null) window.clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -387,7 +445,7 @@ export function ArtistScrollStage() {
       <section
         ref={sectionRef}
         id="artist-scroll"
-        className="landing-container showcase-stage-section relative mx-auto mt-3 mb-0 h-[calc(100vh-7.5rem)] overflow-hidden rounded-[2rem] border border-[color:var(--ui-border)]"
+        className="landing-container showcase-stage-section relative mx-auto mt-3 mb-0 h-auto min-h-[44rem] md:h-[calc(100vh-7.5rem)] md:min-h-0 overflow-hidden rounded-[2rem] border border-[color:var(--ui-border)]"
         style={stageVars}
       >
         <div className="showcase-stage-bg absolute inset-0" />
@@ -397,7 +455,7 @@ export function ArtistScrollStage() {
           <aside className="showcase-stage-left flex h-full items-center justify-center px-6 py-10 sm:px-10 lg:px-12">
             <div className="mx-auto w-full max-w-[560px]">
               <p className="text-xs font-semibold tracking-[0.2em] text-white/80">ARTIST SHOWCASE</p>
-              <h3 className="mt-2 font-serif text-[clamp(3rem,8vw,8rem)] leading-none tracking-[0.14em] text-white">
+              <h3 className="mt-2 font-serif text-[clamp(2.1rem,11vw,8rem)] leading-[0.92] tracking-[0.08em] sm:tracking-[0.14em] text-white">
                 MUSISEC STAGE
               </h3>
               <p className="mt-6 max-w-[510px] text-[clamp(1rem,0.35vw+0.9rem,1.28rem)] leading-relaxed text-white/90">
@@ -549,8 +607,8 @@ export function ArtistScrollStage() {
                   X
                 </button>
 
-                <div className="grid min-h-full lg:grid-cols-[0.9fr_1.1fr]">
-                  <aside className="artist-detail-left relative flex items-center justify-center overflow-hidden px-4 py-8 sm:px-8">
+                <div className="grid min-h-full gap-3 lg:gap-0 lg:grid-cols-[0.9fr_1.1fr]">
+                  <aside className="artist-detail-left relative flex items-center justify-center overflow-hidden px-4 pt-14 pb-4 sm:px-8 sm:py-8">
                     <p className="artist-detail-vertical hidden lg:block">
                       {detailItem.category} | {detailItem.name}
                     </p>
@@ -558,12 +616,12 @@ export function ArtistScrollStage() {
                     <img
                       src={detailImage}
                       alt={detailItem.name}
-                      className="block h-[min(84vh,900px)] w-[min(100%,560px)] rounded-2xl object-cover"
+                      className="block h-[min(56vh,460px)] w-full max-w-[560px] rounded-2xl object-cover sm:h-[min(84vh,900px)]"
                       loading="lazy"
                     />
                   </aside>
 
-                  <section className="artist-detail-right flex min-h-0 flex-col px-5 pb-7 pt-14 sm:px-8 lg:px-10">
+                  <section className="artist-detail-right flex min-h-0 flex-col px-4 pb-7 pt-3 sm:px-8 sm:pt-14 lg:px-10">
                     <h4 className="text-[clamp(2rem,1.8vw+1.2rem,3.1rem)] font-semibold tracking-tight text-[var(--ui-text)]">
                       {detailItem.name}
                     </h4>

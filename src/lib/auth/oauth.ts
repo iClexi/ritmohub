@@ -27,8 +27,42 @@ export function createOAuthState() {
   return randomBytes(24).toString("hex");
 }
 
+function getConfiguredPublicOrigin() {
+  const candidates = [
+    process.env.AUTH_URL,
+    process.env.NEXTAUTH_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.APP_URL,
+  ];
+
+  for (const candidate of candidates) {
+    const value = candidate?.trim();
+    if (!value || !URL.canParse(value)) {
+      continue;
+    }
+
+    return new URL(value).origin;
+  }
+
+  return null;
+}
+
 export function getOriginFromRequest(request: Request) {
-  return new URL(request.url).origin;
+  const configuredOrigin = getConfiguredPublicOrigin();
+  if (configuredOrigin) {
+    return configuredOrigin;
+  }
+
+  const url = new URL(request.url);
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+
+  if (forwardedHost) {
+    const protocol = forwardedProto || url.protocol.replace(":", "");
+    return `${protocol}://${forwardedHost}`;
+  }
+
+  return url.origin;
 }
 
 export function getOAuthFlowFromRequest(request: Request): OAuthFlow {

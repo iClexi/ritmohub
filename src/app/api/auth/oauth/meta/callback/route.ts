@@ -63,6 +63,7 @@ async function createUserFromMetaProfile(input: { email: string; name?: string }
         username: buildUsernameCandidate(usernameBase, attempt),
         email: input.email,
         passwordHash,
+        authProvider: "meta",
       });
     } catch (error) {
       if (!isPgUniqueViolation(error)) {

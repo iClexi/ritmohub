@@ -193,7 +193,7 @@ export function ProfileMenu({
       </button>
 
       {isOpen ? (
-        <div className="slide-in backdrop-panel rh-card absolute right-0 z-[90] mt-3 w-96 rounded-2xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)] p-5 shadow-2xl shadow-[color:rgb(var(--ui-glow-primary)/0.2)]">
+        <div className="slide-in backdrop-panel rh-card absolute right-0 z-[90] mt-3 w-[min(22rem,calc(100vw-1rem))] rounded-2xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)] p-4 shadow-2xl shadow-[color:rgb(var(--ui-glow-primary)/0.2)] sm:w-96 sm:p-5">
           {/* Header */}
           <div className="mb-4 flex items-center gap-3">
             <span className="relative inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full">

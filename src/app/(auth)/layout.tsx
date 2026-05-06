@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -14,9 +15,10 @@ export default function AuthLayout({
         <div className="absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-[color:rgb(var(--ui-glow-accent)/0.25)] blur-3xl" />
       </div>
 
-      <aside className="relative hidden w-full lg:flex lg:w-1/2 xl:w-3/5">
+      <aside className="relative hidden w-full lg:flex lg:w-1/2 xl:w-1/2">
         <div className="mx-auto flex w-full max-w-2xl flex-col justify-between px-12 py-16">
-          <Link href="/" className="text-sm font-semibold tracking-widest text-[var(--ui-text)]/80">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold tracking-widest text-[var(--ui-text)]/80">
+            <Image src="/brand/logo.svg" alt="" width={28} height={28} className="h-7 w-7 rounded-lg" />
             RITMOHUB
           </Link>
 
@@ -43,12 +45,12 @@ export default function AuthLayout({
         </div>
       </aside>
 
-      <main className="relative flex w-full items-center justify-center px-6 py-10 sm:px-10 lg:w-1/2 xl:w-2/5">
-        <div className="absolute right-6 top-6">
+      <main className="relative flex w-full min-w-0 flex-col items-center justify-center gap-3 px-3 py-6 sm:px-10 sm:py-10 lg:w-1/2 xl:w-1/2">
+        <div className="z-20 flex w-full max-w-xl items-center justify-end sm:absolute sm:right-6 sm:top-6 sm:w-auto sm:max-w-none">
           <ThemeToggle />
         </div>
 
-        <div className="animate-fade-up backdrop-panel rh-card w-full max-w-md rounded-3xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)] p-8 shadow-xl shadow-[color:rgb(var(--ui-glow-primary)/0.16)]">
+        <div className="animate-fade-up backdrop-panel rh-card w-full min-w-0 max-w-xl rounded-2xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)] p-5 shadow-xl shadow-[color:rgb(var(--ui-glow-primary)/0.16)] sm:rounded-3xl sm:p-12">
           {children}
         </div>
       </main>

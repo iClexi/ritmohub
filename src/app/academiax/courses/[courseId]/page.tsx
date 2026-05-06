@@ -10,6 +10,7 @@ import {
 } from "@/lib/db";
 import { CourseDetailTabs } from "@/components/courses/course-detail-tabs";
 import { CourseCheckoutButton } from "@/components/courses/course-checkout-button";
+import { AcademiaIcon, type AcademiaIconName } from "@/components/academiax/academiax-icons";
 
 type Props = { params: Promise<{ courseId: string }> };
 
@@ -181,10 +182,10 @@ export default async function CourseDetailPage({ params }: Props) {
               {/* Stats chips */}
               <div className="mt-8 flex flex-wrap gap-3">
                 {[
-                  { icon: "⏱️", label: `${totalHours}h de contenido` },
-                  { icon: "📚", label: `${modules.length} lecciones` },
-                  { icon: "🎯", label: course.level },
-                  { icon: "👥", label: `${enrollment.toLocaleString()} estudiantes` },
+                  { icon: "clock" as AcademiaIconName, label: `${totalHours}h de contenido` },
+                  { icon: "book" as AcademiaIconName, label: `${modules.length} lecciones` },
+                  { icon: "target" as AcademiaIconName, label: course.level },
+                  { icon: "users" as AcademiaIconName, label: `${enrollment.toLocaleString()} estudiantes` },
                 ].map((chip) => (
                   <div
                     key={chip.label}
@@ -194,7 +195,7 @@ export default async function CourseDetailPage({ params }: Props) {
                       color: "rgba(255,255,255,0.7)",
                     }}
                   >
-                    <span>{chip.icon}</span>
+                    <AcademiaIcon name={chip.icon} className="h-4 w-4" />
                     <span>{chip.label}</span>
                   </div>
                 ))}
@@ -245,7 +246,7 @@ export default async function CourseDetailPage({ params }: Props) {
                       <CourseCheckoutButton
                         courseId={course.id}
                         provider="stripe"
-                        label="Comprar con Stripe"
+                        label="Comprar"
                         className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all hover:opacity-90"
                         style={{ background: "linear-gradient(135deg,#ef4444,#dc2626)" }}
                       />
@@ -368,10 +369,10 @@ export default async function CourseDetailPage({ params }: Props) {
                 </Link>
               ) : userId ? (
                 <div className="mt-4 space-y-2">
-                  <CourseCheckoutButton
+                    <CourseCheckoutButton
                     courseId={course.id}
                     provider="stripe"
-                    label="Comprar con Stripe"
+                    label="Comprar"
                     className="w-full rounded-2xl py-3 text-sm font-bold text-white transition-all hover:opacity-90"
                     style={{ background: "linear-gradient(135deg,#ef4444,#dc2626)" }}
                   />
@@ -395,13 +396,13 @@ export default async function CourseDetailPage({ params }: Props) {
 
               <div className="mt-5 space-y-2">
                 {[
-                  { icon: "📚", label: `${modules.length} lecciones` },
-                  { icon: "⏱️", label: `${totalHours}h de contenido` },
-                  { icon: "🎯", label: `Nivel ${course.level}` },
-                  { icon: "♾️", label: "Acceso de por vida" },
+                  { icon: "book" as AcademiaIconName, label: `${modules.length} lecciones` },
+                  { icon: "clock" as AcademiaIconName, label: `${totalHours}h de contenido` },
+                  { icon: "target" as AcademiaIconName, label: `Nivel ${course.level}` },
+                  { icon: "infinity" as AcademiaIconName, label: "Acceso de por vida" },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-2 text-sm" style={{ color: "var(--ui-muted)" }}>
-                    <span>{item.icon}</span>
+                    <AcademiaIcon name={item.icon} className="h-4 w-4" />
                     <span>{item.label}</span>
                   </div>
                 ))}

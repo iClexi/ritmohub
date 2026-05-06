@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { ArtistScrollStage } from "@/components/home/artist-scroll-stage";
 import { LandingImage } from "@/components/home/landing-image";
@@ -125,15 +126,13 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
     <main className="landing-shell relative min-h-screen overflow-x-hidden bg-[var(--ui-bg)]">
       <ScrollTopReset />
       <header className="landing-nav fixed inset-x-0 top-4 z-50">
-        <div className="landing-container flex items-center justify-between gap-3 rounded-3xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)]/92 px-4 py-3 backdrop-blur-xl">
+        <div className="landing-container flex items-center justify-between gap-1.5 rounded-3xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)]/92 px-2 py-2 sm:gap-3 sm:px-4 sm:py-3 backdrop-blur-xl">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-[var(--ui-text)]"
+            className="inline-flex shrink-0 items-center gap-2 text-base font-semibold tracking-tight text-[var(--ui-text)] sm:text-lg"
           >
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--ui-primary)] text-sm font-bold text-[var(--ui-on-primary)]">
-              RH
-            </span>
-            RitmoHub
+            <Image src="/brand/logo.svg" alt="RitmoHub" width={32} height={32} className="h-7 w-7 rounded-xl sm:h-8 sm:w-8" />
+            <span className="hidden sm:inline">RitmoHub</span>
           </Link>
 
           <nav className="hidden items-center gap-6 text-sm font-semibold text-[var(--ui-muted)] md:flex">
@@ -151,12 +150,14 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
             </a>
           </nav>
 
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <span className="hidden sm:inline-flex">
+              <ThemeToggle />
+            </span>
             {isLoggedIn ? (
               <Link
                 href="/dashboard"
-                className="rh-btn-primary rounded-2xl bg-[var(--ui-primary)] px-4 py-2 text-sm font-semibold text-[var(--ui-on-primary)]"
+                className="rh-btn-primary rounded-2xl bg-[var(--ui-primary)] px-3 py-2 text-xs font-semibold text-[var(--ui-on-primary)] sm:px-4 sm:text-sm"
               >
                 Ir al panel
               </Link>
@@ -164,13 +165,13 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
               <>
                 <Link
                   href="/login"
-                  className="landing-ghost-btn rounded-2xl border border-[color:var(--ui-border)] px-4 py-2 text-sm font-semibold text-[var(--ui-text)]"
+                  className="landing-ghost-btn inline-flex items-center whitespace-nowrap rounded-2xl border border-[color:var(--ui-border)] px-2.5 py-1.5 text-[11px] font-semibold text-[var(--ui-text)] sm:px-4 sm:py-2 sm:text-sm"
                 >
                   Iniciar sesion
                 </Link>
                 <Link
                   href="/register"
-                  className="rh-btn-primary rounded-2xl bg-[var(--ui-accent)] px-4 py-2 text-sm font-semibold text-[#07231e]"
+                  className="rh-btn-primary inline-flex items-center whitespace-nowrap rounded-2xl bg-[var(--ui-accent)] px-2.5 py-1.5 text-[11px] font-semibold text-[#07231e] sm:px-4 sm:py-2 sm:text-sm"
                 >
                   Crear cuenta
                 </Link>
@@ -203,10 +204,10 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
             Musicos colaborando ahora mismo
           </div>
 
-          <h1 className="landing-title mt-6 text-center text-balance text-5xl leading-[1.06] font-semibold tracking-tight text-[var(--ui-text)] sm:text-6xl md:text-7xl">
+          <h1 className="landing-title mt-6 text-center text-balance text-3xl leading-[1.08] font-semibold tracking-tight text-[var(--ui-text)] sm:text-6xl md:text-7xl">
             La red musical donde tus conexiones se convierten en conciertos.
           </h1>
-          <p className="mx-auto mt-5 max-w-3xl text-center text-xl text-[var(--ui-muted)]">
+          <p className="mx-auto mt-5 max-w-3xl text-center text-base text-[var(--ui-muted)] sm:text-xl">
             Publica tu proyecto, encuentra talentos, organiza shows con flyers y mueve tu carrera desde una sola plataforma.
           </p>
 
@@ -234,7 +235,7 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
           <div className="landing-marquee-track">
             {[...heroGallery, ...heroGallery].map((image, index) => (
               <article key={`gallery-top-${image}-${index}`} className="landing-media-tile">
-                <LandingImage src={image} alt={`Escena musical superior ${index + 1}`} className="h-full w-full object-cover" />
+                <LandingImage src={image} alt={`Escena musical superior ${index + 1}`} className="h-full w-full object-cover" loading="eager" />
               </article>
             ))}
           </div>
@@ -244,7 +245,7 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
           <div className="landing-marquee-track">
             {[...heroGallery.slice().reverse(), ...heroGallery.slice().reverse()].map((image, index) => (
               <article key={`gallery-bottom-${image}-${index}`} className="landing-media-tile">
-                <LandingImage src={image} alt={`Escena musical inferior ${index + 1}`} className="h-full w-full object-cover" />
+                <LandingImage src={image} alt={`Escena musical inferior ${index + 1}`} className="h-full w-full object-cover" loading="eager" />
               </article>
             ))}
           </div>

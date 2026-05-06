@@ -61,6 +61,8 @@ next-env.d.ts
 *.sql.gz
 *.backup
 *.bak
+*.bak.*
+*.bak_*
 *.tar.gz
 backups/
 backup/

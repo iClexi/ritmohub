@@ -2,11 +2,33 @@ import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/auth/admin-guard";
 import { hashPassword } from "@/lib/auth/password";
-import { deleteUserById, updateUserForAdmin, updateUserPasswordHashById } from "@/lib/db";
+import {
+  deleteUserById,
+  getAdminUserById,
+  listRecentVisitsForUser,
+  updateUserForAdmin,
+  updateUserPasswordHashById,
+} from "@/lib/db";
 
 type Props = { params: Promise<{ userId: string }> };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export async function GET(_request: Request, { params }: Props) {
+  const guard = await requireAdmin();
+  if (!guard.ok) {
+    return guard.response;
+  }
+
+  const { userId } = await params;
+  const user = await getAdminUserById(userId);
+  if (!user) {
+    return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
+  }
+
+  const visits = await listRecentVisitsForUser(userId, 25);
+  return NextResponse.json({ user, visits });
+}
 
 export async function PATCH(request: Request, { params }: Props) {
   const guard = await requireAdmin();
@@ -20,11 +42,20 @@ export async function PATCH(request: Request, { params }: Props) {
 
     const name = String(body?.name ?? "").trim();
     const email = String(body?.email ?? "").trim().toLowerCase();
+    const phoneRaw = typeof body?.phone === "string" ? body.phone.trim() : "";
+    const phone = phoneRaw === "" ? null : phoneRaw;
     const stageName = String(body?.stageName ?? "").trim();
     const role = body?.role === "admin" ? "admin" : "user";
     const musicianType = String(body?.musicianType ?? "").trim();
     const primaryInstrument = String(body?.primaryInstrument ?? "").trim();
     const bio = String(body?.bio ?? "").trim();
+    const location = String(body?.location ?? "").trim();
+    const websiteUrl = String(body?.websiteUrl ?? "").trim();
+    const socialInstagram = String(body?.socialInstagram ?? "").trim();
+    const socialSpotify = String(body?.socialSpotify ?? "").trim();
+    const socialYoutube = String(body?.socialYoutube ?? "").trim();
+    const genre = String(body?.genre ?? "").trim();
+    const tagline = String(body?.tagline ?? "").trim();
     const nextPassword = String(body?.password ?? "");
 
     if (!name || !email) {
@@ -53,11 +84,19 @@ export async function PATCH(request: Request, { params }: Props) {
       userId,
       name,
       email,
+      phone,
       stageName,
       role,
       musicianType,
       primaryInstrument,
       bio,
+      location,
+      websiteUrl,
+      socialInstagram,
+      socialSpotify,
+      socialYoutube,
+      genre,
+      tagline,
     });
 
     if (!updatedUser) {

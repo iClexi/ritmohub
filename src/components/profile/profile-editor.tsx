@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useRef, useState } from "react";
+import { type CountryIso2, PhoneInput } from "react-international-phone";
 import { useRouter } from "next/navigation";
 import { updateProfileSchema } from "@/lib/validations/profile";
 import { avatarUploadSchema } from "@/lib/validations/workspace";
@@ -14,6 +15,15 @@ import {
   instrumentRules,
   type FieldRule,
 } from "@/lib/validations/rules";
+
+const DEFAULT_PHONE_COUNTRY: CountryIso2 = "do";
+const phoneControlKeys = new Set(["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab", "Home", "End"]);
+
+function preventNonNumericPhoneInput(event: React.KeyboardEvent<HTMLInputElement>) {
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  if (phoneControlKeys.has(event.key)) return;
+  if (!/^\d$/.test(event.key)) event.preventDefault();
+}
 
 type ProfileEditorProps = {
   userId: string;
@@ -34,6 +44,7 @@ type ProfileEditorProps = {
   userStageName?: string;
   userGenre?: string;
   userTagline?: string;
+  userPhone?: string;
 };
 
 const MUSICIAN_TYPES = [
@@ -97,6 +108,7 @@ export function ProfileEditor({
   userStageName = "",
   userGenre = "",
   userTagline = "",
+  userPhone = "",
 }: ProfileEditorProps) {
   const router = useRouter();
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -120,6 +132,18 @@ export function ProfileEditor({
   const [stageName, setStageName] = useState(userStageName);
   const [genre, setGenre] = useState(userGenre);
   const [tagline, setTagline] = useState(userTagline);
+
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [showPhoneForm, setShowPhoneForm] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [contactChangeSending, setContactChangeSending] = useState(false);
+  const [contactChangeMsg, setContactChangeMsg] = useState<string | null>(null);
+  const [contactChangeError, setContactChangeError] = useState<string | null>(null);
+  const [newPhoneCountry, setNewPhoneCountry] = useState<CountryIso2>(DEFAULT_PHONE_COUNTRY);
+  const [phoneCodeStep, setPhoneCodeStep] = useState(false);
+  const [phoneCode, setPhoneCode] = useState("");
+  const [phoneCodeSending, setPhoneCodeSending] = useState(false);
 
   const [avatarPreview, setAvatarPreview] = useState(userAvatarUrl);
   const [coverPreview, setCoverPreview] = useState(userCoverUrl);
@@ -219,6 +243,92 @@ export function ProfileEditor({
       setError("No se pudo subir la foto de portada.");
     } finally {
       setUploadingCover(false);
+    }
+  };
+
+  const handleSendEmailChange = async () => {
+    setContactChangeMsg(null);
+    setContactChangeError(null);
+    const newValue = newEmail.trim();
+    if (!newValue) { setContactChangeError("Ingresa el nuevo correo."); return; }
+    setContactChangeSending(true);
+    try {
+      const res = await fetch("/api/profile/change-contact/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ field: "email", newValue }),
+      });
+      const data = (await res.json().catch(() => null)) as { message?: string } | null;
+      if (!res.ok) {
+        setContactChangeError(data?.message ?? "No se pudo enviar el correo.");
+      } else {
+        setContactChangeMsg(data?.message ?? "Revisa tu correo para confirmar el cambio.");
+        setNewEmail("");
+        setShowEmailForm(false);
+      }
+    } catch {
+      setContactChangeError("Error de red. Intenta de nuevo.");
+    } finally {
+      setContactChangeSending(false);
+    }
+  };
+
+  const handleSendPhoneCode = async () => {
+    setContactChangeMsg(null);
+    setContactChangeError(null);
+    const newValue = newPhone.trim();
+    if (!newValue) { setContactChangeError("Ingresa el nuevo numero."); return; }
+    setContactChangeSending(true);
+    try {
+      const res = await fetch("/api/profile/change-contact/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ field: "phone", newValue, phoneCountry: newPhoneCountry }),
+      });
+      const data = (await res.json().catch(() => null)) as { message?: string } | null;
+      if (!res.ok) {
+        setContactChangeError(data?.message ?? "No se pudo enviar el SMS.");
+      } else {
+        setContactChangeMsg(data?.message ?? "Codigo enviado. Revisa tu telefono.");
+        setPhoneCodeStep(true);
+        setPhoneCode("");
+      }
+    } catch {
+      setContactChangeError("Error de red. Intenta de nuevo.");
+    } finally {
+      setContactChangeSending(false);
+    }
+  };
+
+  const handleVerifyPhoneCode = async () => {
+    setContactChangeMsg(null);
+    setContactChangeError(null);
+    if (!/^\d{6}$/.test(phoneCode.trim())) {
+      setContactChangeError("Ingresa el codigo de 6 digitos.");
+      return;
+    }
+    setPhoneCodeSending(true);
+    try {
+      const res = await fetch("/api/profile/change-contact/verify-phone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: phoneCode.trim() }),
+      });
+      const data = (await res.json().catch(() => null)) as { message?: string } | null;
+      if (!res.ok) {
+        setContactChangeError(data?.message ?? "Codigo incorrecto.");
+      } else {
+        setContactChangeMsg(data?.message ?? "Telefono actualizado correctamente.");
+        setShowPhoneForm(false);
+        setPhoneCodeStep(false);
+        setPhoneCode("");
+        setNewPhone("");
+        router.refresh();
+      }
+    } catch {
+      setContactChangeError("Error de red. Intenta de nuevo.");
+    } finally {
+      setPhoneCodeSending(false);
     }
   };
 
@@ -334,7 +444,7 @@ export function ProfileEditor({
         </div>
 
         {/* Top-right action buttons */}
-        <div className="flex justify-end gap-2 pt-3">
+        <div className="flex flex-wrap justify-end gap-2 pt-16 sm:pt-3">
           <button
             type="button"
             onClick={() => avatarInputRef.current?.click()}
@@ -368,6 +478,9 @@ export function ProfileEditor({
         <div className="mt-2 pl-1" style={{ paddingTop: "4.5rem" }}>
           <p className="text-xl font-bold text-[var(--ui-text)]">{displayName}</p>
           <p className="text-sm text-[var(--ui-muted)]">{userEmail}</p>
+          {userPhone && (
+            <p className="text-sm text-[var(--ui-muted)]">{userPhone}</p>
+          )}
         </div>
       </div>
 
@@ -626,6 +739,141 @@ export function ProfileEditor({
           </button>
         </div>
       </form>
+      {/* Contact change section */}
+      <div className="border-t border-[color:var(--ui-border)] p-6 space-y-4">
+        <p className="text-xs font-bold uppercase tracking-widest text-[var(--ui-muted)]">Correo y telefono</p>
+
+        {contactChangeMsg && (
+          <p className="rounded-xl bg-[color:rgb(var(--ui-glow-accent)/0.14)] px-3 py-2.5 text-sm text-[var(--ui-accent)]">{contactChangeMsg}</p>
+        )}
+        {contactChangeError && (
+          <p className="rounded-xl bg-[color:rgb(var(--ui-glow-danger)/0.14)] px-3 py-2.5 text-sm text-[var(--ui-danger)]">{contactChangeError}</p>
+        )}
+
+        {/* Email change */}
+        <div className="rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)]">Correo electronico</p>
+              <p className="mt-0.5 text-sm font-medium text-[var(--ui-text)]">{userEmail}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setShowEmailForm((v) => !v); setShowPhoneForm(false); setContactChangeMsg(null); setContactChangeError(null); }}
+              className="shrink-0 rounded-lg border border-[color:var(--ui-border)] bg-[var(--ui-surface)] px-3 py-1.5 text-xs font-semibold text-[var(--ui-text)] transition hover:border-[var(--ui-primary)]"
+            >
+              {showEmailForm ? "Cancelar" : "Cambiar"}
+            </button>
+          </div>
+          {showEmailForm && (
+            <div className="mt-3 flex gap-2">
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="Nuevo correo electronico"
+                className="rh-input flex-1 rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)] px-3 py-2 text-sm text-[var(--ui-text)] outline-none focus:border-[var(--ui-primary)] focus:ring-2 focus:ring-[color:rgb(var(--ui-glow-primary)/0.2)]"
+              />
+              <button
+                type="button"
+                disabled={contactChangeSending}
+                onClick={handleSendEmailChange}
+                className="shrink-0 rounded-xl bg-[var(--ui-primary)] px-4 py-2 text-xs font-semibold text-[var(--ui-on-primary)] transition hover:bg-[var(--ui-primary-hover)] disabled:opacity-60"
+              >
+                {contactChangeSending ? "Enviando..." : "Confirmar"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Phone change */}
+        <div className="rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)]">Telefono</p>
+              <p className="mt-0.5 text-sm font-medium text-[var(--ui-text)]">{userPhone || "No registrado"}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const next = !showPhoneForm;
+                setShowPhoneForm(next);
+                setShowEmailForm(false);
+                setContactChangeMsg(null);
+                setContactChangeError(null);
+                if (!next) { setPhoneCodeStep(false); setPhoneCode(""); setNewPhone(""); }
+              }}
+              className="shrink-0 rounded-lg border border-[color:var(--ui-border)] bg-[var(--ui-surface)] px-3 py-1.5 text-xs font-semibold text-[var(--ui-text)] transition hover:border-[var(--ui-primary)]"
+            >
+              {showPhoneForm ? "Cancelar" : "Cambiar"}
+            </button>
+          </div>
+
+          {showPhoneForm && !phoneCodeStep && (
+            <div className="mt-3 space-y-2">
+              <PhoneInput
+                defaultCountry={DEFAULT_PHONE_COUNTRY}
+                preferredCountries={["do", "us", "es", "mx", "co", "ar", "ve", "cl", "pe", "ec", "pa", "pr"]}
+                forceDialCode
+                value={newPhone}
+                onChange={(nextPhone, meta) => {
+                  setNewPhone(nextPhone);
+                  setNewPhoneCountry(meta.country.iso2 as CountryIso2);
+                }}
+                className="rh-phone-field"
+                inputProps={{
+                  autoComplete: "tel",
+                  inputMode: "numeric",
+                  onKeyDown: preventNonNumericPhoneInput,
+                }}
+              />
+              <button
+                type="button"
+                disabled={contactChangeSending || !newPhone.trim()}
+                onClick={handleSendPhoneCode}
+                className="w-full rounded-xl bg-[var(--ui-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--ui-on-primary)] transition hover:bg-[var(--ui-primary-hover)] disabled:opacity-60"
+              >
+                {contactChangeSending ? "Enviando..." : "Enviar codigo SMS"}
+              </button>
+            </div>
+          )}
+
+          {showPhoneForm && phoneCodeStep && (
+            <div className="mt-3 space-y-3">
+              <p className="text-xs text-[var(--ui-muted)]">
+                Te enviamos un codigo de 6 digitos al nuevo numero. Ingresalo abajo. Expira en 15 minutos.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={phoneCode}
+                  onChange={(e) => setPhoneCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="000000"
+                  className="rh-input w-32 rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)] px-3 py-2 text-center text-lg font-bold tracking-widest text-[var(--ui-text)] outline-none focus:border-[var(--ui-primary)] focus:ring-2 focus:ring-[color:rgb(var(--ui-glow-primary)/0.2)]"
+                />
+                <button
+                  type="button"
+                  disabled={phoneCodeSending || phoneCode.length < 6}
+                  onClick={handleVerifyPhoneCode}
+                  className="flex-1 rounded-xl bg-[var(--ui-primary)] px-4 py-2 text-sm font-semibold text-[var(--ui-on-primary)] transition hover:bg-[var(--ui-primary-hover)] disabled:opacity-60"
+                >
+                  {phoneCodeSending ? "Verificando..." : "Verificar"}
+                </button>
+              </div>
+              <button
+                type="button"
+                disabled={contactChangeSending}
+                onClick={() => { setPhoneCodeStep(false); setPhoneCode(""); }}
+                className="text-xs text-[var(--ui-muted)] underline hover:text-[var(--ui-text)]"
+              >
+                Cambiar numero o reenviar codigo
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

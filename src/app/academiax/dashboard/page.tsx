@@ -2,40 +2,46 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSessionFromCookie } from "@/lib/auth/session";
 import { listCoursePurchasesByUser, getCourseById } from "@/lib/db";
+import { AcademiaIcon, type AcademiaIconName } from "@/components/academiax/academiax-icons";
 
-const ACHIEVEMENTS = [
+const ACHIEVEMENTS: Array<{
+  icon: AcademiaIconName;
+  title: string;
+  desc: string;
+  key: string;
+}> = [
   {
-    emoji: "🎓",
+    icon: "award",
     title: "Primera lección",
     desc: "Completar tu primera lección",
     key: "first",
   },
   {
-    emoji: "🔥",
+    icon: "flame",
     title: "En racha",
     desc: "5 días seguidos de aprendizaje",
     key: "streak",
   },
   {
-    emoji: "⚡",
+    icon: "bolt",
     title: "Velocista",
     desc: "Completar una lección en menos de 1 hora",
     key: "speed",
   },
   {
-    emoji: "🎯",
+    icon: "target",
     title: "Enfocado",
     desc: "Completar 3 lecciones en un día",
     key: "focus",
   },
   {
-    emoji: "🏆",
+    icon: "trophy",
     title: "Completista",
     desc: "Terminar tu primer curso",
     key: "complete",
   },
   {
-    emoji: "🌟",
+    icon: "spark",
     title: "Explorador",
     desc: "Inscribirse en 3 cursos",
     key: "explorer",
@@ -94,7 +100,10 @@ export default async function RitmoHubAcademyDashboard() {
             Panel de aprendizaje
           </p>
           <h1 className="text-3xl font-bold sm:text-4xl" style={{ color: "var(--ui-text)" }}>
-            Bienvenido de vuelta, {user.name.split(" ")[0]} 👋
+            <span className="inline-flex items-center gap-3">
+              Bienvenido de vuelta, {user.name.split(" ")[0]}
+              <AcademiaIcon name="spark" className="h-7 w-7 text-[#f87171]" />
+            </span>
           </h1>
           <p className="mt-2 text-base" style={{ color: "var(--ui-muted)" }}>
             Continúa desde donde lo dejaste.
@@ -107,25 +116,25 @@ export default async function RitmoHubAcademyDashboard() {
             {
               label: "Cursos inscritos",
               value: enrolledCourses.length,
-              icon: "📚",
+              icon: "book" as AcademiaIconName,
               color: "#6366f1",
             },
             {
               label: "Completados",
               value: 0,
-              icon: "🏅",
+              icon: "award" as AcademiaIconName,
               color: "#34d399",
             },
             {
               label: "Horas aprendidas",
               value: `${totalHours.toFixed(0)}h`,
-              icon: "⏱️",
+              icon: "clock" as AcademiaIconName,
               color: "#f59e0b",
             },
             {
               label: "Racha actual",
               value: "5 días",
-              icon: "🔥",
+              icon: "flame" as AcademiaIconName,
               color: "#ef4444",
             },
           ].map((stat) => (
@@ -137,7 +146,7 @@ export default async function RitmoHubAcademyDashboard() {
                 border: "1px solid var(--ui-border)",
               }}
             >
-              <span className="text-2xl">{stat.icon}</span>
+              <AcademiaIcon name={stat.icon} className="h-7 w-7" style={{ color: stat.color }} />
               <p className="mt-3 text-2xl font-bold" style={{ color: stat.color }}>
                 {stat.value}
               </p>
@@ -244,7 +253,12 @@ export default async function RitmoHubAcademyDashboard() {
                 border: "1px dashed var(--ui-border)",
               }}
             >
-              <span className="text-4xl">📚</span>
+              <span
+                className="flex h-16 w-16 items-center justify-center rounded-2xl"
+                style={{ background: "rgba(99,102,241,0.12)", color: "#818cf8" }}
+              >
+                <AcademiaIcon name="book" className="h-8 w-8" />
+              </span>
               <h3 className="mt-4 text-lg font-semibold" style={{ color: "var(--ui-text)" }}>
                 Aún no tienes cursos
               </h3>
@@ -284,7 +298,11 @@ export default async function RitmoHubAcademyDashboard() {
                     opacity: unlocked ? 1 : 0.45,
                   }}
                 >
-                  <span className="text-2xl">{ach.emoji}</span>
+                  <AcademiaIcon
+                    name={ach.icon}
+                    className="h-7 w-7"
+                    style={{ color: unlocked ? "#818cf8" : "var(--ui-muted)" }}
+                  />
                   <p
                     className="mt-2 text-xs font-semibold"
                     style={{ color: unlocked ? "var(--ui-text)" : "var(--ui-muted)" }}

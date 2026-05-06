@@ -45,7 +45,7 @@ const poolConfig: PoolConfig = connectionString
 // Pool optimizado para despliegue con PostgreSQL en el mismo servidor.
 // max:5 limita conexiones simultaneas para no saturar un VPS pequeno.
 // keepAlive mantiene estables las conexiones entre la app y PostgreSQL local.
-const pool = new Pool({
+export const pool = new Pool({
   ...poolConfig,
   max: 5,
   idleTimeoutMillis: 25_000,
@@ -134,6 +134,22 @@ async function initializeSchema() {
 
     CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      used_at TEXT,
+      created_at TEXT NOT NULL,
+      CONSTRAINT fk_password_reset_tokens_user
+        FOREIGN KEY(user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens(user_id);
+    CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expires_at ON password_reset_tokens(expires_at);
 
     CREATE TABLE IF NOT EXISTS posts (
       id TEXT PRIMARY KEY,
@@ -896,6 +912,8 @@ type UserRow = {
   genre: string;
   tagline: string;
   role: string;
+  phone?: string | null;
+  auth_provider?: string;
   created_at: string;
   updated_at: string;
 };
@@ -946,6 +964,15 @@ type SessionRow = {
   created_at: string;
 };
 
+type PasswordResetTokenRow = {
+  id: string;
+  user_id: string;
+  token_hash: string;
+  expires_at: string;
+  used_at: string | null;
+  created_at: string;
+};
+
 type SessionWithUserRow = SessionRow & {
   name: string;
   email: string;
@@ -967,6 +994,7 @@ type SessionWithUserRow = SessionRow & {
   genre: string;
   tagline: string;
   role: string;
+  phone?: string | null;
   user_created_at: string;
   user_updated_at: string;
 };
@@ -1147,6 +1175,7 @@ export type UserRecord = {
   genre: string;
   tagline: string;
   role: string;
+  phone?: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -1193,6 +1222,15 @@ export type SessionRecord = {
   tokenHash: string;
   userId: string;
   expiresAt: Date;
+  createdAt: Date;
+};
+
+export type PasswordResetTokenRecord = {
+  id: string;
+  userId: string;
+  tokenHash: string;
+  expiresAt: Date;
+  usedAt: Date | null;
   createdAt: Date;
 };
 
@@ -1317,13 +1355,62 @@ export type AdminUserRecord = {
   id: string;
   name: string;
   email: string;
+  phone: string | null;
   stageName: string;
   role: "user" | "admin";
   musicianType: string;
   primaryInstrument: string;
   bio: string;
+  authProvider: string;
+  avatarUrl: string;
+  coverUrl: string;
+  websiteUrl: string;
+  location: string;
+  socialInstagram: string;
+  socialSpotify: string;
+  socialYoutube: string;
+  genre: string;
+  tagline: string;
+  orientation: string;
+  studies: string;
+  isSolo: boolean;
   createdAt: string;
   updatedAt: string;
+  firstSeenAt: string | null;
+  lastSeenAt: string | null;
+  lastLoginAt: string | null;
+  visitCount: number;
+  lastIp: string | null;
+  lastUserAgent: string | null;
+  lastBrowser: string | null;
+  lastBrowserVersion: string | null;
+  lastOs: string | null;
+  lastOsVersion: string | null;
+  lastDeviceType: string | null;
+  lastDeviceVendor: string | null;
+  lastScreenWidth: number | null;
+  lastScreenHeight: number | null;
+  lastViewportWidth: number | null;
+  lastViewportHeight: number | null;
+  lastPixelRatio: number | null;
+  lastColorDepth: number | null;
+  lastLanguage: string | null;
+  lastLanguages: string | null;
+  lastTimezone: string | null;
+  lastTimezoneOffset: number | null;
+  lastReferrer: string | null;
+  lastCountry: string | null;
+  lastRegion: string | null;
+  lastCityGeo: string | null;
+  lastIsp: string | null;
+  lastGeoLat: number | null;
+  lastGeoLon: number | null;
+  lastConnection: string | null;
+  lastPlatform: string | null;
+  lastCpuCores: number | null;
+  lastMemoryGb: number | null;
+  lastTouchPoints: number | null;
+  lastDnt: string | null;
 };
 
 export type ConcertPublishIntentRecord = {
@@ -1416,6 +1503,7 @@ function mapUser(row: UserRow): UserRecord {
     genre: row.genre ?? "",
     tagline: row.tagline ?? "",
     role: row.role ?? "user",
+    phone: row.phone ?? null,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };
@@ -1427,6 +1515,17 @@ function mapSession(row: SessionRow): SessionRecord {
     tokenHash: row.token_hash,
     userId: row.user_id,
     expiresAt: new Date(row.expires_at),
+    createdAt: new Date(row.created_at),
+  };
+}
+
+function mapPasswordResetToken(row: PasswordResetTokenRow): PasswordResetTokenRecord {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    tokenHash: row.token_hash,
+    expiresAt: new Date(row.expires_at),
+    usedAt: row.used_at ? new Date(row.used_at) : null,
     createdAt: new Date(row.created_at),
   };
 }
@@ -1683,6 +1782,7 @@ export async function createUser(input: {
   name: string;
   username?: string;
   email: string;
+  phone?: string;
   passwordHash: string;
   musicianType?: string;
   bio?: string;
@@ -1690,8 +1790,9 @@ export async function createUser(input: {
   orientation?: string;
   studies?: string;
   role?: string;
+  authProvider?: string;
 }): Promise<UserRecord> {
-  const normalizedName = input.name.trim().replaceAll(/\s+/g, " ");
+  const normalizedName = input.name.trim().replaceAll(/\s+/g, " " );
   const rawUsername = input.username?.trim() || input.email.split("@")[0]?.trim() || normalizedName;
   const normalizedUsername = rawUsername.toLowerCase().replaceAll(/\s+/g, "_");
 
@@ -1702,6 +1803,7 @@ export async function createUser(input: {
   const id = randomUUID();
   const now = new Date().toISOString();
   await ensureUserExtraColumnsExist();
+  await ensurePasswordResetSmsSchema();
   await ensureUniqueUsernameIndex();
 
   if (normalizedUsername) {
@@ -1719,6 +1821,7 @@ export async function createUser(input: {
         id,
         name,
         email,
+        phone,
         password_hash,
         musician_type,
         bio,
@@ -1727,16 +1830,18 @@ export async function createUser(input: {
         studies,
         stage_name,
         role,
+        auth_provider,
         created_at,
         updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING *
     `,
     [
       id,
       normalizedName,
       input.email.trim().toLowerCase(),
+      input.phone?.trim() || null,
       input.passwordHash,
       input.musicianType ?? "",
       input.bio ?? "",
@@ -1745,6 +1850,7 @@ export async function createUser(input: {
       input.studies ?? "",
       normalizedUsername,
       input.role ?? "user",
+      input.authProvider ?? "password",
       now,
       now,
     ],
@@ -1897,6 +2003,7 @@ export async function getSessionWithUserByTokenHash(
         COALESCE(to_jsonb(u)->>'genre', '') AS genre,
         COALESCE(to_jsonb(u)->>'tagline', '') AS tagline,
         COALESCE(to_jsonb(u)->>'role', 'user') AS role,
+        u.phone,
         u.created_at AS user_created_at,
         u.updated_at AS user_updated_at
       FROM sessions s
@@ -1935,6 +2042,7 @@ export async function getSessionWithUserByTokenHash(
       genre: row.genre ?? "",
       tagline: row.tagline ?? "",
       role: row.role ?? "user",
+      phone: row.phone ?? null,
       createdAt: new Date(row.user_created_at),
       updatedAt: new Date(row.user_updated_at),
     },
@@ -1951,6 +2059,72 @@ export async function deleteSessionByTokenHash(tokenHash: string) {
 
 export async function deleteExpiredSessions() {
   await execute("DELETE FROM sessions WHERE expires_at <= $1", [new Date().toISOString()]);
+}
+
+export async function deleteSessionsByUserId(userId: string) {
+  await execute("DELETE FROM sessions WHERE user_id = $1", [userId]);
+}
+
+export async function createPasswordResetTokenRecord(input: {
+  userId: string;
+  tokenHash: string;
+  expiresAt: Date;
+}): Promise<PasswordResetTokenRecord> {
+  const now = new Date().toISOString();
+  const row = await queryOne<PasswordResetTokenRow>(
+    `
+      INSERT INTO password_reset_tokens (id, user_id, token_hash, expires_at, created_at)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+    `,
+    [randomUUID(), input.userId, input.tokenHash, input.expiresAt.toISOString(), now],
+  );
+
+  if (!row) {
+    throw new Error("No se pudo crear el token de recuperacion.");
+  }
+
+  return mapPasswordResetToken(row);
+}
+
+export async function getValidPasswordResetTokenByHash(
+  tokenHash: string,
+): Promise<PasswordResetTokenRecord | null> {
+  const row = await queryOne<PasswordResetTokenRow>(
+    `
+      SELECT *
+      FROM password_reset_tokens
+      WHERE token_hash = $1
+        AND used_at IS NULL
+        AND expires_at > $2
+      LIMIT 1
+    `,
+    [tokenHash, new Date().toISOString()],
+  );
+
+  return row ? mapPasswordResetToken(row) : null;
+}
+
+export async function markPasswordResetTokenUsed(tokenId: string) {
+  await execute(
+    `
+      UPDATE password_reset_tokens
+      SET used_at = $1
+      WHERE id = $2
+    `,
+    [new Date().toISOString(), tokenId],
+  );
+}
+
+export async function invalidatePasswordResetTokensForUser(userId: string) {  await execute(    `      UPDATE password_reset_tokens      SET used_at = $1      WHERE user_id = $2        AND used_at IS NULL    `,    [new Date().toISOString(), userId],  );}
+export async function deleteExpiredPasswordResetTokens() {
+  await execute(
+    `
+      DELETE FROM password_reset_tokens
+      WHERE expires_at <= $1 OR used_at IS NOT NULL
+    `,
+    [new Date().toISOString()],
+  );
 }
 
 // ─── Band functions ──────────────────────────────────────────────────────────
@@ -1984,6 +2158,7 @@ async function ensureUserExtraColumnsExist() {
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS genre TEXT NOT NULL DEFAULT ''`,
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS tagline TEXT NOT NULL DEFAULT ''`,
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user'`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider TEXT NOT NULL DEFAULT 'password'`,
     ];
     for (const sql of statements) {
       try { await pool.query(sql); }
@@ -4785,33 +4960,68 @@ export async function listUsersForAdmin(input?: {
   values.push(limit);
   const limitPlaceholder = `$${values.length}`;
 
-  const rows = await queryRows<
-    Pick<
-      UserRow,
-      | "id"
-      | "name"
-      | "email"
-      | "stage_name"
-      | "role"
-      | "musician_type"
-      | "primary_instrument"
-      | "bio"
-      | "created_at"
-      | "updated_at"
-    >
-  >(
+  const rows = await queryRows<Record<string, unknown>>(
     `
       SELECT
         id,
         name,
         email,
+        phone,
         COALESCE(stage_name, '') AS stage_name,
         COALESCE(role, 'user') AS role,
         COALESCE(musician_type, '') AS musician_type,
         COALESCE(primary_instrument, '') AS primary_instrument,
         COALESCE(bio, '') AS bio,
+        COALESCE(auth_provider, 'password') AS auth_provider,
+        COALESCE(avatar_url, '') AS avatar_url,
+        COALESCE(cover_url, '') AS cover_url,
+        COALESCE(website_url, '') AS website_url,
+        COALESCE(location, '') AS location,
+        COALESCE(social_instagram, '') AS social_instagram,
+        COALESCE(social_spotify, '') AS social_spotify,
+        COALESCE(social_youtube, '') AS social_youtube,
+        COALESCE(genre, '') AS genre,
+        COALESCE(tagline, '') AS tagline,
+        COALESCE(orientation, '') AS orientation,
+        COALESCE(studies, '') AS studies,
+        COALESCE(is_solo, false) AS is_solo,
         created_at,
-        updated_at
+        updated_at,
+        first_seen_at,
+        last_seen_at,
+        last_login_at,
+        COALESCE(visit_count, 0) AS visit_count,
+        last_ip,
+        last_user_agent,
+        last_browser,
+        last_browser_version,
+        last_os,
+        last_os_version,
+        last_device_type,
+        last_device_vendor,
+        last_screen_width,
+        last_screen_height,
+        last_viewport_width,
+        last_viewport_height,
+        last_pixel_ratio,
+        last_color_depth,
+        last_language,
+        last_languages,
+        last_timezone,
+        last_timezone_offset,
+        last_referrer,
+        last_country,
+        last_region,
+        last_city_geo,
+        last_isp,
+        last_geo_lat,
+        last_geo_lon,
+        last_connection,
+        last_platform,
+        last_cpu_cores,
+        last_memory_gb,
+        last_touch_points,
+        last_dnt
       FROM users
       ${whereClause}
       ORDER BY updated_at DESC
@@ -4820,81 +5030,153 @@ export async function listUsersForAdmin(input?: {
     values,
   );
 
-  return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    stageName: row.stage_name ?? "",
-    role: row.role === "admin" ? "admin" : "user",
-    musicianType: row.musician_type ?? "",
-    primaryInstrument: row.primary_instrument ?? "",
-    bio: row.bio ?? "",
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
+  return rows.map((row) => mapAdminUserRow(row));
+}
+
+function readNumber(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function readString(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string") {
+    return value === "" ? null : value;
+  }
+  return String(value);
+}
+
+function mapAdminUserRow(row: Record<string, unknown>): AdminUserRecord {
+  const role = String(row.role ?? "user");
+  return {
+    id: String(row.id ?? ""),
+    name: String(row.name ?? ""),
+    email: String(row.email ?? ""),
+    phone: (row.phone as string | null) ?? null,
+    stageName: String(row.stage_name ?? ""),
+    role: role === "admin" ? "admin" : "user",
+    musicianType: String(row.musician_type ?? ""),
+    primaryInstrument: String(row.primary_instrument ?? ""),
+    bio: String(row.bio ?? ""),
+    authProvider: String(row.auth_provider ?? "password"),
+    avatarUrl: String(row.avatar_url ?? ""),
+    coverUrl: String(row.cover_url ?? ""),
+    websiteUrl: String(row.website_url ?? ""),
+    location: String(row.location ?? ""),
+    socialInstagram: String(row.social_instagram ?? ""),
+    socialSpotify: String(row.social_spotify ?? ""),
+    socialYoutube: String(row.social_youtube ?? ""),
+    genre: String(row.genre ?? ""),
+    tagline: String(row.tagline ?? ""),
+    orientation: String(row.orientation ?? ""),
+    studies: String(row.studies ?? ""),
+    isSolo: Boolean(row.is_solo),
+    createdAt: String(row.created_at ?? ""),
+    updatedAt: String(row.updated_at ?? ""),
+    firstSeenAt: readString(row.first_seen_at),
+    lastSeenAt: readString(row.last_seen_at),
+    lastLoginAt: readString(row.last_login_at),
+    visitCount: readNumber(row.visit_count) ?? 0,
+    lastIp: readString(row.last_ip),
+    lastUserAgent: readString(row.last_user_agent),
+    lastBrowser: readString(row.last_browser),
+    lastBrowserVersion: readString(row.last_browser_version),
+    lastOs: readString(row.last_os),
+    lastOsVersion: readString(row.last_os_version),
+    lastDeviceType: readString(row.last_device_type),
+    lastDeviceVendor: readString(row.last_device_vendor),
+    lastScreenWidth: readNumber(row.last_screen_width),
+    lastScreenHeight: readNumber(row.last_screen_height),
+    lastViewportWidth: readNumber(row.last_viewport_width),
+    lastViewportHeight: readNumber(row.last_viewport_height),
+    lastPixelRatio: readNumber(row.last_pixel_ratio),
+    lastColorDepth: readNumber(row.last_color_depth),
+    lastLanguage: readString(row.last_language),
+    lastLanguages: readString(row.last_languages),
+    lastTimezone: readString(row.last_timezone),
+    lastTimezoneOffset: readNumber(row.last_timezone_offset),
+    lastReferrer: readString(row.last_referrer),
+    lastCountry: readString(row.last_country),
+    lastRegion: readString(row.last_region),
+    lastCityGeo: readString(row.last_city_geo),
+    lastIsp: readString(row.last_isp),
+    lastGeoLat: readNumber(row.last_geo_lat),
+    lastGeoLon: readNumber(row.last_geo_lon),
+    lastConnection: readString(row.last_connection),
+    lastPlatform: readString(row.last_platform),
+    lastCpuCores: readNumber(row.last_cpu_cores),
+    lastMemoryGb: readNumber(row.last_memory_gb),
+    lastTouchPoints: readNumber(row.last_touch_points),
+    lastDnt: readString(row.last_dnt),
+  };
 }
 
 export async function updateUserForAdmin(input: {
   userId: string;
   name: string;
   email: string;
+  phone: string | null;
   stageName: string;
   role: "user" | "admin";
   musicianType: string;
   primaryInstrument: string;
   bio: string;
+  location: string;
+  websiteUrl: string;
+  socialInstagram: string;
+  socialSpotify: string;
+  socialYoutube: string;
+  genre: string;
+  tagline: string;
 }): Promise<AdminUserRecord | null> {
   await ensureUserExtraColumnsExist();
   await ensureUniqueUsernameIndex();
 
   const now = new Date().toISOString();
-  const row = await queryOne<
-    Pick<
-      UserRow,
-      | "id"
-      | "name"
-      | "email"
-      | "stage_name"
-      | "role"
-      | "musician_type"
-      | "primary_instrument"
-      | "bio"
-      | "created_at"
-      | "updated_at"
-    >
-  >(
+  const row = await queryOne<Record<string, unknown>>(
     `
       UPDATE users
       SET
         name = $1,
         email = $2,
-        stage_name = $3,
-        role = $4,
-        musician_type = $5,
-        primary_instrument = $6,
-        bio = $7,
-        updated_at = $8
-      WHERE id = $9
-      RETURNING
-        id,
-        name,
-        email,
-        COALESCE(stage_name, '') AS stage_name,
-        COALESCE(role, 'user') AS role,
-        COALESCE(musician_type, '') AS musician_type,
-        COALESCE(primary_instrument, '') AS primary_instrument,
-        COALESCE(bio, '') AS bio,
-        created_at,
-        updated_at
+        phone = $3,
+        stage_name = $4,
+        role = $5,
+        musician_type = $6,
+        primary_instrument = $7,
+        bio = $8,
+        location = $9,
+        website_url = $10,
+        social_instagram = $11,
+        social_spotify = $12,
+        social_youtube = $13,
+        genre = $14,
+        tagline = $15,
+        updated_at = $16
+      WHERE id = $17
+      RETURNING *
     `,
     [
       input.name.trim().replaceAll(/\s+/g, " "),
       input.email.trim().toLowerCase(),
+      input.phone?.trim() || null,
       input.stageName.trim(),
       input.role,
       input.musicianType.trim(),
       input.primaryInstrument.trim(),
       input.bio.trim(),
+      input.location.trim(),
+      input.websiteUrl.trim(),
+      input.socialInstagram.trim(),
+      input.socialSpotify.trim(),
+      input.socialYoutube.trim(),
+      input.genre.trim(),
+      input.tagline.trim(),
       now,
       input.userId,
     ],
@@ -4904,18 +5186,30 @@ export async function updateUserForAdmin(input: {
     return null;
   }
 
-  return {
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    stageName: row.stage_name ?? "",
-    role: row.role === "admin" ? "admin" : "user",
-    musicianType: row.musician_type ?? "",
-    primaryInstrument: row.primary_instrument ?? "",
-    bio: row.bio ?? "",
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
+  return mapAdminUserRow(row);
+}
+
+export async function getAdminUserById(userId: string): Promise<AdminUserRecord | null> {
+  await ensureUserExtraColumnsExist();
+  const row = await queryOne<Record<string, unknown>>(
+    `SELECT * FROM users WHERE id = $1 LIMIT 1`,
+    [userId],
+  );
+  return row ? mapAdminUserRow(row) : null;
+}
+
+export async function listRecentVisitsForUser(userId: string, limit = 20): Promise<Array<Record<string, unknown>>> {
+  const rows = await queryRows<Record<string, unknown>>(
+    `
+      SELECT *
+      FROM user_visits
+      WHERE user_id = $1
+      ORDER BY occurred_at DESC
+      LIMIT $2
+    `,
+    [userId, Math.max(1, Math.min(100, limit))],
+  );
+  return rows;
 }
 
 export async function updateUserPasswordHashById(userId: string, passwordHash: string): Promise<boolean> {
@@ -5521,4 +5815,539 @@ export async function isAdminUserId(userId: string): Promise<boolean> {
     [userId],
   );
   return row?.role === "admin";
+}
+
+type PasswordResetSmsCodeRow = {
+  id: string;
+  user_id: string;
+  phone: string;
+  code_hash: string;
+  attempt_count: number;
+  max_attempts: number;
+  expires_at: string;
+  used_at: string | null;
+  created_at: string;
+};
+
+export type PasswordResetSmsCodeRecord = {
+  id: string;
+  userId: string;
+  phone: string;
+  codeHash: string;
+  attemptCount: number;
+  maxAttempts: number;
+  expiresAt: Date;
+  usedAt: Date | null;
+  createdAt: Date;
+};
+
+function mapPasswordResetSmsCode(row: PasswordResetSmsCodeRow): PasswordResetSmsCodeRecord {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    phone: row.phone,
+    codeHash: row.code_hash,
+    attemptCount: Number(row.attempt_count),
+    maxAttempts: Number(row.max_attempts),
+    expiresAt: new Date(row.expires_at),
+    usedAt: row.used_at ? new Date(row.used_at) : null,
+    createdAt: new Date(row.created_at),
+  };
+}
+
+let passwordResetSmsSchemaPromise: Promise<void> | null = null;
+
+async function ensurePasswordResetSmsSchema() {
+  if (passwordResetSmsSchemaPromise) {
+    return passwordResetSmsSchemaPromise;
+  }
+
+  passwordResetSmsSchemaPromise = (async () => {
+    await pool.query(`
+      ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS phone TEXT;
+
+      CREATE INDEX IF NOT EXISTS idx_users_phone_normalized
+        ON users (LOWER(BTRIM(phone)));
+
+      CREATE TABLE IF NOT EXISTS password_reset_sms_codes (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        code_hash TEXT NOT NULL,
+        attempt_count INTEGER NOT NULL DEFAULT 0,
+        max_attempts INTEGER NOT NULL DEFAULT 5,
+        expires_at TEXT NOT NULL,
+        used_at TEXT,
+        created_at TEXT NOT NULL,
+        CONSTRAINT fk_password_reset_sms_codes_user
+          FOREIGN KEY(user_id)
+          REFERENCES users(id)
+          ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_password_reset_sms_codes_user_id
+        ON password_reset_sms_codes(user_id);
+
+      CREATE INDEX IF NOT EXISTS idx_password_reset_sms_codes_phone
+        ON password_reset_sms_codes(phone);
+
+      CREATE INDEX IF NOT EXISTS idx_password_reset_sms_codes_expires_at
+        ON password_reset_sms_codes(expires_at);
+    `);
+  })();
+
+  try {
+    await passwordResetSmsSchemaPromise;
+  } catch (error) {
+    passwordResetSmsSchemaPromise = null;
+    throw error;
+  }
+}
+
+export async function getUserByPhone(phone: string): Promise<UserRecord | null> {
+  await ensurePasswordResetSmsSchema();
+
+  const row = await queryOne<UserRow>(
+    `
+      SELECT *
+      FROM users
+      WHERE BTRIM(phone) = BTRIM($1)
+      LIMIT 1
+    `,
+    [phone.trim()],
+  );
+
+  return row ? mapUser(row) : null;
+}
+
+export async function createPasswordResetSmsCodeRecord(input: {
+  userId: string;
+  phone: string;
+  codeHash: string;
+  maxAttempts: number;
+  expiresAt: Date;
+}): Promise<PasswordResetSmsCodeRecord> {
+  await ensurePasswordResetSmsSchema();
+
+  const now = new Date().toISOString();
+  const row = await queryOne<PasswordResetSmsCodeRow>(
+    `
+      INSERT INTO password_reset_sms_codes (
+        id,
+        user_id,
+        phone,
+        code_hash,
+        attempt_count,
+        max_attempts,
+        expires_at,
+        created_at
+      )
+      VALUES ($1, $2, $3, $4, 0, $5, $6, $7)
+      RETURNING *
+    `,
+    [
+      randomUUID(),
+      input.userId,
+      input.phone.trim(),
+      input.codeHash,
+      input.maxAttempts,
+      input.expiresAt.toISOString(),
+      now,
+    ],
+  );
+
+  if (!row) {
+    throw new Error("No se pudo crear el codigo SMS de recuperacion.");
+  }
+
+  return mapPasswordResetSmsCode(row);
+}
+
+export async function getValidPasswordResetSmsCodeByPhone(
+  phone: string,
+): Promise<PasswordResetSmsCodeRecord | null> {
+  await ensurePasswordResetSmsSchema();
+
+  const row = await queryOne<PasswordResetSmsCodeRow>(
+    `
+      SELECT *
+      FROM password_reset_sms_codes
+      WHERE BTRIM(phone) = BTRIM($1)
+        AND used_at IS NULL
+        AND expires_at > $2
+        AND attempt_count < max_attempts
+      ORDER BY created_at DESC
+      LIMIT 1
+    `,
+    [phone.trim(), new Date().toISOString()],
+  );
+
+  return row ? mapPasswordResetSmsCode(row) : null;
+}
+
+export async function incrementPasswordResetSmsCodeAttempts(codeId: string): Promise<number> {
+  await ensurePasswordResetSmsSchema();
+
+  const row = await queryOne<{ attempt_count: number }>(
+    `
+      UPDATE password_reset_sms_codes
+      SET attempt_count = attempt_count + 1
+      WHERE id = $1
+      RETURNING attempt_count
+    `,
+    [codeId],
+  );
+
+  return Number(row?.attempt_count ?? 0);
+}
+
+export async function markPasswordResetSmsCodeConsumed(codeId: string) {
+  await ensurePasswordResetSmsSchema();
+
+  await execute(
+    `
+      UPDATE password_reset_sms_codes
+      SET used_at = $1
+      WHERE id = $2
+    `,
+    [new Date().toISOString(), codeId],
+  );
+}
+
+export async function invalidatePasswordResetSmsCodesForUser(userId: string) {
+  await ensurePasswordResetSmsSchema();
+
+  await execute(
+    `
+      UPDATE password_reset_sms_codes
+      SET used_at = $1
+      WHERE user_id = $2
+        AND used_at IS NULL
+    `,
+    [new Date().toISOString(), userId],
+  );
+}
+
+export async function deleteExpiredPasswordResetSmsCodes() {
+  await ensurePasswordResetSmsSchema();
+
+  await execute(
+    `
+      DELETE FROM password_reset_sms_codes
+      WHERE expires_at <= $1 OR used_at IS NOT NULL
+    `,
+    [new Date().toISOString()],
+  );
+}
+
+
+export type PendingContactChangeRecord = {
+  id: string;
+  userId: string;
+  field: "email" | "phone";
+  newValue: string;
+  tokenHash: string;
+  expiresAt: Date;
+  usedAt: Date | null;
+  createdAt: Date;
+};
+
+type PendingContactChangeRow = {
+  id: string;
+  user_id: string;
+  field: string;
+  new_value: string;
+  token_hash: string;
+  expires_at: string;
+  used_at: string | null;
+  created_at: string;
+};
+
+function mapPendingContactChange(row: PendingContactChangeRow): PendingContactChangeRecord {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    field: row.field as "email" | "phone",
+    newValue: row.new_value,
+    tokenHash: row.token_hash,
+    expiresAt: new Date(row.expires_at),
+    usedAt: row.used_at ? new Date(row.used_at) : null,
+    createdAt: new Date(row.created_at),
+  };
+}
+
+let pendingContactChangeSchemaPromise: Promise<void> | null = null;
+
+async function ensurePendingContactChangeSchema() {
+  if (pendingContactChangeSchemaPromise) {
+    await pendingContactChangeSchemaPromise;
+    return;
+  }
+
+  pendingContactChangeSchemaPromise = (async () => {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS pending_contact_changes (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        field TEXT NOT NULL,
+        new_value TEXT NOT NULL,
+        token_hash TEXT NOT NULL UNIQUE,
+        expires_at TEXT NOT NULL,
+        used_at TEXT,
+        created_at TEXT NOT NULL,
+        CONSTRAINT fk_pending_contact_changes_user
+          FOREIGN KEY(user_id)
+          REFERENCES users(id)
+          ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_pending_contact_changes_user_id
+        ON pending_contact_changes(user_id);
+
+      CREATE INDEX IF NOT EXISTS idx_pending_contact_changes_expires_at
+        ON pending_contact_changes(expires_at);
+    `);
+  })();
+
+  try {
+    await pendingContactChangeSchemaPromise;
+  } catch (error) {
+    pendingContactChangeSchemaPromise = null;
+    throw error;
+  }
+}
+
+export async function createPendingContactChange(input: {
+  userId: string;
+  field: "email" | "phone";
+  newValue: string;
+  tokenHash: string;
+  expiresAt: Date;
+}): Promise<PendingContactChangeRecord> {
+  await ensurePendingContactChangeSchema();
+  const now = new Date().toISOString();
+  const id = randomUUID();
+  const row = await queryOne<PendingContactChangeRow>(
+    `
+      INSERT INTO pending_contact_changes (id, user_id, field, new_value, token_hash, expires_at, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *
+    `,
+    [id, input.userId, input.field, input.newValue, input.tokenHash, input.expiresAt.toISOString(), now],
+  );
+  if (!row) throw new Error("No se pudo crear el cambio pendiente.");
+  return mapPendingContactChange(row);
+}
+
+export async function getValidPendingContactChange(tokenHash: string): Promise<PendingContactChangeRecord | null> {
+  await ensurePendingContactChangeSchema();
+  const row = await queryOne<PendingContactChangeRow>(
+    `
+      SELECT * FROM pending_contact_changes
+      WHERE token_hash = $1
+        AND used_at IS NULL
+        AND expires_at > $2
+      LIMIT 1
+    `,
+    [tokenHash, new Date().toISOString()],
+  );
+  return row ? mapPendingContactChange(row) : null;
+}
+
+export async function markPendingContactChangeUsed(id: string) {
+  await ensurePendingContactChangeSchema();
+  await execute(
+    `UPDATE pending_contact_changes SET used_at = $1 WHERE id = $2`,
+    [new Date().toISOString(), id],
+  );
+}
+
+export async function invalidatePendingContactChangesForUser(userId: string) {
+  await ensurePendingContactChangeSchema();
+  await execute(
+    `UPDATE pending_contact_changes SET used_at = $1 WHERE user_id = $2 AND used_at IS NULL`,
+    [new Date().toISOString(), userId],
+  );
+}
+
+export async function deleteExpiredPendingContactChanges() {
+  await ensurePendingContactChangeSchema();
+  await execute(
+    `DELETE FROM pending_contact_changes WHERE expires_at < $1`,
+    [new Date().toISOString()],
+  );
+}
+
+export async function updateUserEmailById(userId: string, email: string): Promise<UserRecord | null> {
+  const now = new Date().toISOString();
+  const row = await queryOne<UserRow>(
+    `UPDATE users SET email = $1, updated_at = $2 WHERE id = $3 RETURNING *`,
+    [email.trim().toLowerCase(), now, userId],
+  );
+  return row ? mapUser(row) : null;
+}
+
+export async function updateUserPhoneById(userId: string, phone: string | null): Promise<UserRecord | null> {
+  await ensurePasswordResetSmsSchema();
+  const now = new Date().toISOString();
+  const row = await queryOne<UserRow>(
+    `UPDATE users SET phone = $1, updated_at = $2 WHERE id = $3 RETURNING *`,
+    [phone ? phone.trim() : null, now, userId],
+  );
+  return row ? mapUser(row) : null;
+}
+
+// ── Pending phone change SMS codes ──────────────────────────────────────────
+
+export type PendingPhoneChangeCodeRecord = {
+  id: string;
+  userId: string;
+  newPhone: string;
+  codeHash: string;
+  attemptCount: number;
+  maxAttempts: number;
+  expiresAt: Date;
+  usedAt: Date | null;
+  createdAt: Date;
+};
+
+type PendingPhoneChangeCodeRow = {
+  id: string;
+  user_id: string;
+  new_phone: string;
+  code_hash: string;
+  attempt_count: number;
+  max_attempts: number;
+  expires_at: string;
+  used_at: string | null;
+  created_at: string;
+};
+
+function mapPendingPhoneChangeCode(row: PendingPhoneChangeCodeRow): PendingPhoneChangeCodeRecord {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    newPhone: row.new_phone,
+    codeHash: row.code_hash,
+    attemptCount: Number(row.attempt_count),
+    maxAttempts: Number(row.max_attempts),
+    expiresAt: new Date(row.expires_at),
+    usedAt: row.used_at ? new Date(row.used_at) : null,
+    createdAt: new Date(row.created_at),
+  };
+}
+
+let pendingPhoneChangeSchemaPromise: Promise<void> | null = null;
+
+async function ensurePendingPhoneChangeSchema() {
+  if (pendingPhoneChangeSchemaPromise) {
+    await pendingPhoneChangeSchemaPromise;
+    return;
+  }
+
+  pendingPhoneChangeSchemaPromise = (async () => {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS pending_phone_change_codes (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        new_phone TEXT NOT NULL,
+        code_hash TEXT NOT NULL,
+        attempt_count INTEGER NOT NULL DEFAULT 0,
+        max_attempts INTEGER NOT NULL DEFAULT 5,
+        expires_at TEXT NOT NULL,
+        used_at TEXT,
+        created_at TEXT NOT NULL,
+        CONSTRAINT fk_pending_phone_change_codes_user
+          FOREIGN KEY(user_id)
+          REFERENCES users(id)
+          ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_pending_phone_change_codes_user_id
+        ON pending_phone_change_codes(user_id);
+
+      CREATE INDEX IF NOT EXISTS idx_pending_phone_change_codes_expires_at
+        ON pending_phone_change_codes(expires_at);
+    `);
+  })();
+
+  try {
+    await pendingPhoneChangeSchemaPromise;
+  } catch (error) {
+    pendingPhoneChangeSchemaPromise = null;
+    throw error;
+  }
+}
+
+export async function createPendingPhoneChangeCode(input: {
+  userId: string;
+  newPhone: string;
+  codeHash: string;
+  maxAttempts: number;
+  expiresAt: Date;
+}): Promise<PendingPhoneChangeCodeRecord> {
+  await ensurePendingPhoneChangeSchema();
+  const now = new Date().toISOString();
+  const id = randomUUID();
+  const row = await queryOne<PendingPhoneChangeCodeRow>(
+    `
+      INSERT INTO pending_phone_change_codes (id, user_id, new_phone, code_hash, max_attempts, expires_at, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *
+    `,
+    [id, input.userId, input.newPhone, input.codeHash, input.maxAttempts, input.expiresAt.toISOString(), now],
+  );
+  if (!row) throw new Error("No se pudo crear el codigo de cambio.");
+  return mapPendingPhoneChangeCode(row);
+}
+
+export async function getValidPendingPhoneChangeCodeByUserId(userId: string): Promise<PendingPhoneChangeCodeRecord | null> {
+  await ensurePendingPhoneChangeSchema();
+  const row = await queryOne<PendingPhoneChangeCodeRow>(
+    `
+      SELECT * FROM pending_phone_change_codes
+      WHERE user_id = $1
+        AND used_at IS NULL
+        AND expires_at > $2
+        AND attempt_count < max_attempts
+      ORDER BY created_at DESC
+      LIMIT 1
+    `,
+    [userId, new Date().toISOString()],
+  );
+  return row ? mapPendingPhoneChangeCode(row) : null;
+}
+
+export async function incrementPendingPhoneChangeCodeAttempts(codeId: string): Promise<number> {
+  await ensurePendingPhoneChangeSchema();
+  const row = await queryOne<{ attempt_count: number }>(
+    `UPDATE pending_phone_change_codes SET attempt_count = attempt_count + 1 WHERE id = $1 RETURNING attempt_count`,
+    [codeId],
+  );
+  return Number(row?.attempt_count ?? 0);
+}
+
+export async function markPendingPhoneChangeCodeConsumed(codeId: string) {
+  await ensurePendingPhoneChangeSchema();
+  await execute(
+    `UPDATE pending_phone_change_codes SET used_at = $1 WHERE id = $2`,
+    [new Date().toISOString(), codeId],
+  );
+}
+
+export async function invalidatePendingPhoneChangeCodesForUser(userId: string) {
+  await ensurePendingPhoneChangeSchema();
+  await execute(
+    `UPDATE pending_phone_change_codes SET used_at = $1 WHERE user_id = $2 AND used_at IS NULL`,
+    [new Date().toISOString(), userId],
+  );
+}
+
+export async function deleteExpiredPendingPhoneChangeCodes() {
+  await ensurePendingPhoneChangeSchema();
+  await execute(
+    `DELETE FROM pending_phone_change_codes WHERE expires_at < $1`,
+    [new Date().toISOString()],
+  );
 }
