@@ -455,9 +455,9 @@ export function ArtistScrollStage() {
           <aside className="showcase-stage-left flex h-full items-center justify-center px-6 py-10 sm:px-10 lg:px-12">
             <div className="mx-auto w-full max-w-[560px]">
               <p className="text-xs font-semibold tracking-[0.2em] text-white/80">ARTIST SHOWCASE</p>
-              <h3 className="mt-2 font-serif text-[clamp(2.1rem,11vw,8rem)] leading-[0.92] tracking-[0.08em] sm:tracking-[0.14em] text-white">
+              <h2 className="mt-2 font-serif text-[clamp(2.1rem,11vw,8rem)] leading-[0.92] tracking-[0.08em] sm:tracking-[0.14em] text-white">
                 MUSISEC STAGE
-              </h3>
+              </h2>
               <p className="mt-6 max-w-[510px] text-[clamp(1rem,0.35vw+0.9rem,1.28rem)] leading-relaxed text-white/90">
                 Descubre artistas destacados con una navegacion inmersiva: desliza para recorrer perfiles, estilos y propuesta musical.
               </p>
@@ -549,7 +549,7 @@ export function ArtistScrollStage() {
                     </div>
                     <p className="showcase-card-label">
                       {item.name}
-                      <span className="ml-1 inline-block">-&gt;</span>
+                      <span className="ml-1 inline-block" aria-hidden="true">-&gt;</span>
                     </p>
                   </button>
                 );
