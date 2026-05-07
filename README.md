@@ -19,6 +19,7 @@ La plataforma esta disenada para que una persona pueda pasar de descubrir un art
 - Oportunidades para musicos, bandas, productores y colaboradores.
 - AcademiaX, una seccion enfocada en cursos, aprendizaje y crecimiento musical.
 - Espacios para formar bandas, invitar miembros y construir una identidad colectiva.
+- Inicio de sesion con correo/contrasena y Google; Meta no se muestra en la interfaz publica.
 
 ## Para Quien Es
 
@@ -35,3 +36,7 @@ RitmoHub esta creado para personas que viven la musica desde distintos lugares:
 La vision de RitmoHub es convertirse en un hogar digital para la musica: un lugar donde el talento se vea, las conexiones ocurran de forma natural y cada proyecto tenga mas oportunidades de crecer.
 
 Mas que una pagina, RitmoHub busca ser una comunidad viva para crear, colaborar, aprender y compartir musica.
+
+## Transparencia Del Codigo
+
+El repositorio publica el codigo de la plataforma para revision. Los archivos `.env` reales quedan fuera de Git; credenciales, tokens OAuth, claves de correo y datos de base de datos viven en el servidor.

@@ -7,9 +7,7 @@ type SocialLoginButtonsProps = {
 
 export function SocialLoginButtons({ compact = false, flow = "login" }: SocialLoginButtonsProps) {
   const googleHref = `/api/auth/oauth/google/start?flow=${flow}`;
-  const metaHref = `/api/auth/oauth/meta/start?flow=${flow}`;
   const googleLabel = flow === "register" ? "Registrarte con Google" : "Iniciar sesion con Google";
-  const metaLabel = flow === "register" ? "Registrarte con Meta" : "Iniciar sesion con Meta";
 
   return (
     <div className={compact ? "space-y-2" : "space-y-3"}>
@@ -28,14 +26,6 @@ export function SocialLoginButtons({ compact = false, flow = "login" }: SocialLo
       >
         <GoogleIcon />
         {googleLabel}
-      </Link>
-
-      <Link
-        href={metaHref}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] px-4 py-2.5 text-center text-sm font-semibold text-[var(--ui-text)] transition hover:border-[var(--ui-primary)]"
-      >
-        <MetaIcon />
-        {metaLabel}
       </Link>
     </div>
   );
@@ -59,17 +49,6 @@ function GoogleIcon() {
       <path
         d="M12 6.15c1.8 0 3 .75 3.7 1.38l2.7-2.58C16.8 3.46 14.62 2.5 12 2.5c-3.78 0-7 2.15-8.47 5.24L6.5 10.1C7.28 7.81 9.45 6.15 12 6.15Z"
         fill="#EA4335"
-      />
-    </svg>
-  );
-}
-
-function MetaIcon() {
-  return (
-    <svg viewBox="0 0 36 24" className="h-4 w-6" aria-hidden fill="none">
-      <path
-        d="M9.6 4C5 4 1.5 9 1.5 14.5S5 24 9.6 24c3 0 5-1.4 8.4-6.6 0 0 1.4-2.2 2.4-3.8l1.6-2.5C24.7 6.7 26.4 4 28.4 4c2.7 0 4.6 3.3 4.6 8 0 3-.7 5-2.3 5-1.3 0-2-1-3.7-3.6l-1.7 2.7C26.7 18.6 28.5 21 31 21c3.3 0 5-2.7 5-7.7C36 7.7 33.3 4 28.5 4c-2.6 0-4.6 1.3-7 4.5-1 1.4-2 2.8-2.7 4-1.4-2-2.5-3.6-3.4-4.7C13 5.4 11.4 4 9.6 4zm0 3c1.1 0 2 .8 3 2 .8 1 1.7 2.4 3 4.4l-1.6 2.4c-2.7 4-3.5 4.7-4.6 4.7-1.4 0-2.3-1.4-2.3-3.9 0-3.5 1.6-9.6 2.5-9.6z"
-        fill="#0081FB"
       />
     </svg>
   );
