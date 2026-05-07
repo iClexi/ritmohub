@@ -541,7 +541,6 @@ export function ArtistScrollStage() {
                         ? `scale(${Math.max(0.89, 1 - distance * 0.055)})`
                         : "scale(1)",
                     } as CSSProperties}
-                    aria-label={`Open detailed profile for ${item.name}`}
                   >
                     <div className="showcase-card-media">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
