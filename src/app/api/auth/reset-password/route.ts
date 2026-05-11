@@ -9,7 +9,13 @@ import {
   markPasswordResetTokenUsed,
   updateUserPasswordHashById,
 } from "@/lib/db";
+import { consumeRateLimit, getClientIp } from "@/lib/security/rate-limit";
+import { createRateLimitKey, rateLimitExceededResponse } from "@/lib/security/rate-limit-response";
 import { resetPasswordSchema } from "@/lib/validations/auth";
+
+const RESET_IP_LIMIT = 10;
+const RESET_IP_WINDOW_MS = 60 * 60 * 1000;
+const RESET_BLOCK_MS = 60 * 60 * 1000;
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -17,6 +23,14 @@ function hashToken(token: string): string {
 
 export async function POST(request: Request) {
   try {
+    const ipResult = consumeRateLimit({
+      key: createRateLimitKey("reset", "password", "ip", getClientIp(request)),
+      limit: RESET_IP_LIMIT,
+      windowMs: RESET_IP_WINDOW_MS,
+      blockMs: RESET_BLOCK_MS,
+    });
+    if (!ipResult.allowed) return rateLimitExceededResponse(ipResult.retryAfterSeconds);
+
     const body = await request.json();
     const parsed = resetPasswordSchema.safeParse(body);
 

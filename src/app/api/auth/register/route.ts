@@ -4,8 +4,14 @@ import { createPendingAccountVerification } from "@/lib/auth/account-verificatio
 import { hashPassword } from "@/lib/auth/password";
 import { createSession, setSessionCookie } from "@/lib/auth/session";
 import { createUser, getUserByEmail, getUserByPhone, getUserByUsername } from "@/lib/db";
+import { consumeRateLimit, getClientIp } from "@/lib/security/rate-limit";
+import { createRateLimitKey, rateLimitExceededResponse } from "@/lib/security/rate-limit-response";
 import { normalizePersonName, normalizePhoneNumber, normalizeUsername, registerApiSchema } from "@/lib/validations/auth";
 import { extractClientIp, recordServerVisit, recordSiteVisit } from "@/lib/visit-tracking";
+
+const REGISTER_IP_LIMIT = 5;
+const REGISTER_IP_WINDOW_MS = 60 * 60 * 1000;
+const REGISTER_BLOCK_MS = 60 * 60 * 1000;
 
 function isPgUniqueViolation(error: unknown) {
   if (!error || typeof error !== "object") {
@@ -17,6 +23,15 @@ function isPgUniqueViolation(error: unknown) {
 
 export async function POST(request: Request) {
   try {
+    const ipForLimit = getClientIp(request);
+    const ipResult = consumeRateLimit({
+      key: createRateLimitKey("register", "form", "ip", ipForLimit),
+      limit: REGISTER_IP_LIMIT,
+      windowMs: REGISTER_IP_WINDOW_MS,
+      blockMs: REGISTER_BLOCK_MS,
+    });
+    if (!ipResult.allowed) return rateLimitExceededResponse(ipResult.retryAfterSeconds);
+
     const body = await request.json();
     const parsed = registerApiSchema.safeParse(body);
 
