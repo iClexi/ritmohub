@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import { RevealOnScroll } from "@/components/ui/reveal-on-scroll";
@@ -69,6 +69,15 @@ export const metadata: Metadata = {
       "Conciertos, ensayos, colaboraciones y comunidades musicales en una sola plataforma.",
   },
   robots: { index: true, follow: true },
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f7f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0b0b" },
+  ],
+  colorScheme: "light dark",
 };
 
 const ORGANIZATION_JSONLD = {
@@ -118,11 +127,18 @@ export default async function RootLayout({
         />
       </head>
       <body className="min-h-full bg-[var(--ui-bg)] text-[var(--ui-text)]">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded focus:bg-black focus:px-3 focus:py-2 focus:text-white"
+        >
+          Saltar al contenido
+        </a>
         <SmoothScroll />
         <RevealOnScroll />
         <SessionWatchdog />
         <VisitTracker enabled />
         <AnimePageEnhancer />
+        <span id="main-content" tabIndex={-1} className="sr-only" aria-hidden="true" />
         {children}
       </body>
     </html>
