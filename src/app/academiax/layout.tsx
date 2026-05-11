@@ -48,6 +48,26 @@ export default async function RitmoHubAcademyLayout({ children }: { children: Re
       <div>
         {children}
       </div>
+
+      <footer
+        style={{ borderTop: "1px solid var(--ui-border)", background: "var(--ui-surface)" }}
+        className="mt-12"
+      >
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-6 text-xs sm:flex-row" style={{ color: "var(--ui-muted)" }}>
+          <span>© {new Date().getFullYear()} RitmoHub Academy</span>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link href="/terminos" className="hover:opacity-80" style={{ color: "var(--ui-muted)" }}>
+              Términos y Condiciones
+            </Link>
+            <Link href="/privacidad" className="hover:opacity-80" style={{ color: "var(--ui-muted)" }}>
+              Política de Privacidad
+            </Link>
+            <a href="mailto:security@iclexi.tech" className="hover:opacity-80" style={{ color: "var(--ui-muted)" }}>
+              Contacto
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
