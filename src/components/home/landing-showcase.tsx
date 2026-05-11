@@ -148,6 +148,9 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
             <a href="#final-cta" className="landing-link">
               Unirme
             </a>
+            <Link href="/terminos" className="landing-link">
+              Términos
+            </Link>
           </nav>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -385,6 +388,17 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
           </div>
         </article>
       </section>
+
+      <footer className="landing-container pb-10">
+        <div className="flex flex-col items-center justify-between gap-3 rounded-2xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)]/70 px-5 py-4 text-center text-xs text-[var(--ui-muted)] backdrop-blur-md sm:flex-row sm:text-sm">
+          <p>© {new Date().getFullYear()} RitmoHub · Red de gestión para músicos</p>
+          <div className="flex items-center gap-4">
+            <Link href="/terminos" className="landing-link font-semibold text-[var(--ui-text)]">
+              Términos y Condiciones
+            </Link>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }

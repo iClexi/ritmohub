@@ -164,6 +164,15 @@ export const registerSchema = z
     validateStrictPhone(data.phone, data.phoneCountry, ctx);
   });
 
+export const registerApiSchema = z.intersection(
+  registerSchema,
+  z.object({
+    acceptTerms: z.literal(true, {
+      error: "Debes aceptar los Terminos y Condiciones.",
+    }),
+  }),
+);
+
 export const loginSchema = z.object({
   email: z
     .string({ error: "El correo es obligatorio." })

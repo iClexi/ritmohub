@@ -21,9 +21,71 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://ritmohub.iclexi.tech";
+
 export const metadata: Metadata = {
-  title: "RitmoHub",
-  description: "Red de gestion para musicos con conciertos, ensayos y colaboraciones.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "RitmoHub",
+    template: "%s · RitmoHub",
+  },
+  description:
+    "Red de gestion para musicos con conciertos, ensayos y colaboraciones.",
+  applicationName: "RitmoHub",
+  authors: [{ name: "RitmoHub" }],
+  generator: "Next.js",
+  keywords: [
+    "musicos",
+    "bandas",
+    "conciertos",
+    "colaboracion musical",
+    "RitmoHub",
+  ],
+  alternates: {
+    canonical: "/",
+    types: {
+      "application/json": [
+        { url: "/.well-known/security.txt", title: "Security policy" },
+      ],
+    },
+  },
+  other: {
+    "terms-of-service": `${SITE_URL}/terminos`,
+    "privacy-policy": `${SITE_URL}/privacidad`,
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_DO",
+    url: SITE_URL,
+    siteName: "RitmoHub",
+    title: "RitmoHub · Red de gestion para musicos",
+    description:
+      "Conciertos, ensayos, colaboraciones y comunidades musicales en una sola plataforma.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RitmoHub",
+    description:
+      "Conciertos, ensayos, colaboraciones y comunidades musicales en una sola plataforma.",
+  },
+  robots: { index: true, follow: true },
+};
+
+const ORGANIZATION_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "RitmoHub",
+  url: SITE_URL,
+  logo: `${SITE_URL}/brand/logo.svg`,
+  sameAs: [],
+};
+
+const WEBSITE_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "RitmoHub",
+  url: SITE_URL,
+  inLanguage: "es",
 };
 
 export default async function RootLayout({
@@ -42,6 +104,19 @@ export default async function RootLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="terms-of-service" href="/terminos" />
+        <link rel="privacy-policy" href="/privacidad" />
+        <link rel="license" href="/terminos" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSONLD) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSONLD) }}
+        />
+      </head>
       <body className="min-h-full bg-[var(--ui-bg)] text-[var(--ui-text)]">
         <SmoothScroll />
         <RevealOnScroll />

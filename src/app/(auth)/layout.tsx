@@ -53,6 +53,17 @@ export default function AuthLayout({
         <div className="animate-fade-up backdrop-panel rh-card w-full min-w-0 max-w-xl rounded-2xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)] p-5 shadow-xl shadow-[color:rgb(var(--ui-glow-primary)/0.16)] sm:rounded-3xl sm:p-12">
           {children}
         </div>
+
+        <p className="z-20 mt-4 w-full max-w-xl text-center text-[11px] leading-relaxed text-[var(--ui-muted)] sm:text-xs">
+          Al continuar aceptas nuestros{" "}
+          <Link
+            href="/terminos"
+            className="font-semibold text-[var(--ui-primary)] underline-offset-2 hover:underline"
+          >
+            Términos y Condiciones
+          </Link>
+          .
+        </p>
       </main>
     </div>
   );

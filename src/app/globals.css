@@ -2559,3 +2559,35 @@ html, body {
     min-height: 36px;
   }
 }
+/* === T&C / Privacy print styles === */
+@media print {
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  header,
+  nav,
+  footer,
+  .print\:hidden,
+  [aria-hidden="true"] {
+    display: none !important;
+  }
+  main,
+  main * {
+    background: transparent !important;
+    color: #111 !important;
+    box-shadow: none !important;
+    border-color: #d1d5db !important;
+    backdrop-filter: none !important;
+  }
+  a {
+    color: #111 !important;
+    text-decoration: underline !important;
+  }
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+  section {
+    page-break-inside: avoid;
+  }
+}

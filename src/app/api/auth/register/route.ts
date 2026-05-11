@@ -4,7 +4,7 @@ import { createPendingAccountVerification } from "@/lib/auth/account-verificatio
 import { hashPassword } from "@/lib/auth/password";
 import { createSession, setSessionCookie } from "@/lib/auth/session";
 import { createUser, getUserByEmail, getUserByPhone, getUserByUsername } from "@/lib/db";
-import { normalizePersonName, normalizePhoneNumber, normalizeUsername, registerSchema } from "@/lib/validations/auth";
+import { normalizePersonName, normalizePhoneNumber, normalizeUsername, registerApiSchema } from "@/lib/validations/auth";
 import { extractClientIp, recordServerVisit, recordSiteVisit } from "@/lib/visit-tracking";
 
 function isPgUniqueViolation(error: unknown) {
@@ -18,7 +18,7 @@ function isPgUniqueViolation(error: unknown) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const parsed = registerSchema.safeParse(body);
+    const parsed = registerApiSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(

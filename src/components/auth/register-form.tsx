@@ -36,6 +36,8 @@ export function RegisterForm() {
   const searchParams = useSearchParams();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPasswords, setShowPasswords] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [termsError, setTermsError] = useState<string | null>(null);
   const removedUserReason = searchParams.get("reason") === "user-deleted";
 
   const {
@@ -88,13 +90,18 @@ export function RegisterForm() {
 
   const onSubmit = async (values: RegisterFormValues) => {
     setServerError(null);
+    if (!acceptTerms) {
+      setTermsError("Debes aceptar los Términos y Condiciones para crear tu cuenta.");
+      return;
+    }
+    setTermsError(null);
 
     const response = await fetch("/api/auth/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(values),
+      body: JSON.stringify({ ...values, acceptTerms: true }),
     });
 
     const payload = (await response.json().catch(() => null)) as
@@ -302,9 +309,47 @@ export function RegisterForm() {
         ) : null}
       </label>
 
+      <div className="space-y-1">
+        <label className="flex items-start gap-3 rounded-2xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)]/40 p-3 text-sm text-[var(--ui-text)] cursor-pointer">
+          <input
+            type="checkbox"
+            checked={acceptTerms}
+            onChange={(e) => {
+              setAcceptTerms(e.target.checked);
+              if (e.target.checked) setTermsError(null);
+            }}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-[color:var(--ui-border)] accent-[var(--ui-primary)]"
+          />
+          <span className="leading-snug text-[var(--ui-muted)]">
+            He leído y acepto los{" "}
+            <Link
+              href="/terminos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[var(--ui-primary)] hover:underline"
+            >
+              Términos y Condiciones
+            </Link>
+            {" "}y la{" "}
+            <Link
+              href="/privacidad"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[var(--ui-primary)] hover:underline"
+            >
+              Política de Privacidad
+            </Link>
+            .
+          </span>
+        </label>
+        {termsError ? (
+          <p className="text-sm text-[var(--ui-danger)]">{termsError}</p>
+        ) : null}
+      </div>
+
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || !acceptTerms}
         className="rh-btn-primary flex w-full items-center justify-center rounded-2xl bg-[var(--ui-danger)] px-5 py-3 font-semibold text-[var(--ui-on-danger)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}

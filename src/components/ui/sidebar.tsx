@@ -69,6 +69,12 @@ export function Sidebar({ user, activeSection }: { user: CurrentUser | null; act
 
       {/* Footer */}
       <div className="p-4 border-t border-[color:var(--ui-border)] bg-[var(--ui-surface)]/30">
+        <Link
+          href="/terminos"
+          className="mb-3 block text-center text-[11px] font-semibold text-[var(--ui-muted)] hover:text-[var(--ui-primary)]"
+        >
+          Términos y Condiciones
+        </Link>
         {user ? (
           <div className="flex items-center justify-between gap-2">
             <ProfileMenu
