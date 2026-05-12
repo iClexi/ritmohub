@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -7,8 +8,8 @@ const scriptSrc = isProduction
   : "'self' 'unsafe-inline' 'unsafe-eval'";
 
 const connectSrc = isProduction
-  ? "'self'"
-  : "'self' ws: http://localhost:* http://127.0.0.1:*";
+  ? "'self' https://*.ingest.us.sentry.io https://*.ingest.sentry.io"
+  : "'self' https://*.ingest.us.sentry.io https://*.ingest.sentry.io ws: http://localhost:* http://127.0.0.1:*";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -60,4 +61,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  widenClientFileUpload: true,
+  silent: !process.env.CI,
+});
