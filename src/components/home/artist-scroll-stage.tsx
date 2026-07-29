@@ -12,6 +12,10 @@ type ShowcaseItem = {
   subtitle: string;
   description: string;
   thumbnail: string;
+  gallery: Array<{
+    src: string;
+    label: string;
+  }>;
   accent: string;
   secondary: string;
 };
@@ -28,77 +32,105 @@ const showcaseItems: ShowcaseItem[] = [
   {
     id: "luma-07",
     name: "LUMA-07",
-    category: "Concepto ficticio · Alt-pop",
+    category: "Alt-pop",
     subtitle: "Universo creativo RitmoHub",
     description:
       "Personaje ficticio de alt-pop digital que convierte sintetizadores luminosos, melodías íntimas y visuales de ciencia ficción en una experiencia de escenario envolvente.",
     thumbnail: "/artists/concepts/luma-07.webp",
+    gallery: [
+      { src: "/artists/concepts/gallery/luma-07-live.webp", label: "En vivo" },
+      { src: "/artists/concepts/gallery/luma-07-studio.webp", label: "En estudio" },
+    ],
     accent: "#3B82F6",
     secondary: "#06B6D4",
   },
   {
     id: "nodo-lila",
     name: "NODO LILA",
-    category: "Concepto ficticio · Electrónica",
+    category: "Electrónica",
     subtitle: "Universo creativo RitmoHub",
     description:
       "Productora ficticia de electrónica nocturna: capas modulares, percusión precisa y paisajes violetas diseñados para escuchar con audífonos o bailar frente a un sistema enorme.",
     thumbnail: "/artists/concepts/nodo-lila.webp",
+    gallery: [
+      { src: "/artists/concepts/gallery/nodo-lila-live.webp", label: "En vivo" },
+      { src: "/artists/concepts/gallery/nodo-lila-studio.webp", label: "En estudio" },
+    ],
     accent: "#A855F7",
     secondary: "#EC4899",
   },
   {
     id: "marea-cero",
     name: "MAREA CERO",
-    category: "Concepto ficticio · Dúo electrónico",
+    category: "Dúo electrónico",
     subtitle: "Universo creativo RitmoHub",
     description:
       "Dúo ficticio que mezcla pulsos electrónicos, texturas marinas y voces en contraste para construir canciones que avanzan como una marea bajo luces de neón.",
     thumbnail: "/artists/concepts/marea-cero.webp",
+    gallery: [
+      { src: "/artists/concepts/gallery/marea-cero-live.webp", label: "En vivo" },
+      { src: "/artists/concepts/gallery/marea-cero-studio.webp", label: "En estudio" },
+    ],
     accent: "#14B8A6",
     secondary: "#FB7185",
   },
   {
     id: "bruma-9",
     name: "BRUMA 9",
-    category: "Concepto ficticio · Rock alternativo",
+    category: "Rock alternativo",
     subtitle: "Universo creativo RitmoHub",
     description:
       "Guitarrista ficticio de rock alternativo con riffs densos, silencios dramáticos y un directo de energía cruda envuelto en rojos profundos.",
     thumbnail: "/artists/concepts/bruma-9.webp",
+    gallery: [
+      { src: "/artists/concepts/gallery/bruma-9-live.webp", label: "En vivo" },
+      { src: "/artists/concepts/gallery/bruma-9-studio.webp", label: "En estudio" },
+    ],
     accent: "#DC2626",
     secondary: "#F97316",
   },
   {
     id: "isla-ruido",
     name: "ISLA RUIDO",
-    category: "Concepto ficticio · Indie tropical",
+    category: "Indie tropical",
     subtitle: "Universo creativo RitmoHub",
     description:
       "Trío ficticio de indie tropical que cruza guitarras ligeras, percusión cálida y coros de verano con una actitud espontánea de ensayo entre amistades.",
     thumbnail: "/artists/concepts/isla-ruido.webp",
+    gallery: [
+      { src: "/artists/concepts/gallery/isla-ruido-live.webp", label: "En vivo" },
+      { src: "/artists/concepts/gallery/isla-ruido-studio.webp", label: "En estudio" },
+    ],
     accent: "#F59E0B",
     secondary: "#0D9488",
   },
   {
     id: "vela-indigo",
     name: "VELA ÍNDIGO",
-    category: "Concepto ficticio · Neo-soul",
+    category: "Neo-soul",
     subtitle: "Universo creativo RitmoHub",
     description:
       "Vocalista ficticia de neo-soul con arreglos de terciopelo, armonías cálidas y una presencia serena que convierte cada interpretación en una conversación cercana.",
     thumbnail: "/artists/concepts/vela-indigo.webp",
+    gallery: [
+      { src: "/artists/concepts/gallery/vela-indigo-live.webp", label: "En vivo" },
+      { src: "/artists/concepts/gallery/vela-indigo-studio.webp", label: "En estudio" },
+    ],
     accent: "#4338CA",
     secondary: "#D97706",
   },
   {
     id: "pulso-nacar",
     name: "PULSO NÁCAR",
-    category: "Concepto ficticio · Percusión electrónica",
+    category: "Percusión electrónica",
     subtitle: "Universo creativo RitmoHub",
     description:
       "Artista ficticia de percusión electrónica que combina patrones orgánicos, resonancias de nácar y pequeños destellos digitales en un ritual rítmico contemporáneo.",
     thumbnail: "/artists/concepts/pulso-nacar.webp",
+    gallery: [
+      { src: "/artists/concepts/gallery/pulso-nacar-live.webp", label: "En vivo" },
+      { src: "/artists/concepts/gallery/pulso-nacar-studio.webp", label: "En estudio" },
+    ],
     accent: "#C2410C",
     secondary: "#84CC16",
   },
@@ -582,18 +614,21 @@ export function ArtistScrollStage() {
 
                 <div className="grid min-h-full gap-3 lg:gap-0 lg:grid-cols-[0.9fr_1.1fr]">
                   <aside className="artist-detail-left relative flex items-center justify-center overflow-hidden px-4 pt-14 pb-4 sm:px-8 sm:py-8">
-                    <p className="artist-detail-vertical hidden lg:block">
-                      {detailItem.category} | {detailItem.name}
-                    </p>
-                    <Image
-                      src={detailImage}
-                      alt={detailItem.name}
-                      width={1120}
-                      height={1800}
-                      sizes="(max-width: 1024px) 100vw, 45vw"
-                      className="block h-[min(56vh,460px)] w-full max-w-[560px] rounded-2xl object-cover sm:h-[min(84vh,900px)]"
-                      loading="lazy"
-                    />
+                    <div className="w-full max-w-[560px]">
+                      <div className="artist-detail-meta mb-3 flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em]">
+                        <span>Perfil conceptual</span>
+                        <span>{detailItem.category}</span>
+                      </div>
+                      <Image
+                        src={detailImage}
+                        alt={`Retrato conceptual de ${detailItem.name}`}
+                        width={1120}
+                        height={1800}
+                        sizes="(max-width: 1024px) 100vw, 45vw"
+                        className="block h-[min(56vh,460px)] w-full rounded-2xl object-cover sm:h-[min(76vh,760px)]"
+                        loading="lazy"
+                      />
+                    </div>
                   </aside>
 
                   <section className="artist-detail-right flex min-h-0 flex-col px-4 pb-7 pt-3 sm:px-8 sm:pt-14 lg:px-10">
@@ -607,20 +642,32 @@ export function ArtistScrollStage() {
                       <p className="artist-profile-card-text mt-2 text-lg leading-relaxed">{detailItem.description}</p>
                     </div>
 
-                    <div className="artist-fiction-card mt-4 flex min-h-[13rem] flex-1 flex-col justify-between overflow-hidden rounded-2xl border p-5 sm:p-6">
-                      <div>
-                        <p className="artist-profile-card-kicker text-xs font-semibold tracking-[0.13em]">
-                          CONCEPTO FICTICIO
-                        </p>
-                        <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--ui-text)] sm:text-lg">
-                          El nombre, la historia y la ilustración de este perfil fueron creados para la experiencia visual de RitmoHub. No representan ni imitan a una persona o agrupación real.
-                        </p>
-                      </div>
-                      <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold">
-                        <span className="artist-fiction-chip rounded-full border px-3 py-1.5">Identidad inventada</span>
-                        <span className="artist-fiction-chip rounded-full border px-3 py-1.5">Ilustración original</span>
-                        <span className="artist-fiction-chip rounded-full border px-3 py-1.5">Demo de producto</span>
-                      </div>
+                    <div className="artist-fiction-note mt-4 flex items-start gap-3 rounded-xl border px-3.5 py-3">
+                      <span className="artist-fiction-dot mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" aria-hidden="true" />
+                      <p className="text-sm leading-relaxed text-[var(--ui-text)]">
+                        <strong>Concepto ficticio.</strong>{" "}
+                        Nombre, historia e imágenes creados para RitmoHub; no representan ni imitan a personas reales.
+                      </p>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2" aria-label={`Galería conceptual de ${detailItem.name}`}>
+                      {detailItem.gallery.map((media) => (
+                        <figure key={media.src} className="artist-profile-media-card rounded-2xl border p-1.5">
+                          <div className="artist-profile-media relative h-[clamp(12rem,26vh,15rem)] overflow-hidden">
+                            <Image
+                              src={media.src}
+                              alt={`${detailItem.name}: ${media.label.toLowerCase()}`}
+                              fill
+                              sizes="(max-width: 640px) 100vw, 28vw"
+                              className="object-cover"
+                              loading="lazy"
+                            />
+                            <figcaption className="artist-profile-media-label absolute bottom-2.5 left-2.5 text-xs font-semibold">
+                              {media.label}
+                            </figcaption>
+                          </div>
+                        </figure>
+                      ))}
                     </div>
                   </section>
                 </div>

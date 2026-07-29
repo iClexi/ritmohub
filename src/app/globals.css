@@ -1385,18 +1385,15 @@ body.stage-scroll-locked {
   background: color-mix(in srgb, var(--ui-surface) 96%, transparent);
 }
 
-.artist-detail-vertical {
-  position: absolute;
-  left: 0.6rem;
-  top: 50%;
-  transform: translateY(-50%) rotate(180deg);
-  writing-mode: vertical-rl;
-  font-size: 0.92rem;
-  letter-spacing: 0.18em;
-  font-weight: 700;
+.artist-detail-meta {
   color: color-mix(in srgb, var(--artist-accent, #3f88c5) 58%, var(--ui-text) 42%);
-  opacity: 0.76;
-  user-select: none;
+  border-color: color-mix(in srgb, var(--artist-accent, #3f88c5) 28%, var(--ui-border) 72%);
+  background: color-mix(in srgb, var(--ui-surface) 88%, transparent);
+}
+
+.artist-detail-meta > :last-child {
+  min-width: 0;
+  text-align: right;
 }
 
 .artist-detail-change {
@@ -1527,31 +1524,34 @@ body.stage-scroll-locked {
   color: var(--ui-text);
 }
 
-.artist-fiction-card {
+.artist-fiction-note {
   border-color: color-mix(in srgb, var(--ui-border) 74%, transparent);
   background:
     radial-gradient(
       circle at 88% 18%,
-      color-mix(in srgb, var(--artist-secondary, #44bba4) 24%, transparent),
-      transparent 36%
+      color-mix(in srgb, var(--artist-secondary, #44bba4) 18%, transparent),
+      transparent 48%
     ),
     linear-gradient(
       145deg,
-      color-mix(in srgb, var(--artist-accent, #3f88c5) 12%, var(--ui-surface) 88%) 0%,
-      color-mix(in srgb, var(--artist-secondary, #44bba4) 9%, var(--ui-surface-soft) 91%) 100%
+      color-mix(in srgb, var(--artist-accent, #3f88c5) 9%, var(--ui-surface) 91%) 0%,
+      color-mix(in srgb, var(--artist-secondary, #44bba4) 7%, var(--ui-surface-soft) 93%) 100%
     );
-  box-shadow: 0 12px 26px rgb(17 39 60 / 0.08);
+  box-shadow: 0 7px 18px rgb(17 39 60 / 0.06);
 }
 
-.artist-fiction-chip {
-  color: color-mix(in srgb, var(--artist-accent, #3f88c5) 62%, var(--ui-text) 38%);
-  border-color: color-mix(in srgb, var(--artist-accent, #3f88c5) 30%, var(--ui-border) 70%);
-  background: color-mix(in srgb, var(--ui-surface) 78%, transparent);
+.artist-fiction-dot {
+  background: linear-gradient(
+    135deg,
+    var(--artist-accent, #3f88c5),
+    var(--artist-secondary, #44bba4)
+  );
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--artist-accent, #3f88c5) 12%, transparent);
 }
 
 .artist-profile-media-card {
   border-color: color-mix(in srgb, var(--ui-border) 75%, transparent);
-  background: transparent;
+  background: color-mix(in srgb, var(--ui-surface) 74%, transparent);
 }
 
 .artist-profile-media {
@@ -2373,14 +2373,6 @@ html, body {
     border-width: 4px !important;
     border-radius: 1rem !important;
     margin-top: 0.75rem;
-  }
-}
-
-/* Vertical writing mode label en artist-detail se solapa con contenido en mobile.
-   En móviles lo escondemos. */
-@media (max-width: 768px) {
-  .artist-detail-vertical {
-    display: none !important;
   }
 }
 
