@@ -622,10 +622,10 @@ export function ArtistScrollStage() {
                       <Image
                         src={detailImage}
                         alt={`Retrato conceptual de ${detailItem.name}`}
-                        width={1120}
-                        height={1800}
+                        width={960}
+                        height={960}
                         sizes="(max-width: 1024px) 100vw, 45vw"
-                        className="block h-[min(56vh,460px)] w-full rounded-2xl object-cover sm:h-[min(76vh,760px)]"
+                        className="artist-detail-portrait block aspect-square h-auto w-full rounded-2xl object-contain"
                         loading="lazy"
                       />
                     </div>
@@ -653,13 +653,13 @@ export function ArtistScrollStage() {
                     <div className="mt-4 grid gap-3 sm:grid-cols-2" aria-label={`Galería conceptual de ${detailItem.name}`}>
                       {detailItem.gallery.map((media) => (
                         <figure key={media.src} className="artist-profile-media-card rounded-2xl border p-1.5">
-                          <div className="artist-profile-media relative h-[clamp(12rem,26vh,15rem)] overflow-hidden">
+                          <div className="artist-profile-media relative aspect-square overflow-hidden">
                             <Image
                               src={media.src}
                               alt={`${detailItem.name}: ${media.label.toLowerCase()}`}
                               fill
                               sizes="(max-width: 640px) 100vw, 28vw"
-                              className="object-cover"
+                              className="object-contain"
                               loading="lazy"
                             />
                             <figcaption className="artist-profile-media-label absolute bottom-2.5 left-2.5 text-xs font-semibold">
