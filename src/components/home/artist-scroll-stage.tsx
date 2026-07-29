@@ -22,7 +22,7 @@ type ShowcaseItem = {
 
 const DEFAULT_ARTIST_IMAGE = "/artists/default-artist.svg";
 
-const CARD_COOLDOWN_MS = 220;
+const WHEEL_GESTURE_END_MS = 320;
 const WAVE_MS = 860;
 const WAVE_HIDE_DELAY_MS = 150;
 const DETAIL_FADE_OUT_MS = 240;
@@ -141,8 +141,8 @@ type WavePhase = "idle" | "opening" | "closing";
 export function ArtistScrollStage() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const railRef = useRef<HTMLDivElement | null>(null);
-  const cooldownRef = useRef(false);
-  const cooldownTimerRef = useRef<number | null>(null);
+  const wheelGestureHandledRef = useRef(false);
+  const wheelGestureTimerRef = useRef<number | null>(null);
   const openTimerRef = useRef<number | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const waveTimerRef = useRef<number | null>(null);
@@ -169,10 +169,11 @@ export function ArtistScrollStage() {
   const canGoNext = currentIndex < showcaseItems.length - 1;
 
   const clearTimers = useCallback(() => {
-    if (cooldownTimerRef.current !== null) {
-      window.clearTimeout(cooldownTimerRef.current);
-      cooldownTimerRef.current = null;
+    if (wheelGestureTimerRef.current !== null) {
+      window.clearTimeout(wheelGestureTimerRef.current);
+      wheelGestureTimerRef.current = null;
     }
+    wheelGestureHandledRef.current = false;
     if (openTimerRef.current !== null) {
       window.clearTimeout(openTimerRef.current);
       openTimerRef.current = null;
@@ -185,6 +186,16 @@ export function ArtistScrollStage() {
       window.clearTimeout(waveTimerRef.current);
       waveTimerRef.current = null;
     }
+  }, []);
+
+  const keepWheelGestureLocked = useCallback(() => {
+    if (wheelGestureTimerRef.current !== null) {
+      window.clearTimeout(wheelGestureTimerRef.current);
+    }
+    wheelGestureTimerRef.current = window.setTimeout(() => {
+      wheelGestureHandledRef.current = false;
+      wheelGestureTimerRef.current = null;
+    }, WHEEL_GESTURE_END_MS);
   }, []);
 
   const moveToIndex = useCallback((nextIndex: number) => {
@@ -318,34 +329,38 @@ export function ArtistScrollStage() {
         return;
       }
 
-      if (Math.abs(event.deltaY) < 6) {
+      const magnitude = Math.abs(event.deltaY);
+      if (magnitude < 0.5) {
         return;
       }
 
       const direction = event.deltaY > 0 ? 1 : -1;
       const isAtLast = currentIndex >= showcaseItems.length - 1;
       const isAtFirst = currentIndex <= 0;
-      if (direction > 0 && isAtLast) {
-        setHasCompletedStage(true);
-        return;
-      }
+      const isLeavingAfterLast = direction > 0 && isAtLast;
+      const isLeavingBeforeFirst = direction < 0 && isAtFirst;
 
-      if (direction < 0 && isAtFirst) {
+      if (isLeavingAfterLast || isLeavingBeforeFirst) {
+        if (wheelGestureHandledRef.current || magnitude < 6) {
+          event.preventDefault();
+          keepWheelGestureLocked();
+          return;
+        }
+        if (isLeavingAfterLast) {
+          setHasCompletedStage(true);
+        }
         return;
       }
 
       event.preventDefault();
+      keepWheelGestureLocked();
 
-      if (cooldownRef.current) {
+      if (magnitude < 6 || wheelGestureHandledRef.current) {
         return;
       }
-      cooldownRef.current = true;
-      moveToIndex(currentIndex + direction);
 
-      cooldownTimerRef.current = window.setTimeout(() => {
-        cooldownRef.current = false;
-        cooldownTimerRef.current = null;
-      }, CARD_COOLDOWN_MS);
+      wheelGestureHandledRef.current = true;
+      moveToIndex(currentIndex + direction);
     };
 
     const options: AddEventListenerOptions = { passive: false, capture: true };
@@ -353,7 +368,7 @@ export function ArtistScrollStage() {
     return () => {
       window.removeEventListener("wheel", onWheel, options);
     };
-  }, [currentIndex, isStageHijackActive, moveToIndex]);
+  }, [currentIndex, isStageHijackActive, keepWheelGestureLocked, moveToIndex]);
 
   const openDetail = useCallback(
     (index: number) => {
