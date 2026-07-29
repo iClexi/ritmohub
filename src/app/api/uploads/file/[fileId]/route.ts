@@ -31,6 +31,10 @@ export async function GET(_request: Request, { params }: Props) {
     return NextResponse.json({ message: "Archivo no encontrado." }, { status: 404 });
   }
 
+  if (media.kind === "cv") {
+    return NextResponse.json({ message: "Archivo no encontrado." }, { status: 404 });
+  }
+
   const binary = new Uint8Array(media.data);
   const mimeType = media.mimeType.toLowerCase();
   const contentDisposition = INLINE_MIME_TYPES.has(mimeType) ? "inline" : "attachment";

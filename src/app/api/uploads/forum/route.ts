@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 
 import { getSessionFromCookie } from "@/lib/auth/session";
 import { createMediaUploadRecord } from "@/lib/db";
+import { requestContentLengthExceeds } from "@/lib/security/request-limits";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
+import { rateLimitExceededResponse } from "@/lib/security/rate-limit-response";
+import { mimeMatchesFileSignature } from "@/lib/uploads/file-signatures";
 import { forumUploadSchema } from "@/lib/validations/workspace";
 
 function resolveMediaKind(mimeType: string): "image" | "video" | "audio" | null {
@@ -24,6 +28,19 @@ export async function POST(request: Request) {
   const sessionPayload = await getSessionFromCookie();
   if (!sessionPayload) {
     return NextResponse.json({ message: "Debes iniciar sesion para subir archivos." }, { status: 401 });
+  }
+
+  if (requestContentLengthExceeds(request, 82 * 1024 * 1024)) {
+    return NextResponse.json({ message: "El archivo supera el limite permitido (80 MB)." }, { status: 413 });
+  }
+
+  const rateLimit = consumeRateLimit({
+    key: `upload:forum:${sessionPayload.session.user.id}`,
+    limit: 8,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return rateLimitExceededResponse(rateLimit.retryAfterSeconds);
   }
 
   try {
@@ -55,12 +72,18 @@ export async function POST(request: Request) {
 
     const mimeType = fileEntry.type.toLowerCase() || "application/octet-stream";
     const binary = Buffer.from(await fileEntry.arrayBuffer());
+    if (!mimeMatchesFileSignature(binary, mimeType)) {
+      return NextResponse.json(
+        { message: "El contenido del archivo no coincide con el formato declarado." },
+        { status: 400 },
+      );
+    }
 
     const stored = await createMediaUploadRecord({
       userId: sessionPayload.session.user.id,
       kind: `forum-${mediaType}`,
       mimeType,
-      sizeBytes: fileEntry.size,
+      sizeBytes: binary.length,
       data: binary,
     });
 
@@ -69,7 +92,7 @@ export async function POST(request: Request) {
       url: `/api/uploads/file/${stored.id}`,
       mediaType,
       fileName: fileEntry.name,
-      size: fileEntry.size,
+      size: binary.length,
     });
   } catch (error) {
     console.error("forum upload error", error);

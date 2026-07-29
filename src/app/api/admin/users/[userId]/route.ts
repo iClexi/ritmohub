@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { requireAdmin } from "@/lib/auth/admin-guard";
 import { hashPassword } from "@/lib/auth/password";
@@ -9,10 +10,30 @@ import {
   updateUserForAdmin,
   updateUserPasswordHashById,
 } from "@/lib/db";
+import { isSafeHttpsUrl, isSafeWebUrl } from "@/lib/security/url";
+import { passwordSchema } from "@/lib/validations/auth";
 
 type Props = { params: Promise<{ userId: string }> };
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const optionalText = (max: number) => z.string().trim().max(max).default("");
+const adminUpdateUserSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  email: z.email().max(254).transform((value) => value.toLowerCase()),
+  phone: z.string().trim().max(32).regex(/^\+?[\d\s()-]*$/).default(""),
+  stageName: optionalText(60),
+  role: z.enum(["user", "admin"]),
+  musicianType: optionalText(60),
+  primaryInstrument: optionalText(60),
+  bio: optionalText(1000),
+  location: optionalText(100),
+  websiteUrl: z.string().trim().max(400).refine((value) => !value || isSafeWebUrl(value)).default(""),
+  socialInstagram: z.string().trim().max(80).regex(/^@?[a-zA-Z0-9_.]*$/).default(""),
+  socialSpotify: z.string().trim().max(400).refine((value) => !value || isSafeHttpsUrl(value)).default(""),
+  socialYoutube: z.string().trim().max(400).refine((value) => !value || isSafeHttpsUrl(value)).default(""),
+  genre: optionalText(80),
+  tagline: optionalText(180),
+  password: z.union([z.literal(""), passwordSchema]).default(""),
+});
 
 export async function GET(_request: Request, { params }: Props) {
   const guard = await requireAdmin();
@@ -38,44 +59,40 @@ export async function PATCH(request: Request, { params }: Props) {
 
   try {
     const { userId } = await params;
-    const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-
-    const name = String(body?.name ?? "").trim();
-    const email = String(body?.email ?? "").trim().toLowerCase();
-    const phoneRaw = typeof body?.phone === "string" ? body.phone.trim() : "";
-    const phone = phoneRaw === "" ? null : phoneRaw;
-    const stageName = String(body?.stageName ?? "").trim();
-    const role = body?.role === "admin" ? "admin" : "user";
-    const musicianType = String(body?.musicianType ?? "").trim();
-    const primaryInstrument = String(body?.primaryInstrument ?? "").trim();
-    const bio = String(body?.bio ?? "").trim();
-    const location = String(body?.location ?? "").trim();
-    const websiteUrl = String(body?.websiteUrl ?? "").trim();
-    const socialInstagram = String(body?.socialInstagram ?? "").trim();
-    const socialSpotify = String(body?.socialSpotify ?? "").trim();
-    const socialYoutube = String(body?.socialYoutube ?? "").trim();
-    const genre = String(body?.genre ?? "").trim();
-    const tagline = String(body?.tagline ?? "").trim();
-    const nextPassword = String(body?.password ?? "");
-
-    if (!name || !email) {
-      return NextResponse.json({ message: "Nombre y correo son obligatorios." }, { status: 400 });
-    }
-
-    if (!emailPattern.test(email)) {
-      return NextResponse.json({ message: "El correo no es valido." }, { status: 400 });
-    }
-
-    if (guard.userId === userId && role !== "admin") {
+    const parsed = adminUpdateUserSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) {
       return NextResponse.json(
-        { message: "No puedes quitarte el rol admin a ti mismo." },
+        {
+          message: "Revisa los datos del usuario.",
+          errors: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 },
       );
     }
 
-    if (nextPassword && nextPassword.length < 6) {
+    const {
+      name,
+      email,
+      stageName,
+      role,
+      musicianType,
+      primaryInstrument,
+      bio,
+      location,
+      websiteUrl,
+      socialInstagram,
+      socialSpotify,
+      socialYoutube,
+      genre,
+      tagline,
+      password: nextPassword,
+    } = parsed.data;
+    const phoneRaw = parsed.data.phone;
+    const phone = phoneRaw === "" ? null : phoneRaw;
+
+    if (guard.userId === userId && role !== "admin") {
       return NextResponse.json(
-        { message: "La nueva contraseña debe tener al menos 6 caracteres." },
+        { message: "No puedes quitarte el rol admin a ti mismo." },
         { status: 400 },
       );
     }

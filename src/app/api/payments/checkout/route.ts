@@ -7,44 +7,43 @@ import {
   updateCoursePurchaseCheckoutUrl,
   updateCoursePurchaseStatus,
 } from "@/lib/db";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
+import { rateLimitExceededResponse } from "@/lib/security/rate-limit-response";
 import { createCourseCheckoutSchema } from "@/lib/validations/workspace";
 
 function normalizeAppUrl(request: Request) {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (configured) {
-    return configured.replace(/\/+$/, "");
+  const candidate =
+    configured ||
+    (process.env.NODE_ENV === "production" ? "" : new URL(request.url).origin);
+
+  if (!candidate) {
+    throw new Error("NEXT_PUBLIC_APP_URL no esta configurada.");
   }
-  return new URL(request.url).origin;
+
+  const appUrl = new URL(candidate);
+  if (
+    !["http:", "https:"].includes(appUrl.protocol) ||
+    appUrl.username ||
+    appUrl.password
+  ) {
+    throw new Error("NEXT_PUBLIC_APP_URL debe usar HTTP o HTTPS.");
+  }
+
+  if (process.env.NODE_ENV === "production" && appUrl.protocol !== "https:") {
+    throw new Error("NEXT_PUBLIC_APP_URL debe usar HTTPS en produccion.");
+  }
+
+  return appUrl.origin;
 }
 
-function buildPaypalCheckoutUrl(input: {
-  title: string;
-  amount: number;
-  appUrl: string;
-  purchaseId: string;
-  courseId: string;
-}) {
-  const paypalMeLink = process.env.PAYPAL_ME_LINK?.trim();
-  if (paypalMeLink) {
-    const base = paypalMeLink.replace(/\/+$/, "");
-    return { url: `${base}/${input.amount.toFixed(2)}` };
+function isStripeCheckoutUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname === "checkout.stripe.com";
+  } catch {
+    return false;
   }
-
-  const businessEmail = process.env.PAYPAL_BUSINESS_EMAIL?.trim();
-  if (businessEmail) {
-    const params = new URLSearchParams({
-      cmd: "_xclick",
-      business: businessEmail,
-      item_name: input.title,
-      amount: input.amount.toFixed(2),
-      currency_code: "USD",
-      return: `${input.appUrl}/academiax/courses/${input.courseId}?payment=success&provider=paypal&purchase_id=${input.purchaseId}`,
-      cancel_return: `${input.appUrl}/academiax/courses/${input.courseId}?payment=cancel&provider=paypal&purchase_id=${input.purchaseId}`,
-    });
-    return { url: `https://www.paypal.com/cgi-bin/webscr?${params.toString()}` };
-  }
-
-  return { error: "PayPal no configurado. Falta PAYPAL_ME_LINK o PAYPAL_BUSINESS_EMAIL." };
 }
 
 async function createStripeCheckout(input: {
@@ -58,7 +57,8 @@ async function createStripeCheckout(input: {
 }) {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
   if (!stripeSecretKey) {
-    return { error: "Stripe no configurado. Falta STRIPE_SECRET_KEY." };
+    console.error("stripe checkout unavailable: missing server configuration");
+    return { error: "El pago no esta disponible temporalmente." };
   }
 
   const amountInCents = Math.round(Number(input.amount) * 100);
@@ -92,8 +92,11 @@ async function createStripeCheckout(input: {
     headers: {
       Authorization: `Bearer ${stripeSecretKey}`,
       "Content-Type": "application/x-www-form-urlencoded",
+      "Idempotency-Key": input.purchaseId,
     },
     body: params.toString(),
+    cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
   });
 
   const payload = (await response.json().catch(() => null)) as
@@ -109,18 +112,17 @@ async function createStripeCheckout(input: {
     | null;
 
   if (!response.ok) {
-    const stripeMessage = payload?.error?.message;
-    const stripeCode = payload?.error?.code;
-    const suffix = stripeCode ? ` (${stripeCode})` : "";
+    console.warn("stripe checkout rejected", {
+      status: response.status,
+      code: payload?.error?.code,
+      type: payload?.error?.type,
+    });
     return {
-      error:
-        stripeMessage
-          ? `Stripe respondio: ${stripeMessage}${suffix}`
-          : `No se pudo crear la sesion de pago en Stripe (HTTP ${response.status}).`,
+      error: "Stripe no pudo iniciar el pago. Intenta nuevamente.",
     };
   }
 
-  if (!payload?.url) {
+  if (!payload?.id || !payload.url || !isStripeCheckoutUrl(payload.url)) {
     return { error: "Stripe no devolvio una URL de checkout valida." };
   }
 
@@ -131,6 +133,16 @@ export async function POST(request: Request) {
   const sessionPayload = await getSessionFromCookie();
   if (!sessionPayload) {
     return NextResponse.json({ message: "Debes iniciar sesion para comprar cursos." }, { status: 401 });
+  }
+
+  const rateLimit = consumeRateLimit({
+    key: `payments:checkout:${sessionPayload.session.user.id}`,
+    limit: 10,
+    windowMs: 10 * 60 * 1000,
+    blockMs: 10 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return rateLimitExceededResponse(rateLimit.retryAfterSeconds);
   }
 
   try {
@@ -163,38 +175,22 @@ export async function POST(request: Request) {
       checkoutUrl: "about:blank",
     });
 
+    const stripeResult = await createStripeCheckout({
+      title: course.title,
+      amount: course.priceUsd,
+      appUrl,
+      userId: sessionPayload.session.user.id,
+      courseId: course.id,
+      purchaseId: purchaseIntent.id,
+      customerEmail: sessionPayload.session.user.email,
+    });
+
     let checkoutUrl = "";
     let checkoutError: string | null = null;
-
-    if (parsed.data.provider === "stripe") {
-      const stripeResult = await createStripeCheckout({
-        title: course.title,
-        amount: course.priceUsd,
-        appUrl,
-        userId: sessionPayload.session.user.id,
-        courseId: course.id,
-        purchaseId: purchaseIntent.id,
-        customerEmail: sessionPayload.session.user.email,
-      });
-
-      if (stripeResult.error) {
-        checkoutError = stripeResult.error;
-      } else {
-        checkoutUrl = stripeResult.url ?? "";
-      }
+    if (stripeResult.error) {
+      checkoutError = stripeResult.error;
     } else {
-      const paypalResult = buildPaypalCheckoutUrl({
-        title: course.title,
-        amount: course.priceUsd,
-        appUrl,
-        purchaseId: purchaseIntent.id,
-        courseId: course.id,
-      });
-      if (paypalResult.error) {
-        checkoutError = paypalResult.error;
-      } else {
-        checkoutUrl = paypalResult.url ?? "";
-      }
+      checkoutUrl = stripeResult.url ?? "";
     }
 
     if (checkoutError || !checkoutUrl) {

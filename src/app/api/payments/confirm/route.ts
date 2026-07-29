@@ -2,10 +2,16 @@ import { NextResponse } from "next/server";
 
 import { getSessionFromCookie } from "@/lib/auth/session";
 import { getCoursePurchaseByIdForUser, updateCoursePurchaseStatus } from "@/lib/db";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
+import { rateLimitExceededResponse } from "@/lib/security/rate-limit-response";
 import { confirmCourseCheckoutSchema } from "@/lib/validations/workspace";
 
 type StripeSessionPayload = {
   id: string;
+  amount_total?: number | null;
+  client_reference_id?: string | null;
+  currency?: string | null;
+  mode?: string;
   payment_status?: string;
   status?: string;
   metadata?: {
@@ -22,7 +28,8 @@ async function fetchStripeSession(sessionId: string): Promise<{
 }> {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
   if (!stripeSecretKey) {
-    return { ok: false, payload: null, message: "Stripe no configurado. Falta STRIPE_SECRET_KEY." };
+    console.error("stripe confirmation unavailable: missing server configuration");
+    return { ok: false, payload: null, message: "El pago no esta disponible temporalmente." };
   }
 
   const response = await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(sessionId)}`, {
@@ -31,17 +38,23 @@ async function fetchStripeSession(sessionId: string): Promise<{
       Authorization: `Bearer ${stripeSecretKey}`,
     },
     cache: "no-store",
+    signal: AbortSignal.timeout(10_000),
   });
 
   const payload = (await response.json().catch(() => null)) as
-    | (StripeSessionPayload & { error?: { message?: string } })
+    | (StripeSessionPayload & { error?: { code?: string; type?: string } })
     | null;
 
   if (!response.ok) {
+    console.warn("stripe confirmation rejected", {
+      status: response.status,
+      code: payload?.error?.code,
+      type: payload?.error?.type,
+    });
     return {
       ok: false,
       payload: null,
-      message: payload?.error?.message ?? `No se pudo validar la sesion de Stripe (HTTP ${response.status}).`,
+      message: "No se pudo validar la sesion de pago.",
     };
   }
 
@@ -52,6 +65,15 @@ export async function POST(request: Request) {
   const sessionPayload = await getSessionFromCookie();
   if (!sessionPayload) {
     return NextResponse.json({ message: "Debes iniciar sesion para confirmar pagos." }, { status: 401 });
+  }
+
+  const rateLimit = consumeRateLimit({
+    key: `payments:confirm:${sessionPayload.session.user.id}`,
+    limit: 30,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return rateLimitExceededResponse(rateLimit.retryAfterSeconds);
   }
 
   try {
@@ -77,47 +99,40 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Compra no encontrada." }, { status: 404 });
     }
 
+    if (purchase.provider !== "stripe" || purchase.provider !== parsed.data.provider) {
+      return NextResponse.json({ message: "Proveedor no coincide con la compra registrada." }, { status: 400 });
+    }
+
     if (purchase.status === "paid") {
       return NextResponse.json({ message: "Compra ya confirmada.", purchase });
     }
 
-    if (purchase.provider !== parsed.data.provider) {
-      return NextResponse.json({ message: "Proveedor no coincide con la compra registrada." }, { status: 400 });
-    }
-
-    if (parsed.data.provider === "paypal") {
-      const updatedPurchase = await updateCoursePurchaseStatus({
-        purchaseId: purchase.id,
-        userId: purchase.userId,
-        status: "paid",
-      });
-      return NextResponse.json({
-        message: "Pago confirmado en PayPal. Curso desbloqueado.",
-        purchase: updatedPurchase ?? purchase,
-      });
-    }
-
-    const stripeSession = await fetchStripeSession(parsed.data.sessionId!);
+    const stripeSession = await fetchStripeSession(parsed.data.sessionId);
     if (!stripeSession.ok || !stripeSession.payload) {
       return NextResponse.json({ message: stripeSession.message ?? "No se pudo validar el pago en Stripe." }, { status: 400 });
     }
 
     const metadata = stripeSession.payload.metadata ?? {};
+    const expectedAmount = Math.round(purchase.amountUsd * 100);
     const metadataMatches =
       metadata.purchase_id === purchase.id &&
       metadata.user_id === purchase.userId &&
       metadata.course_id === purchase.courseId;
+    const checkoutMatches =
+      stripeSession.payload.id === parsed.data.sessionId &&
+      stripeSession.payload.client_reference_id === purchase.id &&
+      stripeSession.payload.mode === "payment" &&
+      stripeSession.payload.amount_total === expectedAmount &&
+      stripeSession.payload.currency?.toUpperCase() === purchase.currency.toUpperCase();
 
-    if (!metadataMatches) {
-      await updateCoursePurchaseStatus({
-        purchaseId: purchase.id,
-        userId: purchase.userId,
-        status: "failed",
-      });
+    if (!metadataMatches || !checkoutMatches) {
       return NextResponse.json({ message: "La sesion de pago no coincide con la compra del usuario." }, { status: 400 });
     }
 
-    if (stripeSession.payload.payment_status !== "paid") {
+    if (
+      stripeSession.payload.payment_status !== "paid" ||
+      stripeSession.payload.status !== "complete"
+    ) {
       const nextStatus = stripeSession.payload.status === "expired" ? "failed" : "pending";
       const updatedPurchase = await updateCoursePurchaseStatus({
         purchaseId: purchase.id,

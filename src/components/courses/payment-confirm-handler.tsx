@@ -26,7 +26,6 @@ export function PaymentConfirmHandler() {
     const provider = searchParams.get("provider");
     const purchaseId = searchParams.get("purchase_id");
     const sessionId = searchParams.get("session_id");
-    const normalizedProvider = provider === "paypal" ? "paypal" : "stripe";
 
     const clearPaymentQuery = () => {
       const params = new URLSearchParams(searchParams.toString());
@@ -39,16 +38,18 @@ export function PaymentConfirmHandler() {
     };
 
     if (paymentResult === "cancel") {
-      setPopup({
-        kind: "warning",
-        title: "Pago cancelado",
-        message: "El proceso de pago fue cancelado. Puedes intentarlo nuevamente cuando quieras.",
-      });
-      clearPaymentQuery();
-      return;
+      const timer = window.setTimeout(() => {
+        setPopup({
+          kind: "warning",
+          title: "Pago cancelado",
+          message: "El proceso de pago fue cancelado. Puedes intentarlo nuevamente cuando quieras.",
+        });
+        clearPaymentQuery();
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
 
-    if (paymentResult !== "success" || !purchaseId) {
+    if (paymentResult !== "success" || provider !== "stripe" || !purchaseId || !sessionId) {
       clearPaymentQuery();
       return;
     }
@@ -65,8 +66,8 @@ export function PaymentConfirmHandler() {
 
         const parsed = confirmCourseCheckoutSchema.safeParse({
           purchaseId,
-          provider: normalizedProvider,
-          sessionId: normalizedProvider === "stripe" ? sessionId : undefined,
+          provider: "stripe",
+          sessionId,
         });
 
         if (!parsed.success) {

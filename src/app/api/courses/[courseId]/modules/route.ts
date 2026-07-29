@@ -6,17 +6,11 @@ import {
   getCourseById,
   listCourseModulesByCourseId,
 } from "@/lib/db";
+import { createCourseModuleSchema } from "@/lib/validations/workspace";
 
 type RouteContext = {
   params: Promise<{ courseId: string }> | { courseId: string };
 };
-
-function normalizeLessonType(value: unknown): "video" | "reading" | "practice" | null {
-  if (value === "video" || value === "reading" || value === "practice") {
-    return value;
-  }
-  return null;
-}
 
 export async function GET(_request: Request, context: RouteContext) {
   const guard = await requireAdmin();
@@ -57,27 +51,22 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   try {
-    const body = await request.json();
-    const title = String(body?.title ?? "").trim();
-    const lessonType = normalizeLessonType(body?.lessonType);
-    const durationMinutes = Number(body?.durationMinutes ?? 0);
-    const content = String(body?.content ?? "").trim();
-    const videoUrl = String(body?.videoUrl ?? "").trim();
-
-    if (!title || !lessonType || !Number.isFinite(durationMinutes) || durationMinutes <= 0 || !content) {
+    const parsed = createCourseModuleSchema.safeParse(
+      await request.json().catch(() => null),
+    );
+    if (!parsed.success) {
       return NextResponse.json(
-        { message: "Datos de modulo invalidos." },
+        {
+          message: "Datos de modulo invalidos.",
+          errors: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 },
       );
     }
 
     const createdModule = await createCourseModuleRecord({
       courseId,
-      title,
-      lessonType,
-      durationMinutes,
-      content,
-      videoUrl,
+      ...parsed.data,
     });
 
     if (!createdModule) {

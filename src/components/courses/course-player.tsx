@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { AcademiaIcon } from "@/components/academiax/academiax-icons";
+import { getYouTubeVideoId } from "@/lib/security/url";
 
 type Module = {
   id: string;
@@ -71,10 +72,10 @@ function LessonIcon({ type, className }: { type: Module["lessonType"]; className
 }
 
 function getYouTubeEmbedUrl(url: string): string | null {
-  if (!url) return null;
-  const match = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-  if (!match) return null;
-  return `https://www.youtube-nocookie.com/embed/${match[1]}?rel=0&modestbranding=1`;
+  const videoId = getYouTubeVideoId(url);
+  return videoId
+    ? `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`
+    : null;
 }
 
 const LESSON_TYPE_STYLE: Record<Module["lessonType"], { bg: string; color: string }> = {

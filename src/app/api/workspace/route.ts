@@ -10,6 +10,7 @@ import {
   listJobs,
   listPublicConcerts,
 } from "@/lib/db";
+import { redactForumPostsForAnonymous } from "@/lib/forum-privacy";
 
 export async function GET(request: Request) {
   try {
@@ -38,7 +39,10 @@ export async function GET(request: Request) {
     return NextResponse.json({
       isLoggedIn: !!sessionPayload,
       concerts,
-      forumPosts,
+      forumPosts:
+        forumPosts && !sessionPayload
+          ? redactForumPostsForAnonymous(forumPosts)
+          : forumPosts,
       jobs,
       courses,
       coursePurchases,

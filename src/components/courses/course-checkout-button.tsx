@@ -6,18 +6,26 @@ import { createCourseCheckoutSchema } from "@/lib/validations/workspace";
 
 type Props = {
   courseId: string;
-  provider: "stripe" | "paypal";
   label: string;
   className?: string;
   style?: React.CSSProperties;
 };
 
-export function CourseCheckoutButton({ courseId, provider, label, className, style }: Props) {
+function isStripeCheckoutUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname === "checkout.stripe.com";
+  } catch {
+    return false;
+  }
+}
+
+export function CourseCheckoutButton({ courseId, label, className, style }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleCheckout = async () => {
-    const parsed = createCourseCheckoutSchema.safeParse({ courseId, provider });
+    const parsed = createCourseCheckoutSchema.safeParse({ courseId, provider: "stripe" });
     if (!parsed.success) {
       setError("Solicitud de pago invalida.");
       return;
@@ -40,12 +48,11 @@ export function CourseCheckoutButton({ courseId, provider, label, className, sty
         message?: string;
       } | null;
 
-      if (!response.ok || !payload?.checkoutUrl) {
+      if (!response.ok || !payload?.checkoutUrl || !isStripeCheckoutUrl(payload.checkoutUrl)) {
         throw new Error(payload?.message ?? "Error al iniciar el checkout.");
       }
 
-      // Redirigir al usuario al proveedor de pagos
-      window.location.href = payload.checkoutUrl;
+      window.location.assign(payload.checkoutUrl);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error al iniciar el checkout.";
       setError(message);

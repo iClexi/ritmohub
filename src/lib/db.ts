@@ -68,6 +68,7 @@ let chatThreadColumnsPromise: Promise<boolean> | null = null;
 let chatGroupMembersTablePromise: Promise<boolean> | null = null;
 let uniqueUsernameIndexPromise: Promise<boolean> | null = null;
 let mediaUploadsTablePromise: Promise<boolean> | null = null;
+let forumVotesTablePromise: Promise<void> | null = null;
 
 async function initializeSchema() {
   await pool.query(`
@@ -247,6 +248,26 @@ async function initializeSchema() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_forum_comments_post_id ON forum_comments(post_id);
+
+    CREATE TABLE IF NOT EXISTS forum_post_votes (
+      post_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      direction SMALLINT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (post_id, user_id),
+      CONSTRAINT chk_forum_post_votes_direction CHECK (direction IN (-1, 1)),
+      CONSTRAINT fk_forum_post_votes_post
+        FOREIGN KEY(post_id)
+        REFERENCES forum_posts(id)
+        ON DELETE CASCADE,
+      CONSTRAINT fk_forum_post_votes_user
+        FOREIGN KEY(user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_forum_post_votes_user_id ON forum_post_votes(user_id);
 
     CREATE TABLE IF NOT EXISTS chat_threads (
       id TEXT PRIMARY KEY,
@@ -546,6 +567,41 @@ async function withTransaction<T>(fn: (client: PoolClient) => Promise<T>): Promi
   } finally {
     client.release();
   }
+}
+
+async function ensureForumVotesTable() {
+  if (!forumVotesTablePromise) {
+    forumVotesTablePromise = pool
+      .query(`
+        CREATE TABLE IF NOT EXISTS forum_post_votes (
+          post_id TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          direction SMALLINT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          PRIMARY KEY (post_id, user_id),
+          CONSTRAINT chk_forum_post_votes_direction CHECK (direction IN (-1, 1)),
+          CONSTRAINT fk_forum_post_votes_post
+            FOREIGN KEY(post_id)
+            REFERENCES forum_posts(id)
+            ON DELETE CASCADE,
+          CONSTRAINT fk_forum_post_votes_user
+            FOREIGN KEY(user_id)
+            REFERENCES users(id)
+            ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_forum_post_votes_user_id
+          ON forum_post_votes(user_id);
+      `)
+      .then(() => undefined)
+      .catch((error) => {
+        forumVotesTablePromise = null;
+        throw error;
+      });
+  }
+
+  return forumVotesTablePromise;
 }
 
 async function hasForumMediaColumns(client?: PoolClient): Promise<boolean> {
@@ -1351,6 +1407,8 @@ export type UserSearchRecord = {
   avatarUrl: string;
 };
 
+export type PublicUserSearchRecord = Omit<UserSearchRecord, "email">;
+
 export type AdminUserRecord = {
   id: string;
   name: string;
@@ -1663,7 +1721,7 @@ function mapJobApplication(row: JobApplicationRow): JobApplicationRecord {
     jobId: row.job_id,
     userId: row.user_id,
     status: row.status,
-    cvUrl: row.cv_url ?? "",
+    cvUrl: row.cv_url ? `/api/jobs/applications/${row.id}/cv` : "",
     portfolioLinks: parsedLinks,
     coverNote: row.cover_note ?? "",
     createdAt: row.created_at,
@@ -4306,110 +4364,103 @@ export async function createForumPost(input: {
   };
 }
 
-export async function incrementForumPostVote(postId: string): Promise<ForumPostRecord | null> {
-  const now = new Date().toISOString();
-  const row = await queryOne<ForumPostRow>(
-    `
-      UPDATE forum_posts
-      SET upvotes = upvotes + 1, updated_at = $1
-      WHERE id = $2
-      RETURNING *
-    `,
-    [now, postId],
-  );
+export async function setForumPostVote(input: {
+  postId: string;
+  userId: string;
+  direction: "up" | "down" | "none";
+}): Promise<ForumPostRecord | null> {
+  await ensureForumVotesTable();
 
-  if (!row) {
-    return null;
+  const result = await withTransaction(async (client) => {
+    const post = await queryOne<{ id: string }>(
+      "SELECT id FROM forum_posts WHERE id = $1 FOR UPDATE",
+      [input.postId],
+      client,
+    );
+    if (!post) {
+      return null;
+    }
+
+    const existingVote = await queryOne<{ direction: number }>(
+      "SELECT direction FROM forum_post_votes WHERE post_id = $1 AND user_id = $2",
+      [input.postId, input.userId],
+      client,
+    );
+    const previousDirection = existingVote?.direction ?? 0;
+    const nextDirection = input.direction === "up" ? 1 : input.direction === "down" ? -1 : 0;
+    const now = new Date().toISOString();
+
+    if (nextDirection === 0) {
+      await execute(
+        "DELETE FROM forum_post_votes WHERE post_id = $1 AND user_id = $2",
+        [input.postId, input.userId],
+        client,
+      );
+    } else {
+      await execute(
+        `
+          INSERT INTO forum_post_votes (post_id, user_id, direction, created_at, updated_at)
+          VALUES ($1, $2, $3, $4, $4)
+          ON CONFLICT (post_id, user_id)
+          DO UPDATE SET direction = EXCLUDED.direction, updated_at = EXCLUDED.updated_at
+        `,
+        [input.postId, input.userId, nextDirection, now],
+        client,
+      );
+    }
+
+    const delta = nextDirection - previousDirection;
+    await execute(
+      `
+        UPDATE forum_posts
+        SET upvotes = GREATEST(0, upvotes + $1), updated_at = $2
+        WHERE id = $3
+      `,
+      [delta, now, input.postId],
+      client,
+    );
+
+    const postWithAvatar = await queryOne<ForumPostRow>(
+      `
+        SELECT
+          p.*,
+          COALESCE(u.avatar_url, '') AS author_avatar_url
+        FROM forum_posts p
+        LEFT JOIN users u ON u.id = p.author_user_id
+        WHERE p.id = $1
+        LIMIT 1
+      `,
+      [input.postId],
+      client,
+    );
+    if (!postWithAvatar) {
+      return null;
+    }
+
+    const comments = await queryRows<ForumCommentRow>(
+      `
+        SELECT
+          c.*,
+          COALESCE(u.avatar_url, '') AS author_avatar_url
+        FROM forum_comments c
+        LEFT JOIN users u ON u.id = c.author_user_id
+        WHERE c.post_id = $1
+        ORDER BY c.created_at ASC
+      `,
+      [input.postId],
+      client,
+    );
+
+    return {
+      ...mapForumPost(postWithAvatar),
+      comments: comments.map(mapForumComment),
+    };
+  });
+
+  if (result) {
+    invalidate("forum:posts");
   }
-
-  const postWithAvatar = await queryOne<ForumPostRow>(
-    `
-      SELECT
-        p.*,
-        COALESCE(u.avatar_url, '') AS author_avatar_url
-      FROM forum_posts p
-      LEFT JOIN users u ON u.id = p.author_user_id
-      WHERE p.id = $1
-      LIMIT 1
-    `,
-    [postId],
-  );
-
-  if (!postWithAvatar) {
-    return null;
-  }
-
-  const comments = await queryRows<ForumCommentRow>(
-    `
-      SELECT
-        c.*,
-        COALESCE(u.avatar_url, '') AS author_avatar_url
-      FROM forum_comments c
-      LEFT JOIN users u ON u.id = c.author_user_id
-      WHERE c.post_id = $1
-      ORDER BY c.created_at ASC
-    `,
-    [postId],
-  );
-
-  invalidate("forum:posts");
-  return {
-    ...mapForumPost(postWithAvatar),
-    comments: comments.map(mapForumComment),
-  };
-}
-
-export async function decrementForumPostVote(postId: string): Promise<ForumPostRecord | null> {
-  const now = new Date().toISOString();
-  const row = await queryOne<ForumPostRow>(
-    `
-      UPDATE forum_posts
-      SET upvotes = GREATEST(0, upvotes - 1), updated_at = $1
-      WHERE id = $2
-      RETURNING *
-    `,
-    [now, postId],
-  );
-
-  if (!row) {
-    return null;
-  }
-
-  const postWithAvatar = await queryOne<ForumPostRow>(
-    `
-      SELECT
-        p.*,
-        COALESCE(u.avatar_url, '') AS author_avatar_url
-      FROM forum_posts p
-      LEFT JOIN users u ON u.id = p.author_user_id
-      WHERE p.id = $1
-      LIMIT 1
-    `,
-    [postId],
-  );
-
-  if (!postWithAvatar) {
-    return null;
-  }
-
-  const comments = await queryRows<ForumCommentRow>(
-    `
-      SELECT
-        c.*,
-        COALESCE(u.avatar_url, '') AS author_avatar_url
-      FROM forum_comments c
-      LEFT JOIN users u ON u.id = c.author_user_id
-      WHERE c.post_id = $1
-      ORDER BY c.created_at ASC
-    `,
-    [postId],
-  );
-
-  invalidate("forum:posts");
-  return {
-    ...mapForumPost(postWithAvatar),
-    comments: comments.map(mapForumComment),
-  };
+  return result;
 }
 
 export async function createForumComment(input: {
@@ -4477,10 +4528,29 @@ export async function listJobApplicationsByUser(userId: string): Promise<JobAppl
   return rows.map(mapJobApplication);
 }
 
+export async function getJobById(jobId: string): Promise<JobRecord | null> {
+  await ensureJobsColumnsExist();
+  await ensureDefaultJobs();
+  const row = await queryOne<JobRow>("SELECT * FROM jobs WHERE id = $1 LIMIT 1", [jobId]);
+  return row ? mapJob(row) : null;
+}
+
+export async function getJobApplicationByJobAndUser(input: {
+  jobId: string;
+  userId: string;
+}): Promise<JobApplicationRecord | null> {
+  const row = await queryOne<JobApplicationRow>(
+    "SELECT * FROM job_applications WHERE job_id = $1 AND user_id = $2 LIMIT 1",
+    [input.jobId, input.userId],
+  );
+  return row ? mapJobApplication(row) : null;
+}
+
 export async function createJobApplication(input: {
   jobId: string;
   userId: string;
   status: string;
+  cvUploadId?: string;
 }): Promise<JobApplicationRecord | null> {
   const job = await queryOne<{ id: string }>("SELECT id FROM jobs WHERE id = $1 LIMIT 1", [input.jobId]);
   if (!job) {
@@ -4492,16 +4562,30 @@ export async function createJobApplication(input: {
     [input.jobId, input.userId],
   );
   if (existing) {
+    if (input.cvUploadId && !existing.cv_url) {
+      const updated = await queryOne<JobApplicationRow>(
+        "UPDATE job_applications SET cv_url = $1 WHERE id = $2 RETURNING *",
+        [input.cvUploadId, existing.id],
+      );
+      return updated ? mapJobApplication(updated) : mapJobApplication(existing);
+    }
     return mapJobApplication(existing);
   }
 
   const row = await queryOne<JobApplicationRow>(
     `
-      INSERT INTO job_applications (id, job_id, user_id, status, created_at)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO job_applications (id, job_id, user_id, status, cv_url, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
     `,
-    [randomUUID(), input.jobId, input.userId, input.status, new Date().toISOString()],
+    [
+      randomUUID(),
+      input.jobId,
+      input.userId,
+      input.status,
+      input.cvUploadId ?? "",
+      new Date().toISOString(),
+    ],
   );
 
   return row ? mapJobApplication(row) : null;
@@ -4889,6 +4973,46 @@ export async function searchUsers(
   }));
 }
 
+export async function searchPublicUsers(
+  query: string,
+  excludeUserId: string,
+  limit = 20,
+): Promise<PublicUserSearchRecord[]> {
+  const q = `%${query.toLowerCase()}%`;
+  const rows = await queryRows<{
+    id: string;
+    name: string;
+    musician_type: string;
+    bio: string;
+    primary_instrument: string;
+    avatar_url: string;
+  }>(
+    `
+      SELECT id, name, musician_type, bio, primary_instrument, avatar_url
+      FROM users
+      WHERE id <> $1
+        AND (
+          LOWER(name) LIKE $2
+          OR LOWER(COALESCE(stage_name, '')) LIKE $2
+          OR LOWER(COALESCE(musician_type, '')) LIKE $2
+          OR LOWER(COALESCE(primary_instrument, '')) LIKE $2
+        )
+      ORDER BY name ASC
+      LIMIT $3
+    `,
+    [excludeUserId, q, limit],
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    musicianType: row.musician_type ?? "",
+    bio: row.bio ?? "",
+    primaryInstrument: row.primary_instrument ?? "",
+    avatarUrl: row.avatar_url ?? "",
+  }));
+}
+
 // ── Search bands ───────────────────────────────────────────────────────────────
 export async function searchBands(query: string, limit = 5): Promise<Array<{ id: string; name: string; genre: string; memberCount: number }>> {
   const q = `%${query.toLowerCase()}%`;
@@ -4906,12 +5030,12 @@ export async function searchBands(query: string, limit = 5): Promise<Array<{ id:
 }
 
 // ── Search forum posts ─────────────────────────────────────────────────────────
-export async function searchForumPosts(query: string, limit = 5): Promise<Array<{ id: string; title: string; category: string; authorName: string; authorUserId: string | null }>> {
+export async function searchForumPosts(query: string, limit = 5, includeBody = true): Promise<Array<{ id: string; title: string; category: string; authorName: string; authorUserId: string | null }>> {
   const q = `%${query.toLowerCase()}%`;
   const rows = await queryRows<{ id: string; title: string; category: string; author_name: string; author_user_id: string | null }>(
     `SELECT id, title, category, author_name, author_user_id
      FROM forum_posts
-     WHERE LOWER(title) LIKE $1 OR LOWER(body) LIKE $1
+     WHERE LOWER(title) LIKE $1${includeBody ? " OR LOWER(body) LIKE $1" : ""}
      ORDER BY created_at DESC
      LIMIT $2`,
     [q, limit],
@@ -5281,6 +5405,46 @@ export async function getMediaUploadById(fileId: string): Promise<MediaUploadRec
   return row ? mapMediaUpload(row) : null;
 }
 
+export async function getJobApplicationCvForViewer(input: {
+  applicationId: string;
+  viewerUserId: string;
+  viewerIsAdmin: boolean;
+}): Promise<MediaUploadRecord | null> {
+  const access = await queryOne<{
+    cv_url: string;
+    applicant_user_id: string;
+    poster_user_id: string | null;
+  }>(
+    `
+      SELECT
+        ja.cv_url,
+        ja.user_id AS applicant_user_id,
+        j.poster_user_id
+      FROM job_applications ja
+      INNER JOIN jobs j ON j.id = ja.job_id
+      WHERE ja.id = $1
+      LIMIT 1
+    `,
+    [input.applicationId],
+  );
+
+  if (
+    !access?.cv_url ||
+    (!input.viewerIsAdmin &&
+      access.applicant_user_id !== input.viewerUserId &&
+      access.poster_user_id !== input.viewerUserId)
+  ) {
+    return null;
+  }
+
+  const media = await getMediaUploadById(access.cv_url);
+  if (!media || media.kind !== "cv" || media.userId !== access.applicant_user_id) {
+    return null;
+  }
+
+  return media;
+}
+
 // ── Create or get direct thread between two users ─────────────────────────────
 export async function createOrGetDirectThread(
   userId: string,
@@ -5505,6 +5669,7 @@ export async function deleteJobRecord(jobId: string): Promise<boolean> {
 export async function createCourseRecord(input: {
   title: string;
   instructor: string;
+  instructorUserId?: string | null;
   level: string;
   imageUrl: string;
   summary: string;
@@ -5525,7 +5690,7 @@ export async function createCourseRecord(input: {
         randomUUID(),
         input.title,
         input.instructor,
-        null,
+        input.instructorUserId ?? null,
         input.level,
         input.imageUrl,
         input.summary,

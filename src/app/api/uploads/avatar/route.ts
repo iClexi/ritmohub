@@ -2,12 +2,29 @@ import { NextResponse } from "next/server";
 
 import { getSessionFromCookie } from "@/lib/auth/session";
 import { createMediaUploadRecord } from "@/lib/db";
+import { requestContentLengthExceeds } from "@/lib/security/request-limits";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
+import { rateLimitExceededResponse } from "@/lib/security/rate-limit-response";
+import { mimeMatchesFileSignature } from "@/lib/uploads/file-signatures";
 import { avatarUploadSchema } from "@/lib/validations/workspace";
 
 export async function POST(request: Request) {
   const sessionPayload = await getSessionFromCookie();
   if (!sessionPayload) {
     return NextResponse.json({ message: "Debes iniciar sesion." }, { status: 401 });
+  }
+
+  if (requestContentLengthExceeds(request, 6 * 1024 * 1024)) {
+    return NextResponse.json({ message: "La imagen supera el limite de 5 MB." }, { status: 413 });
+  }
+
+  const rateLimit = consumeRateLimit({
+    key: `upload:avatar:${sessionPayload.session.user.id}`,
+    limit: 20,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return rateLimitExceededResponse(rateLimit.retryAfterSeconds);
   }
 
   try {
@@ -32,12 +49,18 @@ export async function POST(request: Request) {
     const kind = parsed.data.kind;
     const mimeType = fileEntry.type.toLowerCase() || "application/octet-stream";
     const binary = Buffer.from(await fileEntry.arrayBuffer());
+    if (!mimeMatchesFileSignature(binary, mimeType)) {
+      return NextResponse.json(
+        { message: "El contenido del archivo no coincide con una imagen valida." },
+        { status: 400 },
+      );
+    }
 
     const stored = await createMediaUploadRecord({
       userId: sessionPayload.session.user.id,
       kind,
       mimeType,
-      sizeBytes: fileEntry.size,
+      sizeBytes: binary.length,
       data: binary,
     });
 

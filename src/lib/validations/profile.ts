@@ -1,12 +1,20 @@
 import { z } from "zod";
 
+z.config({ jitless: true });
+
+import {
+  isSafeHttpsUrl,
+  isSafeStoredImageUrl,
+  isSafeWebUrl,
+} from "@/lib/security/url";
+
 import { patterns } from "./rules";
 
 const optionalUrl = z
   .string()
   .trim()
   .max(400, "URL demasiado larga.")
-  .refine((v) => !v || /^https:\/\/.{3,}$/.test(v), {
+  .refine((v) => !v || isSafeHttpsUrl(v), {
     message: "Debe ser una URL que empiece con https://.",
   })
   .optional()
@@ -47,14 +55,30 @@ export const updateProfileSchema = z.object({
     .optional()
     .default(""),
 
-  avatarUrl: z.string().trim().max(500).optional().default(""),
-  coverUrl: z.string().trim().max(500).optional().default(""),
+  avatarUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => !v || isSafeStoredImageUrl(v), {
+      message: "La imagen debe usar HTTPS o una subida interna válida.",
+    })
+    .optional()
+    .default(""),
+  coverUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => !v || isSafeStoredImageUrl(v), {
+      message: "La imagen debe usar HTTPS o una subida interna válida.",
+    })
+    .optional()
+    .default(""),
 
   websiteUrl: z
     .string()
     .trim()
     .max(200, "URL demasiado larga.")
-    .refine((v) => !v || /^https?:\/\/.{3,}$/.test(v), {
+    .refine((v) => !v || isSafeWebUrl(v), {
       message: "Debe ser una URL válida (https://...).",
     })
     .optional()

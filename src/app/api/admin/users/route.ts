@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   }
 
   const query = request.nextUrl.searchParams.get("q")?.trim() ?? "";
-  const users = await listUsersForAdmin({ query, limit: 200 });
+  const users = await listUsersForAdmin({ query, limit: 100 });
 
-  return NextResponse.json({ users });
+  return NextResponse.json({ users, generatedAt: new Date().toISOString() });
 }

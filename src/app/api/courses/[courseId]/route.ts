@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/auth/admin-guard";
 import { deleteCourseRecord, updateCourseRecord } from "@/lib/db";
+import { updateCourseSchema } from "@/lib/validations/workspace";
 
 type Props = { params: Promise<{ courseId: string }> };
 
@@ -10,15 +11,18 @@ export async function PATCH(request: Request, { params }: Props) {
   if (!guard.ok) return guard.response;
   try {
     const { courseId } = await params;
-    const body = await request.json();
-    const course = await updateCourseRecord(courseId, {
-      title: body.title !== undefined ? String(body.title) : undefined,
-      instructor: body.instructor !== undefined ? String(body.instructor) : undefined,
-      level: body.level !== undefined ? String(body.level) : undefined,
-      imageUrl: body.imageUrl !== undefined ? String(body.imageUrl) : undefined,
-      summary: body.summary !== undefined ? String(body.summary) : undefined,
-      priceUsd: body.priceUsd !== undefined ? Number(body.priceUsd) : undefined,
-    });
+    const parsed = updateCourseSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          message: "Revisa los datos del curso.",
+          errors: parsed.error.flatten().fieldErrors,
+        },
+        { status: 400 },
+      );
+    }
+
+    const course = await updateCourseRecord(courseId, parsed.data);
     if (!course) return NextResponse.json({ message: "Curso no encontrado." }, { status: 404 });
     return NextResponse.json({ message: "Curso actualizado.", course });
   } catch (err) {

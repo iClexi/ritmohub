@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getSessionFromCookie } from "@/lib/auth/session";
+import { requestContentLengthExceeds } from "@/lib/security/request-limits";
+import { consumeRateLimit, getClientIp } from "@/lib/security/rate-limit";
+import { rateLimitExceededResponse } from "@/lib/security/rate-limit-response";
 import {
   extractClientIp,
   recordClientVisit,
@@ -26,7 +29,25 @@ function str(value: unknown, max = 512): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
+  const sessionPayload = await getSessionFromCookie();
+  if (!sessionPayload) {
+    return NextResponse.json({ ok: false, message: "Debes iniciar sesion." }, { status: 401 });
+  }
+
+  if (requestContentLengthExceeds(request, 16 * 1024)) {
+    return NextResponse.json({ ok: false, message: "Solicitud demasiado grande." }, { status: 413 });
+  }
+
+  const rateLimit = consumeRateLimit({
+    key: `visit:${sessionPayload.session.user.id}:${getClientIp(request)}`,
+    limit: 30,
+    windowMs: 5 * 60 * 1000,
+    blockMs: 5 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return rateLimitExceededResponse(rateLimit.retryAfterSeconds);
+  }
+
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) {
     return NextResponse.json({ ok: false, message: "Sin datos" }, { status: 400 });
@@ -58,20 +79,18 @@ export async function POST(request: NextRequest) {
   const userAgent = request.headers.get("user-agent");
 
   const siteVisitId = await recordSiteVisit({
-    userId: user?.id ?? null,
+    userId: sessionPayload.session.user.id,
     payload,
     ip,
     userAgent,
   });
 
-  if (user) {
-    await recordClientVisit({
-      userId: user.id,
-      payload,
-      ip,
-      userAgent,
-    });
-  }
+  await recordClientVisit({
+    userId: sessionPayload.session.user.id,
+    payload,
+    ip,
+    userAgent,
+  });
 
-  return NextResponse.json({ ok: true, authenticated: Boolean(user), visitId: siteVisitId });
+  return NextResponse.json({ ok: true, authenticated: true, visitId: siteVisitId });
 }

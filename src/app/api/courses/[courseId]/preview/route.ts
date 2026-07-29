@@ -46,9 +46,7 @@ export async function GET(
       ? {
           id: instructorUser.id,
           name: instructorUser.name,
-          email: instructorUser.email,
         }
       : null,
   });
 }
-

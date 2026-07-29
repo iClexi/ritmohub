@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getSessionFromCookie } from "@/lib/auth/session";
-import { searchUsers, searchBands, searchForumPosts } from "@/lib/db";
+import { searchBands, searchForumPosts, searchPublicUsers } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromCookie();
@@ -14,9 +14,9 @@ export async function GET(req: NextRequest) {
   const excludeUserId = session?.session.user.id ?? "";
 
   const [users, bands, posts] = await Promise.all([
-    searchUsers(q, excludeUserId, 5),
+    searchPublicUsers(q, excludeUserId, 5),
     searchBands(q, 5),
-    searchForumPosts(q, 5),
+    searchForumPosts(q, 5, Boolean(session)),
   ]);
 
   return NextResponse.json({ users, bands, posts });

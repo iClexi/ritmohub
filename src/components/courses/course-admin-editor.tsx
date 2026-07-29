@@ -110,7 +110,7 @@ export function CourseAdminEditor({ mode, initialCourse, initialModules }: Props
       setFeedbackError("Titulo y descripcion son requeridos.");
       return;
     }
-    if (!Number.isFinite(priceUsd) || priceUsd < 0) {
+    if (!Number.isFinite(priceUsd) || priceUsd < 0.5) {
       setFeedbackError("El precio del curso es invalido.");
       return;
     }
@@ -170,7 +170,7 @@ export function CourseAdminEditor({ mode, initialCourse, initialModules }: Props
       setFeedbackError("Titulo y descripcion son requeridos.");
       return;
     }
-    if (!Number.isFinite(priceUsd) || priceUsd < 0) {
+    if (!Number.isFinite(priceUsd) || priceUsd < 0.5) {
       setFeedbackError("El precio del curso es invalido.");
       return;
     }
@@ -446,7 +446,7 @@ export function CourseAdminEditor({ mode, initialCourse, initialModules }: Props
               <span className="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)]">Precio USD</span>
               <input
                 type="number"
-                min="0"
+                min="0.5"
                 step="0.01"
                 value={courseForm.priceUsd}
                 onChange={(event) => setCourseForm((prev) => ({ ...prev, priceUsd: event.target.value }))}

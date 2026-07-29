@@ -9,8 +9,10 @@ export async function GET(request: NextRequest) {
     return guard.response;
   }
 
-  const requestedLimit = Number(request.nextUrl.searchParams.get("limit") ?? "120");
-  const limit = Number.isFinite(requestedLimit) ? requestedLimit : 120;
+  const requestedLimit = Number(request.nextUrl.searchParams.get("limit") ?? "60");
+  const limit = Number.isFinite(requestedLimit)
+    ? Math.min(Math.max(Math.trunc(requestedLimit), 1), 100)
+    : 60;
   const visits = await listRecentSiteTraffic(limit);
 
   return NextResponse.json({ visits, generatedAt: new Date().toISOString() });

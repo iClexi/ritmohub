@@ -1,11 +1,18 @@
 import { z } from "zod";
 
+z.config({ jitless: true });
+
+import {
+  isSafeHttpsUrl,
+  isSafeStoredImageUrl,
+  isSafeWebUrl,
+  isSafeYouTubeVideoUrl,
+} from "@/lib/security/url";
+
 import { patterns } from "./rules";
 
 export const concertStatusSchema = z.enum(["lead", "negotiation", "confirmed", "post_show"]);
 const hasLetterRegex = /\p{L}/u;
-const isInternalUploadPath = (value: string) =>
-  value.startsWith("/api/uploads/file/");
 
 export const createConcertSchema = z.object({
   title: z
@@ -47,7 +54,7 @@ export const createConcertSchema = z.object({
   flyerUrl: z
     .string()
     .trim()
-    .refine((v) => !v || /^https:\/\/.{3,}$/.test(v) || isInternalUploadPath(v), {
+    .refine((v) => !v || isSafeStoredImageUrl(v), {
       message: "Debe ser una URL https:// o una ruta interna de uploads.",
     })
     .optional()
@@ -56,7 +63,7 @@ export const createConcertSchema = z.object({
   ticketUrl: z
     .string()
     .trim()
-    .refine((v) => !v || /^https:\/\/.{3,}$/.test(v), {
+    .refine((v) => !v || isSafeHttpsUrl(v), {
       message: "Debe ser una URL que empiece con https://.",
     })
     .optional()
@@ -103,7 +110,7 @@ export const createForumPostSchema = z.object({
     .string()
     .trim()
     .max(1000)
-    .refine((v) => !v || /^https:\/\/.{3,}$/.test(v) || isInternalUploadPath(v), {
+    .refine((v) => !v || isSafeStoredImageUrl(v), {
       message: "Debe ser una URL https:// o una ruta interna de uploads.",
     })
     .optional()
@@ -113,7 +120,7 @@ export const createForumPostSchema = z.object({
     .string()
     .trim()
     .max(1000)
-    .refine((v) => !v || /^https?:\/\/.{3,}$/.test(v), {
+    .refine((v) => !v || isSafeWebUrl(v), {
       message: "Debe ser una URL válida.",
     })
     .optional()
@@ -173,8 +180,12 @@ export const updateBandBrandingSchema = z.object({
   name: z.string().trim().min(2).max(80).regex(patterns.name, "Solo letras, números y signos básicos.").optional(),
   genre: z.string().trim().max(80).optional(),
   bio: z.string().trim().max(500).optional(),
-  logoUrl: z.string().trim().max(400).optional(),
-  bannerUrl: z.string().trim().max(400).optional(),
+  logoUrl: z.string().trim().max(400).refine((v) => !v || isSafeStoredImageUrl(v), {
+    message: "El logo debe usar HTTPS o una subida interna válida.",
+  }).optional(),
+  bannerUrl: z.string().trim().max(400).refine((v) => !v || isSafeStoredImageUrl(v), {
+    message: "El banner debe usar HTTPS o una subida interna válida.",
+  }).optional(),
   bannerFit: z.enum(["cover", "contain"]).optional(),
 });
 
@@ -200,7 +211,7 @@ export const createGroupChatSchema = z.object({
 });
 
 export const forumVoteSchema = z.object({
-  direction: z.enum(["up", "down"]),
+  direction: z.enum(["up", "down", "none"]),
 });
 
 export const applyJobSchema = z.object({
@@ -333,21 +344,66 @@ export const forumUploadSchema = z
 
 export const createCourseCheckoutSchema = z.object({
   courseId: z.string().trim().min(2).max(64),
-  provider: z.enum(["paypal", "stripe"]),
+  provider: z.literal("stripe"),
 });
 
-export const confirmCourseCheckoutSchema = z
-  .object({
-    purchaseId: z.string().trim().pipe(z.uuid()),
-    provider: z.enum(["paypal", "stripe"]),
-    sessionId: z.string().trim().min(4).optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (value.provider === "stripe" && !value.sessionId) {
-      ctx.addIssue({
-        code: "custom",
-        message: "sessionId es requerido para confirmar pagos en Stripe.",
-        path: ["sessionId"],
-      });
-    }
-  });
+export const confirmCourseCheckoutSchema = z.object({
+  purchaseId: z.string().trim().pipe(z.uuid()),
+  provider: z.literal("stripe"),
+  sessionId: z.string().trim().min(8).max(255).regex(/^cs_(?:test|live)_[A-Za-z0-9]+$/),
+});
+
+const courseBaseSchema = z.object({
+  title: z.string().trim().min(3).max(160),
+  instructor: z.string().trim().min(2).max(120),
+  level: z.enum(["Básico", "Intermedio", "Avanzado"]),
+  imageUrl: z.string().trim().max(1000).refine(isSafeHttpsUrl, {
+    message: "La imagen debe usar una URL HTTPS válida.",
+  }),
+  summary: z.string().trim().min(3).max(4000),
+  priceUsd: z.coerce.number().finite().min(0.5).max(10_000),
+});
+
+export const createCourseSchema = courseBaseSchema;
+export const updateCourseSchema = courseBaseSchema.partial().refine(
+  (value) => Object.keys(value).length > 0,
+  { message: "No hay cambios válidos." },
+);
+
+const courseModuleBaseSchema = z.object({
+  title: z.string().trim().min(3).max(160),
+  lessonType: z.enum(["video", "reading", "practice"]),
+  durationMinutes: z.coerce.number().int().min(1).max(1440),
+  content: z.string().trim().min(1).max(20_000),
+  videoUrl: z
+    .string()
+    .trim()
+    .max(1000)
+    .refine((value) => !value || isSafeYouTubeVideoUrl(value), {
+      message: "El video debe ser una URL HTTPS válida de YouTube.",
+    })
+    .default(""),
+});
+
+export const createCourseModuleSchema = courseModuleBaseSchema;
+export const updateCourseModuleSchema = courseModuleBaseSchema.partial().refine(
+  (value) => Object.keys(value).length > 0,
+  { message: "No hay cambios válidos." },
+);
+
+export const createJobSchema = z.object({
+  title: z.string().trim().min(3).max(160),
+  type: z.string().trim().min(2).max(80).default("Evento"),
+  city: z.string().trim().min(2).max(80),
+  imageUrl: z.string().trim().max(1000).refine(isSafeHttpsUrl, {
+    message: "La imagen debe usar una URL HTTPS válida.",
+  }).default("https://source.unsplash.com/900x600/?music,musician"),
+  pay: z.string().trim().min(1).max(120).default("A convenir"),
+  summary: z.string().trim().max(1000).default(""),
+  description: z.string().trim().max(10_000).default(""),
+  requiresCv: z.boolean().default(false),
+  requesterName: z.string().trim().max(120).default(""),
+  requesterRole: z.string().trim().max(120).default(""),
+  requirements: z.array(z.string().trim().min(1).max(240)).max(30).default([]),
+  deadline: z.string().trim().max(64).default(""),
+});

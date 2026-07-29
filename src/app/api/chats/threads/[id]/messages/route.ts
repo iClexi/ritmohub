@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { getSessionFromCookie } from "@/lib/auth/session";
 import { createChatMessageForThread } from "@/lib/db";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
+import { rateLimitExceededResponse } from "@/lib/security/rate-limit-response";
 import { createChatMessageSchema } from "@/lib/validations/workspace";
 
 type ChatMessageRouteProps = {
@@ -13,6 +15,15 @@ export async function POST(request: Request, { params }: ChatMessageRouteProps) 
 
   if (!sessionPayload) {
     return NextResponse.json({ message: "Debes iniciar sesion." }, { status: 401 });
+  }
+
+  const rateLimit = consumeRateLimit({
+    key: `chat:message:${sessionPayload.session.user.id}`,
+    limit: 120,
+    windowMs: 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return rateLimitExceededResponse(rateLimit.retryAfterSeconds);
   }
 
   try {

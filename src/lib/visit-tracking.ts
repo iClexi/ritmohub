@@ -107,19 +107,19 @@ export function parseUserAgent(userAgent: string): UserAgentInfo {
 
 // ── IP extraction ─────────────────────────────────────────────────────────────
 export function extractClientIp(headers: Headers): string | null {
+  const cf = headers.get("cf-connecting-ip")?.trim().slice(0, 64);
+  if (cf) return cf;
   const xff = headers.get("x-forwarded-for");
   if (xff) {
-    const first = xff.split(",")[0]?.trim();
+    const first = xff.split(",")[0]?.trim().slice(0, 64);
     if (first) return first;
   }
-  const real = headers.get("x-real-ip");
-  if (real) return real.trim();
-  const cf = headers.get("cf-connecting-ip");
-  if (cf) return cf.trim();
+  const real = headers.get("x-real-ip")?.trim().slice(0, 64);
+  if (real) return real;
   return null;
 }
 
-// ── Geolocation lookup (gratuito, opcional) ───────────────────────────────────
+// ── Geolocation ───────────────────────────────────────────────────────────────
 type GeoInfo = {
   country: string | null;
   region: string | null;
@@ -129,62 +129,18 @@ type GeoInfo = {
   geoLon: number | null;
 };
 
-const geoCache = new Map<string, { value: GeoInfo; expires: number }>();
-const GEO_TTL_MS = 24 * 60 * 60 * 1000;
-
-function isPrivateIp(ip: string): boolean {
-  if (!ip) return true;
-  if (ip === "127.0.0.1" || ip === "::1") return true;
-  if (ip.startsWith("10.")) return true;
-  if (ip.startsWith("192.168.")) return true;
-  if (ip.startsWith("172.")) {
-    const second = Number(ip.split(".")[1] ?? "0");
-    if (second >= 16 && second <= 31) return true;
-  }
-  if (ip.startsWith("fc") || ip.startsWith("fd")) return true;
-  if (ip.startsWith("fe80:")) return true;
-  return false;
-}
-
 export async function lookupGeo(ip: string | null): Promise<GeoInfo> {
-  const empty: GeoInfo = { country: null, region: null, cityGeo: null, isp: null, geoLat: null, geoLon: null };
-  if (!ip || isPrivateIp(ip)) return empty;
-
-  const cached = geoCache.get(ip);
-  if (cached && cached.expires > Date.now()) return cached.value;
-
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2500);
-    const response = await fetch(
-      `http://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,country,regionName,city,isp,lat,lon`,
-      { signal: controller.signal, cache: "no-store" },
-    );
-    clearTimeout(timeout);
-    if (!response.ok) return empty;
-    const data = (await response.json()) as {
-      status?: string;
-      country?: string;
-      regionName?: string;
-      city?: string;
-      isp?: string;
-      lat?: number;
-      lon?: number;
-    };
-    if (data.status !== "success") return empty;
-    const value: GeoInfo = {
-      country: data.country ?? null,
-      region: data.regionName ?? null,
-      cityGeo: data.city ?? null,
-      isp: data.isp ?? null,
-      geoLat: typeof data.lat === "number" ? data.lat : null,
-      geoLon: typeof data.lon === "number" ? data.lon : null,
-    };
-    geoCache.set(ip, { value, expires: Date.now() + GEO_TTL_MS });
-    return value;
-  } catch {
-    return empty;
-  }
+  // Do not export visitor IPs to third-party geolocation services. Trusted
+  // proxy metadata can be integrated here later without a per-visit lookup.
+  void ip;
+  return {
+    country: null,
+    region: null,
+    cityGeo: null,
+    isp: null,
+    geoLat: null,
+    geoLon: null,
+  };
 }
 
 // ── Persistencia ──────────────────────────────────────────────────────────────
@@ -826,7 +782,7 @@ function mapSiteTrafficRow(row: Record<string, unknown>): SiteTrafficRecord {
 
 export async function listRecentSiteTraffic(limit = 120): Promise<SiteTrafficRecord[]> {
   await ensureVisitSchema();
-  const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 500);
+  const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100);
   const result = await pool.query<Record<string, unknown>>(
     `
       SELECT

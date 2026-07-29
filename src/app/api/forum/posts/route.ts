@@ -2,10 +2,19 @@ import { NextResponse } from "next/server";
 
 import { getSessionFromCookie } from "@/lib/auth/session";
 import { createForumPost, listForumPostsWithComments } from "@/lib/db";
+import { redactForumPostsForAnonymous } from "@/lib/forum-privacy";
+import { consumeRateLimit } from "@/lib/security/rate-limit";
+import { rateLimitExceededResponse } from "@/lib/security/rate-limit-response";
 import { createForumPostSchema } from "@/lib/validations/workspace";
 
 export async function GET() {
-  return NextResponse.json({ posts: await listForumPostsWithComments() });
+  const sessionPayload = await getSessionFromCookie();
+  const posts = await listForumPostsWithComments();
+  const visiblePosts = sessionPayload
+    ? posts
+    : redactForumPostsForAnonymous(posts);
+
+  return NextResponse.json({ posts: visiblePosts });
 }
 
 export async function POST(request: Request) {
@@ -13,6 +22,15 @@ export async function POST(request: Request) {
 
   if (!sessionPayload) {
     return NextResponse.json({ message: "Debes iniciar sesion." }, { status: 401 });
+  }
+
+  const rateLimit = consumeRateLimit({
+    key: `forum:post:${sessionPayload.session.user.id}`,
+    limit: 20,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    return rateLimitExceededResponse(rateLimit.retryAfterSeconds);
   }
 
   try {
