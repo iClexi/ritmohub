@@ -12,9 +12,6 @@ type ShowcaseItem = {
   subtitle: string;
   description: string;
   thumbnail: string;
-  fullImage: string;
-  videoUrl: string;
-  gallery: string[];
   accent: string;
   secondary: string;
 };
@@ -29,112 +26,81 @@ const VIEWPORT_EDGE_TOLERANCE = 12;
 
 const showcaseItems: ShowcaseItem[] = [
   {
-    id: "adrian-multi-versales",
-    name: "Adrian Alcantar Multi-versales",
-    category: "Banda destacada",
-    subtitle: "Santo Domingo",
+    id: "luma-07",
+    name: "LUMA-07",
+    category: "Concepto ficticio · Alt-pop",
+    subtitle: "Universo creativo RitmoHub",
     description:
-      "Son legendarios porque son poderosos: cuando suben al escenario invocan un pollito amarillo y desatan una energia brutal que enciende a todo el publico.",
-    thumbnail: "/artists/adrian-multiversal-banner.png",
-    fullImage: "/artists/adrian-multiversal-banner.png",
-    videoUrl: "https://www.youtube.com/watch?v=QK8mJJJvaes",
-    gallery: [
-      "/artists/adrian-bajista.jpg",
-      "/artists/adrian-baterista.jpg",
-      "/artists/adrian-cantante.jpg",
-      "/artists/adrian-guitarrista.jpg",
-    ],
+      "Personaje ficticio de alt-pop digital que convierte sintetizadores luminosos, melodías íntimas y visuales de ciencia ficción en una experiencia de escenario envolvente.",
+    thumbnail: "/artists/concepts/luma-07.webp",
     accent: "#3B82F6",
     secondary: "#06B6D4",
   },
   {
-    id: "itlenos",
-    name: "Itlenos",
-    category: "Banda local",
-    subtitle: "Santo Domingo",
+    id: "nodo-lila",
+    name: "NODO LILA",
+    category: "Concepto ficticio · Electrónica",
+    subtitle: "Universo creativo RitmoHub",
     description:
-      "Itlenos es una banda dominicana con fuerza en tarima, sonido moderno y una propuesta que mezcla energia, presencia y autenticidad en cada presentacion.",
-    thumbnail: "/artists/itlenos-portada.png",
-    fullImage: "/artists/itlenos-portada.png",
-    videoUrl: "https://www.youtube.com/watch?v=weRHyjj34ZE",
-    gallery: [
-      "/artists/itlenos-baterista.jpg",
-      "/artists/itlenos-guitarrista.jpg",
-      "/artists/itlenos-bajista.jpg",
-      "/artists/itlenos-cantante.jpg",
-    ],
-    accent: "#60A5FA",
-    secondary: "#22D3EE",
-  },
-  {
-    id: "dawwing-choppa",
-    name: "Darwing Choppa",
-    category: "Urbano / Trap",
-    subtitle: "Santo Domingo",
-    description:
-      "Darwing Choppa combina actitud de calle, presencia escenica y un sonido urbano directo para conectar con el publico desde el primer beat.",
-    thumbnail: "/artists/dawwing-choppa-pfp.jpg",
-    fullImage: "/artists/dawwing-choppa-pfp.jpg",
-    videoUrl: "https://www.youtube.com/watch?v=acEOASYioGY",
-    gallery: ["/artists/dawwing-choppa-banner.jpg"],
-    accent: "#F97316",
-    secondary: "#EF4444",
-  },
-  {
-    id: "jimmy-jackson",
-    name: "Jimmy Jackson",
-    category: "Tributo / Pop",
-    subtitle: "Santo Domingo",
-    description:
-      "Jimmy Jackson es una famosa estrella de pop, pasos iconicos, presencia electrica y un show que revive su estilo con fuerza y precision.",
-    thumbnail: "/artists/jimmy-jackson-foto.jpg",
-    fullImage: "/artists/jimmy-jackson-foto.jpg",
-    videoUrl: "https://www.youtube.com/watch?v=Rht7rBHuXW8",
-    gallery: ["/artists/jimmy-jackson-banner.jpg"],
+      "Productora ficticia de electrónica nocturna: capas modulares, percusión precisa y paisajes violetas diseñados para escuchar con audífonos o bailar frente a un sistema enorme.",
+    thumbnail: "/artists/concepts/nodo-lila.webp",
     accent: "#A855F7",
     secondary: "#EC4899",
   },
   {
-    id: "numeosis",
-    name: "Numeosis",
-    category: "Pop / Performance",
-    subtitle: "Santo Domingo",
+    id: "marea-cero",
+    name: "MAREA CERO",
+    category: "Concepto ficticio · Dúo electrónico",
+    subtitle: "Universo creativo RitmoHub",
     description:
-      "Numeosis es una propuesta escenica intensa, con imagen poderosa, presencia de tarima y un estilo que conecta de inmediato con el publico.",
-    thumbnail: "/artists/numeosis-portada.png",
-    fullImage: "/artists/numeosis-portada.png",
-    videoUrl: "https://www.youtube.com/watch?v=oygrmJFKYZY",
-    gallery: ["/artists/numeosis-banner.png"],
-    accent: "#38BDF8",
-    secondary: "#6366F1",
-  },
-  {
-    id: "ashanty-gaynor",
-    name: "Ashanty Gaynor",
-    category: "Pop / Performance",
-    subtitle: "Santo Domingo",
-    description:
-      "Ashanty Gaynor destaca por su presencia escenica, interpretacion intensa y una puesta en escena que conecta rapido con el publico.",
-    thumbnail: "/artists/ashanty-gaynor-pfp.jpg",
-    fullImage: "/artists/ashanty-gaynor-pfp.jpg",
-    videoUrl: "https://www.youtube.com/watch?v=fHI8X4OXluQ",
-    gallery: ["/artists/ashanty-gaynor-banner.jpg"],
-    accent: "#F43F5E",
+      "Dúo ficticio que mezcla pulsos electrónicos, texturas marinas y voces en contraste para construir canciones que avanzan como una marea bajo luces de neón.",
+    thumbnail: "/artists/concepts/marea-cero.webp",
+    accent: "#14B8A6",
     secondary: "#FB7185",
   },
   {
-    id: "fernando-sheeran",
-    name: "Fernando Sheeran",
-    category: "Pop / Acustico",
-    subtitle: "Santo Domingo",
+    id: "bruma-9",
+    name: "BRUMA 9",
+    category: "Concepto ficticio · Rock alternativo",
+    subtitle: "Universo creativo RitmoHub",
     description:
-      "Fernando Sheeran combina una vibra romantica con energia en vivo, letras cercanas y un estilo pop acustico que conecta rapido con la audiencia.",
-    thumbnail: "/artists/fernando-sheeran-foto.jpg",
-    fullImage: "/artists/fernando-sheeran-foto.jpg",
-    videoUrl: "https://www.youtube.com/watch?v=Q8mG0JfN2X8",
-    gallery: ["/artists/fernando-sheeran-banner.jpg"],
-    accent: "#E879F9",
-    secondary: "#F472B6",
+      "Guitarrista ficticio de rock alternativo con riffs densos, silencios dramáticos y un directo de energía cruda envuelto en rojos profundos.",
+    thumbnail: "/artists/concepts/bruma-9.webp",
+    accent: "#DC2626",
+    secondary: "#F97316",
+  },
+  {
+    id: "isla-ruido",
+    name: "ISLA RUIDO",
+    category: "Concepto ficticio · Indie tropical",
+    subtitle: "Universo creativo RitmoHub",
+    description:
+      "Trío ficticio de indie tropical que cruza guitarras ligeras, percusión cálida y coros de verano con una actitud espontánea de ensayo entre amistades.",
+    thumbnail: "/artists/concepts/isla-ruido.webp",
+    accent: "#F59E0B",
+    secondary: "#0D9488",
+  },
+  {
+    id: "vela-indigo",
+    name: "VELA ÍNDIGO",
+    category: "Concepto ficticio · Neo-soul",
+    subtitle: "Universo creativo RitmoHub",
+    description:
+      "Vocalista ficticia de neo-soul con arreglos de terciopelo, armonías cálidas y una presencia serena que convierte cada interpretación en una conversación cercana.",
+    thumbnail: "/artists/concepts/vela-indigo.webp",
+    accent: "#4338CA",
+    secondary: "#D97706",
+  },
+  {
+    id: "pulso-nacar",
+    name: "PULSO NÁCAR",
+    category: "Concepto ficticio · Percusión electrónica",
+    subtitle: "Universo creativo RitmoHub",
+    description:
+      "Artista ficticia de percusión electrónica que combina patrones orgánicos, resonancias de nácar y pequeños destellos digitales en un ritual rítmico contemporáneo.",
+    thumbnail: "/artists/concepts/pulso-nacar.webp",
+    accent: "#C2410C",
+    secondary: "#84CC16",
   },
 ];
 
@@ -161,7 +127,7 @@ export function ArtistScrollStage() {
   const activeItem = showcaseItems[currentIndex] ?? showcaseItems[0];
   const waveItem = showcaseItems[detailIndex ?? wavePreviewIndex ?? currentIndex] ?? showcaseItems[0];
   const detailItem = detailIndex !== null ? showcaseItems[detailIndex] : null;
-  const detailImage = detailItem?.thumbnail ?? detailItem?.fullImage ?? DEFAULT_ARTIST_IMAGE;
+  const detailImage = detailItem?.thumbnail ?? DEFAULT_ARTIST_IMAGE;
 
   const isDetailOpen = detailIndex !== null;
   const isOverlayActive = isDetailOpen || wavePhase !== "idle";
@@ -455,15 +421,15 @@ export function ArtistScrollStage() {
         <div className="relative z-10 grid h-full items-center justify-center gap-6 lg:grid-cols-[0.82fr_1.18fr]">
           <aside className="showcase-stage-left flex h-full items-center justify-center px-6 py-10 sm:px-10 lg:px-12">
             <div className="mx-auto w-full max-w-[560px]">
-              <p className="text-xs font-semibold tracking-[0.2em] text-white/80">ARTIST SHOWCASE</p>
+              <p className="text-xs font-semibold tracking-[0.2em] text-white/80">CONCEPTOS ORIGINALES</p>
               <h2 className="mt-2 font-serif text-[clamp(2.1rem,11vw,8rem)] leading-[0.92] tracking-[0.08em] sm:tracking-[0.14em] text-white">
                 MUSISEC STAGE
               </h2>
               <p className="mt-6 max-w-[510px] text-[clamp(1rem,0.35vw+0.9rem,1.28rem)] leading-relaxed text-white/90">
-                Descubre artistas destacados con una navegación inmersiva: desliza para recorrer perfiles, estilos y propuesta musical.
+                Descubre artistas ficticios creados exclusivamente para RitmoHub: desliza para recorrer identidades, estilos y universos musicales.
               </p>
               <p className="mt-2 max-w-[510px] text-[clamp(0.94rem,0.25vw+0.86rem,1.1rem)] leading-relaxed text-white/76">
-                Haz clic en cualquier tarjeta para abrir su perfil completo, ver su galería y conocer mejor cada integrante.
+                Todos los nombres, relatos e imágenes de esta sección son conceptos creativos y no representan a personas reales.
               </p>
               <div className="mt-7 inline-flex w-fit items-center gap-2 rounded-full border border-white/35 bg-black/18 px-4 py-1.5 text-xs font-semibold text-white/90">
                 {activeItem.name}
@@ -548,7 +514,7 @@ export function ArtistScrollStage() {
                         src={item.thumbnail}
                         alt={item.name}
                         fill
-                        sizes="(max-width: 640px) 78vw, 320px"
+                        sizes="(max-width: 640px) 78vw, 440px"
                         className="object-cover"
                         loading={index === 0 ? "eager" : "lazy"}
                         fetchPriority={index === 0 ? "high" : "auto"}
@@ -641,39 +607,20 @@ export function ArtistScrollStage() {
                       <p className="artist-profile-card-text mt-2 text-lg leading-relaxed">{detailItem.description}</p>
                     </div>
 
-                    <div className="mt-4 grid min-h-0 flex-1 items-start gap-3 sm:grid-cols-2">
-                      {detailItem.gallery.length === 1 ? (
-                        <article className="artist-profile-media-card relative col-span-full overflow-hidden rounded-xl border shadow-[0_8px_18px_rgb(17_39_60_/0.12)]">
-                          <div className="artist-profile-media relative h-[22rem] w-full overflow-hidden sm:h-[31rem]">
-                            <Image
-                              src={detailItem.gallery[0]}
-                              alt={`${detailItem.name} banner`}
-                              fill
-                              sizes="(max-width: 1024px) 100vw, 55vw"
-                              className="object-cover opacity-92"
-                              loading="lazy"
-                            />
-                          </div>
-                        </article>
-                      ) : (
-                        detailItem.gallery.slice(0, 4).map((image, index) => (
-                          <article
-                            key={`${detailItem.id}-gallery-${index}`}
-                            className="artist-profile-media-card relative overflow-hidden rounded-xl border shadow-[0_8px_18px_rgb(17_39_60_/0.12)]"
-                          >
-                            <div className="artist-profile-media relative h-52 w-full overflow-hidden sm:h-64">
-                              <Image
-                                src={image}
-                                alt={`${detailItem.name} gallery ${index + 1}`}
-                                fill
-                                sizes="(max-width: 640px) 100vw, 28vw"
-                                className="object-cover opacity-92"
-                                loading="lazy"
-                              />
-                            </div>
-                          </article>
-                        ))
-                      )}
+                    <div className="artist-fiction-card mt-4 flex min-h-[13rem] flex-1 flex-col justify-between overflow-hidden rounded-2xl border p-5 sm:p-6">
+                      <div>
+                        <p className="artist-profile-card-kicker text-xs font-semibold tracking-[0.13em]">
+                          CONCEPTO FICTICIO
+                        </p>
+                        <p className="mt-3 max-w-2xl text-base leading-relaxed text-[var(--ui-text)] sm:text-lg">
+                          El nombre, la historia y la ilustración de este perfil fueron creados para la experiencia visual de RitmoHub. No representan ni imitan a una persona o agrupación real.
+                        </p>
+                      </div>
+                      <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold">
+                        <span className="artist-fiction-chip rounded-full border px-3 py-1.5">Identidad inventada</span>
+                        <span className="artist-fiction-chip rounded-full border px-3 py-1.5">Ilustración original</span>
+                        <span className="artist-fiction-chip rounded-full border px-3 py-1.5">Demo de producto</span>
+                      </div>
                     </div>
                   </section>
                 </div>

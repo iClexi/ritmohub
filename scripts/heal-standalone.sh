@@ -18,6 +18,9 @@ if [ ! -d .next/standalone ]; then
 fi
 
 mkdir -p .next/standalone/public .next/standalone/.next/static
+# Keep removed public assets out of future releases instead of accumulating
+# stale files from earlier builds.
+find .next/standalone/public -mindepth 1 -delete
 cp -a public/. .next/standalone/public/
 cp -a .next/static/. .next/standalone/.next/static/
 

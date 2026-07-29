@@ -1527,6 +1527,28 @@ body.stage-scroll-locked {
   color: var(--ui-text);
 }
 
+.artist-fiction-card {
+  border-color: color-mix(in srgb, var(--ui-border) 74%, transparent);
+  background:
+    radial-gradient(
+      circle at 88% 18%,
+      color-mix(in srgb, var(--artist-secondary, #44bba4) 24%, transparent),
+      transparent 36%
+    ),
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--artist-accent, #3f88c5) 12%, var(--ui-surface) 88%) 0%,
+      color-mix(in srgb, var(--artist-secondary, #44bba4) 9%, var(--ui-surface-soft) 91%) 100%
+    );
+  box-shadow: 0 12px 26px rgb(17 39 60 / 0.08);
+}
+
+.artist-fiction-chip {
+  color: color-mix(in srgb, var(--artist-accent, #3f88c5) 62%, var(--ui-text) 38%);
+  border-color: color-mix(in srgb, var(--artist-accent, #3f88c5) 30%, var(--ui-border) 70%);
+  background: color-mix(in srgb, var(--ui-surface) 78%, transparent);
+}
+
 .artist-profile-media-card {
   border-color: color-mix(in srgb, var(--ui-border) 75%, transparent);
   background: transparent;
