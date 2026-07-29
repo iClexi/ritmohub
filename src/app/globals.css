@@ -692,12 +692,14 @@ body.stage-scroll-locked {
 }
 
 .landing-nav {
+  z-index: 50;
   animation: landingReveal 420ms cubic-bezier(0.2, 0.84, 0.24, 1) both;
 }
 
 .landing-nav a,
 .landing-nav button,
 .landing-nav summary {
+  display: inline-flex;
   min-height: 44px;
   align-items: center;
 }
