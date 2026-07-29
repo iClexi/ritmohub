@@ -104,7 +104,7 @@ ritmohub/
 
 ## Environment
 
-Use `.env.example` as a template and keep real values outside Git.
+Create an ignored `.env.local` for development, and keep production values in the runtime environment outside Git.
 
 Important groups:
 
@@ -116,7 +116,7 @@ Important groups:
 | Email | `SMTP_*` |
 | SMS | `BREVO_*` |
 | Seed controls | `ENABLE_SEED_ROUTES`, seed tokens/passwords |
-| Payments | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, PayPal values |
+| Payments | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY` |
 | OAuth | `GOOGLE_*`, `META_*` |
 | Observability | `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_*` |
 
@@ -126,7 +126,8 @@ Never commit real credentials, database URLs, OAuth secrets, seed passwords, Sen
 
 ```bash
 npm install
-cp .env.example .env.local
+umask 077
+touch .env.local
 npm run dev
 ```
 

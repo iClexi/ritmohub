@@ -1,11 +1,11 @@
 #!/bin/sh
-# heal-standalone.sh — make sure .next/standalone has public/ and .next/static.
-# Runs the same copy that `npm run postbuild` does, but is idempotent and safe to
-# call from systemd ExecStartPre or by hand after a partial deploy.
+# heal-standalone.sh — complete assets and native image runtime in standalone.
+# Runs the same copy that `npm run postbuild` needs, but is idempotent and safe
+# to call from systemd ExecStartPre or by hand after a partial deploy.
 #
-# Background: `output: "standalone"` does not include the public/ folder or
-# .next/static/, so a freshly built standalone serves 404 for /artists/*, etc.
-# unless those are copied in. This script restores them.
+# Background: `output: "standalone"` does not include public/ or .next/static/.
+# File tracing can also omit Sharp's libvips shared object, which makes
+# /_next/image return 400 even though the source image exists.
 
 set -e
 
@@ -17,9 +17,13 @@ if [ ! -d .next/standalone ]; then
   exit 0
 fi
 
-rm -rf .next/standalone/public .next/standalone/.next/static
-cp -a public .next/standalone/public
-mkdir -p .next/standalone/.next
-cp -a .next/static .next/standalone/.next/static
+mkdir -p .next/standalone/public .next/standalone/.next/static
+cp -a public/. .next/standalone/public/
+cp -a .next/static/. .next/standalone/.next/static/
 
-echo "heal-standalone: copied public/ and .next/static into .next/standalone"
+if [ -d node_modules/@img ]; then
+  mkdir -p .next/standalone/node_modules/@img
+  cp -a node_modules/@img/. .next/standalone/node_modules/@img/
+fi
+
+echo "heal-standalone: copied assets and Sharp native runtime into standalone"

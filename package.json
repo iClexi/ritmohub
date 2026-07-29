@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 5155",
     "build": "next build",
-    "postbuild": "rm -rf .next/standalone/public .next/standalone/.next/static && cp -a public .next/standalone/public && mkdir -p .next/standalone/.next && cp -a .next/static .next/standalone/.next/static",
+    "postbuild": "sh scripts/heal-standalone.sh",
     "start": "next start -p 5155",
     "lint": "eslint"
   },
@@ -17,11 +17,11 @@
     "clsx": "^2.1.1",
     "lenis": "^1.3.21",
     "libphonenumber-js": "^1.12.42",
-    "next": "16.2.3",
-    "nodemailer": "^8.0.7",
+    "next": "16.2.12",
+    "nodemailer": "^9.0.3",
     "pg": "^8.20.0",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "react-hook-form": "^7.72.1",
     "react-international-phone": "^4.8.0",
     "zod": "^4.3.6"
@@ -29,16 +29,19 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/nodemailer": "^8.0.0",
+    "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.3",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.2.12",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
   "overrides": {
-    "postcss": "8.5.10"
+    "fast-uri": "3.1.4",
+    "minimatch@10.2.5": "10.2.6",
+    "postcss": "8.5.24",
+    "sharp": "0.35.3"
   }
 }
