@@ -5,6 +5,7 @@ import { createSession, setSessionCookie } from "@/lib/auth/session";
 import { getUserByEmail } from "@/lib/db";
 import { consumeRateLimit, getClientIp } from "@/lib/security/rate-limit";
 import { createRateLimitKey, rateLimitExceededResponse } from "@/lib/security/rate-limit-response";
+import { parseJsonBody } from "@/lib/security/request-limits";
 import { loginSchema } from "@/lib/validations/auth";
 import { extractClientIp, recordServerVisit, recordSiteVisit } from "@/lib/visit-tracking";
 
@@ -16,8 +17,15 @@ const LOGIN_BLOCK_MS = 30 * 60 * 1000;
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const parsed = loginSchema.safeParse(body);
+    const body = await parseJsonBody(request);
+    if (!body.ok) {
+      return NextResponse.json(
+        { message: "El cuerpo JSON no es valido." },
+        { status: 400 },
+      );
+    }
+
+    const parsed = loginSchema.safeParse(body.data);
 
     if (!parsed.success) {
       return NextResponse.json(

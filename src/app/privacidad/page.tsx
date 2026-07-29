@@ -5,11 +5,10 @@ import Image from "next/image";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { PrintButton } from "@/components/ui/print-button";
 
-export const dynamic = "force-static";
-export const revalidate = 86400;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad · RitmoHub",
+  title: "Política de Privacidad",
   description:
     "Política de Privacidad de RitmoHub: qué datos recopilamos, cómo los usamos, cuánto los conservamos y cuáles son tus derechos.",
   alternates: { canonical: "/privacidad" },

@@ -8,9 +8,14 @@ import {
   markAccountVerificationAsVerified,
   markAccountVerificationEmailTokenUsed,
 } from "@/lib/auth/account-verification-store";
+import { getAppUrl } from "@/lib/email/send-email";
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
+}
+
+function appRedirect(path: string) {
+  return NextResponse.redirect(new URL(path, getAppUrl()));
 }
 
 export async function GET(request: Request) {
@@ -19,22 +24,22 @@ export async function GET(request: Request) {
     const token = url.searchParams.get("token")?.trim();
 
     if (!token || token.length < 32) {
-      return NextResponse.redirect(new URL("/verify-account?error=invalid", request.url));
+      return appRedirect("/verify-account?error=invalid");
     }
 
     const tokenRecord = await getValidAccountVerificationEmailToken(hashToken(token));
 
     if (!tokenRecord) {
-      return NextResponse.redirect(new URL("/verify-account?error=invalid", request.url));
+      return appRedirect("/verify-account?error=invalid");
     }
 
     await markAccountVerificationEmailTokenUsed(tokenRecord.id);
     await invalidateAccountVerificationSmsCodesForUser(tokenRecord.userId);
     await markAccountVerificationAsVerified(tokenRecord.userId);
 
-    return NextResponse.redirect(new URL("/dashboard?verified=1", request.url));
+    return appRedirect("/dashboard?verified=1");
   } catch (error) {
     console.error("account verification email error", error);
-    return NextResponse.redirect(new URL("/verify-account?error=server", request.url));
+    return appRedirect("/verify-account?error=server");
   }
 }

@@ -101,20 +101,21 @@ export function consumeRateLimit(input: RateLimitInput): RateLimitResult {
 }
 
 export function getClientIp(request: Request): string {
-  const cfIp = request.headers.get("cf-connecting-ip")?.trim();
+  const normalize = (value: string | null) => value?.trim().slice(0, 64) ?? "";
+  const cfIp = normalize(request.headers.get("cf-connecting-ip"));
   if (cfIp) {
     return cfIp;
   }
 
-  const xForwardedFor = request.headers.get("x-forwarded-for")?.trim();
+  const xForwardedFor = normalize(request.headers.get("x-forwarded-for"));
   if (xForwardedFor) {
-    const firstIp = xForwardedFor.split(",")[0]?.trim();
+    const firstIp = xForwardedFor.split(",")[0]?.trim().slice(0, 64);
     if (firstIp) {
       return firstIp;
     }
   }
 
-  const xRealIp = request.headers.get("x-real-ip")?.trim();
+  const xRealIp = normalize(request.headers.get("x-real-ip"));
   if (xRealIp) {
     return xRealIp;
   }

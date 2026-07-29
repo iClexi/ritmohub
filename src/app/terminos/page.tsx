@@ -5,11 +5,10 @@ import Image from "next/image";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { PrintButton } from "@/components/ui/print-button";
 
-export const dynamic = "force-static";
-export const revalidate = 86400;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Términos y Condiciones · RitmoHub",
+  title: "Términos y Condiciones",
   description:
     "Términos y condiciones de uso de RitmoHub: red de gestión para músicos con conciertos, ensayos y colaboraciones.",
   alternates: { canonical: "/terminos" },

@@ -1,5 +1,6 @@
 Contact: mailto:security@iclexi.tech
-Expires: 2027-05-10T00:00:00.000Z
+Contact: https://github.com/iClexi/ritmohub/security/advisories/new
+Expires: 2027-07-29T23:59:59Z
 Preferred-Languages: es, en
 Canonical: https://ritmohub.iclexi.tech/.well-known/security.txt
 Policy: https://ritmohub.iclexi.tech/terminos

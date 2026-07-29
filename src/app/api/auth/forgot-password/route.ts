@@ -6,6 +6,7 @@ import { buildPasswordResetUrl, sendPasswordResetEmail } from "@/lib/email/passw
 import { sendPasswordResetSms } from "@/lib/sms/password-reset";
 import { consumeRateLimit, getClientIp } from "@/lib/security/rate-limit";
 import { createRateLimitKey, rateLimitExceededResponse } from "@/lib/security/rate-limit-response";
+import { parseJsonBody } from "@/lib/security/request-limits";
 import {
   createPasswordResetSmsCodeRecord,
   createPasswordResetTokenRecord,
@@ -63,11 +64,25 @@ function checkForgotPasswordRateLimit(request: Request, channel: "email" | "sms"
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const channel = typeof body?.channel === "string" ? body.channel : "email";
+    const body = await parseJsonBody(request);
+    if (!body.ok) {
+      return NextResponse.json(
+        { message: "El cuerpo JSON no es valido." },
+        { status: 400 },
+      );
+    }
+
+    const channel = (
+      typeof body.data === "object" &&
+      body.data !== null &&
+      "channel" in body.data &&
+      typeof body.data.channel === "string"
+    )
+      ? body.data.channel
+      : "email";
 
     if (channel === "sms") {
-      const parsedSms = forgotPasswordSmsSchema.safeParse(body);
+      const parsedSms = forgotPasswordSmsSchema.safeParse(body.data);
 
       if (!parsedSms.success) {
         return NextResponse.json(
@@ -125,7 +140,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const parsed = forgotPasswordSchema.safeParse(body);
+    const parsed = forgotPasswordSchema.safeParse(body.data);
 
     if (!parsed.success) {
       return NextResponse.json(

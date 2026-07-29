@@ -125,6 +125,8 @@ export async function GET(request: Request) {
         redirect_uri: redirectUri,
         grant_type: "authorization_code",
       }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
 
     const tokenPayload = (await tokenResponse.json().catch(() => null)) as GoogleTokenResponse | null;
@@ -138,6 +140,7 @@ export async function GET(request: Request) {
         Authorization: `Bearer ${accessToken}`,
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
     const userPayload = (await userResponse.json().catch(() => null)) as GoogleUserInfoResponse | null;
     const email = userPayload?.email?.trim().toLowerCase();

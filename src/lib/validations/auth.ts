@@ -1,6 +1,8 @@
 import { parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js/max";
 import { z } from "zod";
 
+z.config({ jitless: true });
+
 const namePattern = /^[\p{L}]+(?:\s+[\p{L}]+)*$/u;
 const usernamePattern = /^[a-z0-9_]{3,30}$/;
 const phoneAllowedCharactersPattern = /^\+?[\d\s()-]+$/;

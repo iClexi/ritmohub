@@ -22,6 +22,7 @@ export function SocialLoginButtons({ compact = false, flow = "login" }: SocialLo
 
       <Link
         href={googleHref}
+        prefetch={false}
         className="flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] px-4 py-2.5 text-center text-sm font-semibold text-[var(--ui-text)] transition hover:border-[var(--ui-primary)]"
       >
         <GoogleIcon />

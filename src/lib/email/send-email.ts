@@ -85,10 +85,25 @@ export async function sendEmail(payload: EmailPayload) {
 }
 
 export function getAppUrl() {
-  return (
-    envValue("NEXT_PUBLIC_APP_URL") ??
-    "http://localhost:5155"
-  ).replace(/\/+$/, "");
+  const fallback = process.env.NODE_ENV === "production"
+    ? "https://ritmohub.iclexi.tech"
+    : "http://localhost:5155";
+  const configured = envValue("NEXT_PUBLIC_APP_URL") ?? fallback;
+
+  try {
+    const url = new URL(configured);
+    if (
+      !["http:", "https:"].includes(url.protocol) ||
+      url.username ||
+      url.password ||
+      (process.env.NODE_ENV === "production" && url.protocol !== "https:")
+    ) {
+      return fallback;
+    }
+    return url.origin;
+  } catch {
+    return fallback;
+  }
 }
 
 export function getFromAddress() {

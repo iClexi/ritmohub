@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 
 type OAuthProvider = "google" | "meta";
 export type OAuthFlow = "login" | "register";
+const PRODUCTION_ORIGIN = "https://ritmohub.iclexi.tech";
 
 function getStateCookieName(provider: OAuthProvider) {
   return `oauth_state_${provider}`;
@@ -41,10 +42,20 @@ function getConfiguredPublicOrigin() {
       continue;
     }
 
-    return new URL(value).origin;
+    const url = new URL(value);
+    if (
+      !["http:", "https:"].includes(url.protocol) ||
+      url.username ||
+      url.password ||
+      (process.env.NODE_ENV === "production" && url.protocol !== "https:")
+    ) {
+      continue;
+    }
+
+    return url.origin;
   }
 
-  return null;
+  return process.env.NODE_ENV === "production" ? PRODUCTION_ORIGIN : null;
 }
 
 export function getOriginFromRequest(request: Request) {

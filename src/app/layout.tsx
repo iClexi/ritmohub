@@ -1,11 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Inter } from "next/font/google";
-import { cookies } from "next/headers";
+import { Inter } from "next/font/google";
+import { cookies, headers } from "next/headers";
 import { RevealOnScroll } from "@/components/ui/reveal-on-scroll";
-import { SmoothScroll } from "@/components/ui/smooth-scroll";
 import { SessionWatchdog } from "@/components/auth/session-watchdog";
 import { VisitTracker } from "@/components/auth/visit-tracker";
-import { AnimePageEnhancer } from "@/components/ui/anime-page-enhancer";
+import { SESSION_COOKIE_NAME } from "@/lib/auth/session";
 
 import "./globals.css";
 import "react-international-phone/style.css";
@@ -14,11 +13,6 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
 });
 
 const SITE_URL = "https://ritmohub.iclexi.tech";
@@ -42,9 +36,8 @@ export const metadata: Metadata = {
     "RitmoHub",
   ],
   alternates: {
-    canonical: "/",
     types: {
-      "application/json": [
+      "text/plain": [
         { url: "/.well-known/security.txt", title: "Security policy" },
       ],
     },
@@ -103,25 +96,30 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
+  const requestHeaders = await headers();
+  const nonce = requestHeaders.get("x-nonce") ?? undefined;
   const cookieTheme = cookieStore.get("rh-theme")?.value;
   const initialTheme = cookieTheme === "noir" ? "noir" : "classic";
+  const hasSessionCookie = Boolean(cookieStore.get(SESSION_COOKIE_NAME)?.value);
 
   return (
     <html
       lang="es"
       data-theme={initialTheme}
       suppressHydrationWarning
-      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased`}
     >
       <head>
         <link rel="terms-of-service" href="/terminos" />
         <link rel="privacy-policy" href="/privacidad" />
         <link rel="license" href="/terminos" />
         <script
+          nonce={nonce}
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_JSONLD) }}
         />
         <script
+          nonce={nonce}
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSONLD) }}
         />
@@ -133,11 +131,9 @@ export default async function RootLayout({
         >
           Saltar al contenido
         </a>
-        <SmoothScroll />
         <RevealOnScroll />
         <SessionWatchdog />
-        <VisitTracker enabled />
-        <AnimePageEnhancer />
+        <VisitTracker enabled={hasSessionCookie} />
         <span id="main-content" tabIndex={-1} className="sr-only" aria-hidden="true" />
         {children}
       </body>

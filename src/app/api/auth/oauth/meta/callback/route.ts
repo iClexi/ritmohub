@@ -119,22 +119,28 @@ export async function GET(request: Request) {
       code,
     });
 
-    const tokenResponse = await fetch(
-      `https://graph.facebook.com/v19.0/oauth/access_token?${tokenParams.toString()}`,
-      { cache: "no-store" },
-    );
+    const tokenResponse = await fetch("https://graph.facebook.com/v19.0/oauth/access_token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: tokenParams.toString(),
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
     const tokenPayload = (await tokenResponse.json().catch(() => null)) as MetaTokenResponse | null;
     const accessToken = tokenPayload?.access_token;
     if (!tokenResponse.ok || !accessToken) {
       return redirectWithOAuthError(origin, flow, "meta_token_error");
     }
 
-    const userParams = new URLSearchParams({
-      fields: "id,name,email",
-      access_token: accessToken,
-    });
+    const userParams = new URLSearchParams({ fields: "id,name,email" });
     const userResponse = await fetch(`https://graph.facebook.com/me?${userParams.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
     const userPayload = (await userResponse.json().catch(() => null)) as MetaUserResponse | null;
 

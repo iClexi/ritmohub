@@ -110,9 +110,13 @@ export async function POST(request: Request) {
       status: "created",
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "unknown";
+    console.error("admin seed error", {
+      code: err && typeof err === "object" && "code" in err
+        ? String((err as { code?: unknown }).code ?? "")
+        : "unknown",
+    });
     return NextResponse.json(
-      { message: "No se pudo crear el admin.", error: message },
+      { message: "No se pudo crear el admin." },
       { status: 500 },
     );
   }

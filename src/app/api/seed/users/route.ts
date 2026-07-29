@@ -130,9 +130,13 @@ export async function POST(request: Request) {
       });
       results.push({ name: userData.name, email: userData.email, status: "created" });
     } catch (err) {
-      // Likely a unique constraint violation (user already exists)
-      const message = err instanceof Error ? err.message : "unknown";
-      results.push({ name: userData.name, email: userData.email, status: `skipped: ${message}` });
+      console.error("user seed item error", {
+        email: userData.email,
+        code: err && typeof err === "object" && "code" in err
+          ? String((err as { code?: unknown }).code ?? "")
+          : "unknown",
+      });
+      results.push({ name: userData.name, email: userData.email, status: "skipped" });
     }
   }
 

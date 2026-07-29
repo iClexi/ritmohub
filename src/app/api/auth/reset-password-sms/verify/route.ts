@@ -13,6 +13,7 @@ import {
 } from "@/lib/db";
 import { consumeRateLimit, getClientIp } from "@/lib/security/rate-limit";
 import { createRateLimitKey, rateLimitExceededResponse } from "@/lib/security/rate-limit-response";
+import { parseJsonBody } from "@/lib/security/request-limits";
 import { normalizePhoneNumber, verifyPasswordResetSmsSchema } from "@/lib/validations/auth";
 
 const SMS_VERIFIED_TOKEN_TTL_MS = 15 * 60 * 1000;
@@ -54,8 +55,15 @@ function checkVerifyRateLimit(request: Request, phone: string) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const parsed = verifyPasswordResetSmsSchema.safeParse(body);
+    const body = await parseJsonBody(request);
+    if (!body.ok) {
+      return NextResponse.json(
+        { message: "El cuerpo JSON no es valido." },
+        { status: 400 },
+      );
+    }
+
+    const parsed = verifyPasswordResetSmsSchema.safeParse(body.data);
 
     if (!parsed.success) {
       return NextResponse.json(
