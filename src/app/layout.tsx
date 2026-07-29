@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { cookies, headers } from "next/headers";
 import { RevealOnScroll } from "@/components/ui/reveal-on-scroll";
+import { SmoothScroll } from "@/components/ui/smooth-scroll";
 import { SessionWatchdog } from "@/components/auth/session-watchdog";
 import { VisitTracker } from "@/components/auth/visit-tracker";
 import { SESSION_COOKIE_NAME } from "@/lib/auth/session";
@@ -131,6 +132,7 @@ export default async function RootLayout({
         >
           Saltar al contenido
         </a>
+        <SmoothScroll />
         <RevealOnScroll />
         <SessionWatchdog />
         <VisitTracker enabled={hasSessionCookie} />
