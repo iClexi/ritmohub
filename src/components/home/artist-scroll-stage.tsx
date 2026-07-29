@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -459,10 +460,10 @@ export function ArtistScrollStage() {
                 MUSISEC STAGE
               </h2>
               <p className="mt-6 max-w-[510px] text-[clamp(1rem,0.35vw+0.9rem,1.28rem)] leading-relaxed text-white/90">
-                Descubre artistas destacados con una navegacion inmersiva: desliza para recorrer perfiles, estilos y propuesta musical.
+                Descubre artistas destacados con una navegación inmersiva: desliza para recorrer perfiles, estilos y propuesta musical.
               </p>
               <p className="mt-2 max-w-[510px] text-[clamp(0.94rem,0.25vw+0.86rem,1.1rem)] leading-relaxed text-white/76">
-                Haz clic en cualquier tarjeta para abrir su perfil completo, ver su galeria y conocer mejor cada integrante.
+                Haz clic en cualquier tarjeta para abrir su perfil completo, ver su galería y conocer mejor cada integrante.
               </p>
               <div className="mt-7 inline-flex w-fit items-center gap-2 rounded-full border border-white/35 bg-black/18 px-4 py-1.5 text-xs font-semibold text-white/90">
                 {activeItem.name}
@@ -481,7 +482,7 @@ export function ArtistScrollStage() {
                   }}
                   disabled={!canGoPrev}
                   aria-disabled={!canGoPrev}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/35 bg-black/20 text-white transition hover:bg-black/35 disabled:cursor-not-allowed disabled:opacity-45"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/35 bg-black/20 text-white transition hover:bg-black/35 disabled:cursor-not-allowed disabled:opacity-45"
                   aria-label="Artista anterior"
                 >
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
@@ -505,7 +506,7 @@ export function ArtistScrollStage() {
                   }}
                   disabled={!canGoNext}
                   aria-disabled={!canGoNext}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/35 bg-black/20 text-white transition hover:bg-black/35 disabled:cursor-not-allowed disabled:opacity-45"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/35 bg-black/20 text-white transition hover:bg-black/35 disabled:cursor-not-allowed disabled:opacity-45"
                   aria-label="Siguiente artista"
                 >
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
@@ -542,9 +543,16 @@ export function ArtistScrollStage() {
                         : "scale(1)",
                     } as CSSProperties}
                   >
-                    <div className="showcase-card-media">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={item.thumbnail} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
+                    <div className="showcase-card-media relative">
+                      <Image
+                        src={item.thumbnail}
+                        alt={item.name}
+                        fill
+                        sizes="(max-width: 640px) 78vw, 320px"
+                        className="object-cover"
+                        loading={index === 0 ? "eager" : "lazy"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
+                      />
                     </div>
                     <p className="showcase-card-label">
                       {item.name}
@@ -611,10 +619,12 @@ export function ArtistScrollStage() {
                     <p className="artist-detail-vertical hidden lg:block">
                       {detailItem.category} | {detailItem.name}
                     </p>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={detailImage}
                       alt={detailItem.name}
+                      width={1120}
+                      height={1800}
+                      sizes="(max-width: 1024px) 100vw, 45vw"
                       className="block h-[min(56vh,460px)] w-full max-w-[560px] rounded-2xl object-cover sm:h-[min(84vh,900px)]"
                       loading="lazy"
                     />
@@ -634,12 +644,13 @@ export function ArtistScrollStage() {
                     <div className="mt-4 grid min-h-0 flex-1 items-start gap-3 sm:grid-cols-2">
                       {detailItem.gallery.length === 1 ? (
                         <article className="artist-profile-media-card relative col-span-full overflow-hidden rounded-xl border shadow-[0_8px_18px_rgb(17_39_60_/0.12)]">
-                          <div className="artist-profile-media h-[22rem] w-full overflow-hidden sm:h-[31rem]">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                          <div className="artist-profile-media relative h-[22rem] w-full overflow-hidden sm:h-[31rem]">
+                            <Image
                               src={detailItem.gallery[0]}
                               alt={`${detailItem.name} banner`}
-                              className="block h-full w-full object-cover opacity-92"
+                              fill
+                              sizes="(max-width: 1024px) 100vw, 55vw"
+                              className="object-cover opacity-92"
                               loading="lazy"
                             />
                           </div>
@@ -650,12 +661,13 @@ export function ArtistScrollStage() {
                             key={`${detailItem.id}-gallery-${index}`}
                             className="artist-profile-media-card relative overflow-hidden rounded-xl border shadow-[0_8px_18px_rgb(17_39_60_/0.12)]"
                           >
-                            <div className="artist-profile-media h-52 w-full overflow-hidden sm:h-64">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
+                            <div className="artist-profile-media relative h-52 w-full overflow-hidden sm:h-64">
+                              <Image
                                 src={image}
                                 alt={`${detailItem.name} gallery ${index + 1}`}
-                                className="block h-full w-full object-cover opacity-92"
+                                fill
+                                sizes="(max-width: 640px) 100vw, 28vw"
+                                className="object-cover opacity-92"
                                 loading="lazy"
                               />
                             </div>

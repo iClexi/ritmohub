@@ -27,10 +27,10 @@ type CourseTopic = "General" | "Produccion" | "Performance" | "Instrumento" | "N
 type CourseTopicFilter = "Todos" | CourseTopic;
 
 const LEVEL_COLORS: Record<string, { bg: string; color: string }> = {
-  Basico: { bg: "rgba(16,185,129,0.15)", color: "#34d399" },
-  Básico: { bg: "rgba(16,185,129,0.15)", color: "#34d399" },
-  Intermedio: { bg: "rgba(99,102,241,0.15)", color: "#818cf8" },
-  Avanzado: { bg: "rgba(239,68,68,0.15)", color: "#f87171" },
+  Basico: { bg: "rgba(16,185,129,0.15)", color: "var(--ax-success)" },
+  Básico: { bg: "rgba(16,185,129,0.15)", color: "var(--ax-success)" },
+  Intermedio: { bg: "rgba(99,102,241,0.15)", color: "var(--ax-primary)" },
+  Avanzado: { bg: "rgba(239,68,68,0.15)", color: "var(--ax-danger)" },
 };
 
 function getCourseTopic(course: Pick<Course, "title" | "summary">): CourseTopic {
@@ -95,7 +95,7 @@ function matchesCourseCost(priceUsd: number, filter: CostFilter) {
 }
 
 function LevelBadge({ level }: { level: string }) {
-  const c = LEVEL_COLORS[level] ?? { bg: "var(--ui-border)", color: "var(--ui-muted)" };
+  const c = LEVEL_COLORS[level] ?? { bg: "var(--ui-surface-soft)", color: "var(--ui-muted)" };
   return (
     <span
       className="rounded-full px-2.5 py-1 text-xs font-semibold"
@@ -255,7 +255,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
         style={{ borderColor: "var(--ui-border)", background: "var(--ui-surface-soft)" }}
       >
         <div className="mx-auto max-w-7xl">
-          <p className="mb-1 text-sm font-semibold uppercase tracking-widest" style={{ color: "#6366f1" }}>
+          <p className="mb-1 text-sm font-semibold uppercase tracking-widest" style={{ color: "var(--ax-primary)" }}>
             Aprende a tu ritmo
           </p>
           <h1 className="text-4xl font-bold" style={{ color: "var(--ui-text)" }}>
@@ -272,8 +272,8 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
         <button
           type="button"
           onClick={() => setSidebarOpen((v) => !v)}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-xl md:hidden"
-          style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-[var(--ui-on-primary)] shadow-xl md:hidden"
+          style={{ background: "linear-gradient(135deg,var(--ax-primary),var(--ax-violet))" }}
         >
           <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="2">
             <line x1="4" y1="6" x2="20" y2="6" />
@@ -360,7 +360,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                       selectedOwnership === value
                         ? {
                             background: "rgba(239,68,68,0.15)",
-                            color: "#f87171",
+                            color: "var(--ax-danger)",
                             border: "1px solid rgba(239,68,68,0.3)",
                           }
                         : {
@@ -395,7 +395,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                       selectedLevel === level
                         ? {
                             background: "rgba(239,68,68,0.15)",
-                            color: "#f87171",
+                            color: "var(--ax-danger)",
                             border: "1px solid rgba(239,68,68,0.3)",
                           }
                         : {
@@ -426,7 +426,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                       selectedTopic === topic
                         ? {
                             background: "rgba(99,102,241,0.15)",
-                            color: "#818cf8",
+                            color: "var(--ax-primary)",
                             border: "1px solid rgba(99,102,241,0.3)",
                           }
                         : {
@@ -457,7 +457,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                       selectedCost === value
                         ? {
                             background: "rgba(139,92,246,0.15)",
-                            color: "#a78bfa",
+                            color: "var(--ax-violet)",
                             border: "1px solid rgba(139,92,246,0.3)",
                           }
                         : {
@@ -494,7 +494,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                       selectedDuration === value
                         ? {
                             background: "rgba(59,130,246,0.15)",
-                            color: "#60a5fa",
+                            color: "var(--ax-info)",
                             border: "1px solid rgba(59,130,246,0.3)",
                           }
                         : {
@@ -536,7 +536,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                       sortBy === opt.value
                         ? {
                             background: "rgba(239,68,68,0.15)",
-                            color: "#f87171",
+                            color: "var(--ax-danger)",
                             border: "1px solid rgba(239,68,68,0.3)",
                           }
                         : {
@@ -577,8 +577,8 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                 setSelectedLevel("Todos");
                 setSortBy("reciente");
               }}
-              className="mt-4 w-full rounded-2xl px-4 py-2.5 text-sm font-semibold text-white"
-              style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
+              className="mt-4 w-full rounded-2xl px-4 py-2.5 text-sm font-semibold text-[var(--ui-on-primary)]"
+              style={{ background: "linear-gradient(135deg,var(--ax-primary),var(--ax-violet))" }}
             >
               Limpiar filtros
             </button>
@@ -600,7 +600,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                 style={{
                   background: "rgba(239,68,68,0.15)",
                   border: "1px solid rgba(239,68,68,0.3)",
-                  color: "#f87171",
+                  color: "var(--ax-danger)",
                 }}
               >
                 {selectedOwnership} ✕
@@ -614,7 +614,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                 style={{
                   background: "rgba(99,102,241,0.15)",
                   border: "1px solid rgba(99,102,241,0.3)",
-                  color: "#818cf8",
+                  color: "var(--ax-primary)",
                 }}
               >
                 {selectedLevel} ✕
@@ -628,7 +628,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                 style={{
                   background: "rgba(99,102,241,0.15)",
                   border: "1px solid rgba(99,102,241,0.3)",
-                  color: "#818cf8",
+                  color: "var(--ax-primary)",
                 }}
               >
                 {selectedTopic} ✕
@@ -642,7 +642,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                 style={{
                   background: "rgba(139,92,246,0.15)",
                   border: "1px solid rgba(139,92,246,0.3)",
-                  color: "#a78bfa",
+                  color: "var(--ax-violet)",
                 }}
               >
                 {selectedCost} ✕
@@ -656,7 +656,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                 style={{
                   background: "rgba(59,130,246,0.15)",
                   border: "1px solid rgba(59,130,246,0.3)",
-                  color: "#60a5fa",
+                  color: "var(--ax-info)",
                 }}
               >
                 {selectedDuration} ✕
@@ -670,7 +670,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                 style={{
                   background: "rgba(139,92,246,0.15)",
                   border: "1px solid rgba(139,92,246,0.3)",
-                  color: "#a78bfa",
+                  color: "var(--ax-violet)",
                 }}
               >
                 &ldquo;{searchQuery}&rdquo; ✕
@@ -706,7 +706,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                         <LevelBadge level={course.level} />
                         <span
                           className="rounded-full px-2.5 py-1 text-xs font-semibold"
-                          style={{ background: "rgba(139,92,246,0.18)", color: "#a78bfa" }}
+                          style={{ background: "rgba(139,92,246,0.18)", color: "var(--ax-violet)" }}
                         >
                           {topic}
                         </span>
@@ -737,7 +737,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                           {isPaid ? (
                             <span
                               className="flex items-center gap-1 text-sm font-bold"
-                              style={{ color: "#34d399" }}
+                              style={{ color: "var(--ax-success)" }}
                             >
                               ✓ Pagado
                             </span>
@@ -751,10 +751,10 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                           href={`/academiax/courses/${course.id}`}
                           onClick={(event) => handleOpenCourse(event, course.id)}
                           aria-disabled={isNavigating && openingCourseId === course.id}
-                          className={`mt-3 flex w-full items-center justify-center rounded-xl py-2.5 text-xs font-semibold text-white transition-all hover:opacity-90 ${
+                          className={`mt-3 flex w-full items-center justify-center rounded-xl py-2.5 text-xs font-semibold text-[var(--ui-on-primary)] transition-all hover:opacity-90 ${
                             isNavigating && openingCourseId === course.id ? "pointer-events-none opacity-85" : ""
                           }`}
-                          style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
+                          style={{ background: "linear-gradient(135deg,var(--ax-primary),var(--ax-violet))" }}
                         >
                           {isNavigating && openingCourseId === course.id ? "Cargando..." : "Ver curso"}
                         </Link>
@@ -780,7 +780,7 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                   viewBox="0 0 24 24"
                   fill="none"
                   className="h-8 w-8"
-                  stroke="#6366f1"
+                  stroke="var(--ax-primary)"
                   strokeWidth="1.5"
                 >
                   <circle cx="11" cy="11" r="8" />
@@ -804,8 +804,8 @@ export function CatalogClient({ courses, paidCourseIds }: Props) {
                   setSelectedLevel("Todos");
                   setSortBy("reciente");
                 }}
-                className="mt-6 rounded-2xl px-6 py-2.5 text-sm font-semibold text-white"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
+                className="mt-6 rounded-2xl px-6 py-2.5 text-sm font-semibold text-[var(--ui-on-primary)]"
+                style={{ background: "linear-gradient(135deg,var(--ax-primary),var(--ax-violet))" }}
               >
                 Limpiar filtros
               </button>

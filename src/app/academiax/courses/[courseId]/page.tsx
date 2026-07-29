@@ -61,9 +61,9 @@ export default async function CourseDetailPage({ params }: Props) {
         ];
 
   const levelColors: Record<string, { bg: string; color: string }> = {
-    Básico: { bg: "rgba(16,185,129,0.2)", color: "#34d399" },
-    Intermedio: { bg: "rgba(99,102,241,0.2)", color: "#818cf8" },
-    Avanzado: { bg: "rgba(239,68,68,0.2)", color: "#f87171" },
+    Básico: { bg: "rgba(16,185,129,0.2)", color: "#6ee7b7" },
+    Intermedio: { bg: "rgba(99,102,241,0.2)", color: "#c7d2fe" },
+    Avanzado: { bg: "rgba(239,68,68,0.2)", color: "#fca5a5" },
     Test: { bg: "rgba(255,255,255,0.08)", color: "#94a3b8" },
   };
   const lc = levelColors[course.level] ?? levelColors["Test"];
@@ -98,7 +98,7 @@ export default async function CourseDetailPage({ params }: Props) {
           </Link>
           <span
             className="rounded-full px-3 py-1 text-xs font-semibold"
-            style={{ background: "rgba(99,102,241,0.15)", color: "#818cf8" }}
+            style={{ background: "rgba(99,102,241,0.15)", color: "var(--ax-primary)" }}
           >
             RitmoHub Academy
           </span>
@@ -157,8 +157,8 @@ export default async function CourseDetailPage({ params }: Props) {
               {/* Instructor */}
               <div className="mt-6 flex items-center gap-3">
                 <span
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
-                  style={{ background: "linear-gradient(135deg,#ef4444,#dc2626)" }}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-[var(--ui-on-primary)]"
+                  style={{ background: "linear-gradient(135deg,var(--ax-danger),#dc2626)" }}
                 >
                   {course.instructor.charAt(0).toUpperCase()}
                 </span>
@@ -173,7 +173,7 @@ export default async function CourseDetailPage({ params }: Props) {
                   ) : (
                     <p className="text-sm font-semibold text-white">{course.instructor}</p>
                   )}
-                  <p className="text-xs" style={{ color: "#818cf8" }}>
+                  <p className="text-xs" style={{ color: "#c7d2fe" }}>
                     Instructor certificado
                   </p>
                 </div>
@@ -227,8 +227,8 @@ export default async function CourseDetailPage({ params }: Props) {
                   {hasPaid ? (
                     <Link
                       href={`/academiax/courses/${course.id}/learn`}
-                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-white transition-all hover:opacity-90"
-                      style={{ background: "linear-gradient(135deg,#10b981,#059669)" }}
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-[var(--ui-on-primary)] transition-all hover:opacity-90"
+                      style={{ background: "var(--ax-success)" }}
                     >
                       <svg
                         viewBox="0 0 24 24"
@@ -245,24 +245,16 @@ export default async function CourseDetailPage({ params }: Props) {
                     <div className="mt-4 space-y-2">
                       <CourseCheckoutButton
                         courseId={course.id}
-                        provider="stripe"
                         label="Comprar"
-                        className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all hover:opacity-90"
-                        style={{ background: "linear-gradient(135deg,#ef4444,#dc2626)" }}
-                      />
-                      <CourseCheckoutButton
-                        courseId={course.id}
-                        provider="paypal"
-                        label="Comprar con PayPal"
-                        className="w-full rounded-2xl py-3.5 text-sm font-bold text-white transition-all hover:opacity-90"
-                        style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)" }}
+                        className="w-full rounded-2xl py-3.5 text-sm font-bold text-[var(--ui-on-primary)] transition-all hover:opacity-90"
+                        style={{ background: "linear-gradient(135deg,var(--ax-danger),#dc2626)" }}
                       />
                     </div>
                   ) : (
                     <Link
                       href="/login"
-                      className="mt-4 flex w-full items-center justify-center rounded-2xl py-3.5 text-sm font-bold text-white transition-all hover:opacity-90"
-                      style={{ background: "linear-gradient(135deg,#ef4444,#dc2626)" }}
+                      className="mt-4 flex w-full items-center justify-center rounded-2xl py-3.5 text-sm font-bold text-[var(--ui-on-primary)] transition-all hover:opacity-90"
+                      style={{ background: "linear-gradient(135deg,var(--ax-danger),#dc2626)" }}
                     >
                       Inicia sesión para comprar
                     </Link>
@@ -278,8 +270,8 @@ export default async function CourseDetailPage({ params }: Props) {
                     ].map((feat) => (
                       <li key={feat} className="flex items-center gap-2 text-sm" style={{ color: "#94a3b8" }}>
                         <span
-                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                          style={{ background: "linear-gradient(135deg,#ef4444,#dc2626)" }}
+                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-[var(--ui-on-primary)]"
+                          style={{ background: "linear-gradient(135deg,var(--ax-danger),#dc2626)" }}
                         >
                           ✓
                         </span>
@@ -362,8 +354,8 @@ export default async function CourseDetailPage({ params }: Props) {
               {hasPaid ? (
                 <Link
                   href={`/academiax/courses/${course.id}/learn`}
-                  className="mt-4 flex w-full items-center justify-center rounded-2xl py-3 text-sm font-bold text-white"
-                  style={{ background: "linear-gradient(135deg,#10b981,#059669)" }}
+                  className="mt-4 flex w-full items-center justify-center rounded-2xl py-3 text-sm font-bold text-[var(--ui-on-primary)]"
+                  style={{ background: "var(--ax-success)" }}
                 >
                   Entrar al curso →
                 </Link>
@@ -371,24 +363,16 @@ export default async function CourseDetailPage({ params }: Props) {
                 <div className="mt-4 space-y-2">
                     <CourseCheckoutButton
                     courseId={course.id}
-                    provider="stripe"
                     label="Comprar"
-                    className="w-full rounded-2xl py-3 text-sm font-bold text-white transition-all hover:opacity-90"
-                    style={{ background: "linear-gradient(135deg,#ef4444,#dc2626)" }}
-                  />
-                  <CourseCheckoutButton
-                    courseId={course.id}
-                    provider="paypal"
-                    label="Comprar con PayPal"
-                    className="w-full rounded-2xl py-3 text-sm font-bold text-white transition-all hover:opacity-90"
-                    style={{ background: "linear-gradient(135deg,#2563eb,#1d4ed8)" }}
+                    className="w-full rounded-2xl py-3 text-sm font-bold text-[var(--ui-on-primary)] transition-all hover:opacity-90"
+                    style={{ background: "linear-gradient(135deg,var(--ax-danger),#dc2626)" }}
                   />
                 </div>
               ) : (
                 <Link
                   href="/login"
-                  className="mt-4 flex w-full items-center justify-center rounded-2xl py-3 text-sm font-bold text-white"
-                  style={{ background: "linear-gradient(135deg,#ef4444,#dc2626)" }}
+                  className="mt-4 flex w-full items-center justify-center rounded-2xl py-3 text-sm font-bold text-[var(--ui-on-primary)]"
+                  style={{ background: "linear-gradient(135deg,var(--ax-danger),#dc2626)" }}
                 >
                   Iniciar sesión
                 </Link>

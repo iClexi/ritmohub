@@ -18,7 +18,7 @@ export default async function RitmoHubAcademyLayout({ children }: { children: Re
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <span className="text-lg font-bold tracking-tight" style={{ color: "var(--ui-text)" }}>
-            RitmoHub <span style={{ color: "#ef4444" }}>Academy</span>
+            RitmoHub <span style={{ color: "var(--ax-danger)" }}>Academy</span>
           </span>
 
           <div className="flex items-center gap-3">

@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { listCourses } from "@/lib/db";
 import { getSessionFromCookie } from "@/lib/auth/session";
 import { AcademiaIcon, type AcademiaIconName } from "@/components/academiax/academiax-icons";
+
+export const metadata: Metadata = {
+  title: "Academy",
+  description:
+    "Cursos de producción, instrumentos, canto y negocio musical impartidos por profesionales.",
+  alternates: { canonical: "/academiax" },
+};
 
 const CATEGORIES: Array<{ icon: AcademiaIconName; label: string }> = [
   { icon: "piano", label: "Producción" },
@@ -21,7 +29,7 @@ const TESTIMONIALS = [
     initials: "SC",
     quote:
       "RitmoHub Academy transformó completamente mi enfoque en producción. Los cursos son increíblemente prácticos y los instructores realmente saben de lo que hablan.",
-    gradient: "linear-gradient(135deg,#ef4444,#dc2626)",
+    gradient: "linear-gradient(135deg,var(--ax-danger),#dc2626)",
   },
   {
     name: "Marcos Ureña",
@@ -29,7 +37,7 @@ const TESTIMONIALS = [
     initials: "MU",
     quote:
       "En tres meses pasé de saber tocar acordes básicos a componer mis propias canciones. La estructura de los cursos es perfecta para autodidactas.",
-    gradient: "linear-gradient(135deg,#8b5cf6,#ec4899)",
+    gradient: "linear-gradient(135deg,var(--ax-violet),var(--ax-pink))",
   },
   {
     name: "Valentina Cruz",
@@ -37,7 +45,7 @@ const TESTIMONIALS = [
     initials: "VC",
     quote:
       "El curso de Voz & Canto me dio herramientas que nunca habría encontrado en clases presenciales. Mi rango vocal mejoró notablemente en pocas semanas.",
-    gradient: "linear-gradient(135deg,#06b6d4,#6366f1)",
+    gradient: "linear-gradient(135deg,var(--ax-cyan),var(--ax-primary))",
   },
   {
     name: "Diego Fuentes",
@@ -45,17 +53,17 @@ const TESTIMONIALS = [
     initials: "DF",
     quote:
       "La calidad del contenido de mezcla y masterización es de nivel profesional. Definitivamente vale cada centavo invertido.",
-    gradient: "linear-gradient(135deg,#f59e0b,#ef4444)",
+    gradient: "linear-gradient(135deg,var(--ax-warning),var(--ax-danger))",
   },
 ];
 
 function LevelBadge({ level }: { level: string }) {
   const colors: Record<string, { bg: string; color: string }> = {
-    Básico: { bg: "rgba(16,185,129,0.15)", color: "#34d399" },
-    Intermedio: { bg: "rgba(99,102,241,0.15)", color: "#818cf8" },
-    Avanzado: { bg: "rgba(239,68,68,0.15)", color: "#f87171" },
+    Básico: { bg: "rgba(16,185,129,0.15)", color: "var(--ax-success)" },
+    Intermedio: { bg: "rgba(99,102,241,0.15)", color: "var(--ax-primary)" },
+    Avanzado: { bg: "rgba(239,68,68,0.15)", color: "var(--ax-danger)" },
   };
-  const c = colors[level] ?? { bg: "var(--ui-border)", color: "var(--ui-muted)" };
+  const c = colors[level] ?? { bg: "var(--ui-surface-soft)", color: "var(--ui-muted)" };
   return (
     <span
       className="rounded-full px-2.5 py-1 text-xs font-semibold"
@@ -81,14 +89,14 @@ export default async function AcademiaXHomePage() {
         <div
           className="pointer-events-none absolute -left-40 -top-40 h-[600px] w-[600px] animate-pulse rounded-full opacity-20"
           style={{
-            background: "radial-gradient(circle, #6366f1 0%, transparent 70%)",
+            background: "radial-gradient(circle, var(--ax-primary) 0%, transparent 70%)",
             animationDuration: "6s",
           }}
         />
         <div
           className="pointer-events-none absolute -bottom-40 -right-40 h-[500px] w-[500px] animate-pulse rounded-full opacity-20"
           style={{
-            background: "radial-gradient(circle, #8b5cf6 0%, transparent 70%)",
+            background: "radial-gradient(circle, var(--ax-violet) 0%, transparent 70%)",
             animationDuration: "8s",
           }}
         />
@@ -110,12 +118,12 @@ export default async function AcademiaXHomePage() {
               style={{
                 background: "rgba(99,102,241,0.12)",
                 border: "1px solid rgba(99,102,241,0.3)",
-                color: "#818cf8",
+                color: "var(--ax-primary)",
               }}
             >
               <span
                 className="h-1.5 w-1.5 rounded-full"
-                style={{ background: "#6366f1" }}
+                style={{ background: "var(--ax-primary)" }}
               />
               Plataforma de aprendizaje musical
             </div>
@@ -127,7 +135,7 @@ export default async function AcademiaXHomePage() {
               Domina la{" "}
               <span
                 style={{
-                  background: "linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)",
+                  background: "linear-gradient(135deg,var(--ax-primary),var(--ax-violet),var(--ax-violet))",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
@@ -146,9 +154,9 @@ export default async function AcademiaXHomePage() {
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
                 href="/academiax/catalog"
-                className="rounded-2xl px-7 py-3.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-xl"
+                className="rounded-2xl px-7 py-3.5 text-sm font-semibold text-[var(--ui-on-primary)] transition-all hover:opacity-90 hover:shadow-xl"
                 style={{
-                  background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+                  background: "linear-gradient(135deg,var(--ax-primary),var(--ax-violet))",
                   boxShadow: "0 0 40px rgba(99,102,241,0.3)",
                 }}
               >
@@ -170,10 +178,10 @@ export default async function AcademiaXHomePage() {
             {/* Social proof */}
             <div className="mt-12 flex items-center gap-6">
               <div className="flex -space-x-2">
-                {["#6366f1", "#8b5cf6", "#a78bfa", "#c4b5fd"].map((bg, i) => (
+                {["var(--ax-primary)", "var(--ax-violet)", "var(--ax-pink)", "var(--ax-info)"].map((bg, i) => (
                   <span
                     key={i}
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ring-2 ring-[var(--ui-bg)]"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-[var(--ui-on-primary)] ring-2 ring-[var(--ui-bg)]"
                     style={{ background: bg }}
                   />
                 ))}
@@ -250,7 +258,7 @@ export default async function AcademiaXHomePage() {
                   <div className="mt-4">
                     <div className="mb-1.5 flex justify-between text-xs" style={{ color: "var(--ui-muted)" }}>
                       <span>Progreso</span>
-                      <span style={{ color: "#818cf8" }}>65%</span>
+                      <span style={{ color: "var(--ax-primary)" }}>65%</span>
                     </div>
                     <div
                       className="h-1.5 w-full overflow-hidden rounded-full"
@@ -260,7 +268,7 @@ export default async function AcademiaXHomePage() {
                         className="h-full rounded-full"
                         style={{
                           width: "65%",
-                          background: "linear-gradient(90deg,#6366f1,#8b5cf6)",
+                          background: "linear-gradient(90deg,var(--ax-primary),var(--ax-violet))",
                         }}
                       />
                     </div>
@@ -278,7 +286,7 @@ export default async function AcademiaXHomePage() {
                           className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold"
                           style={
                             lesson.done
-                              ? { background: "#6366f1", color: "white" }
+                              ? { background: "var(--ax-primary)", color: "var(--ui-on-primary)" }
                               : { background: "var(--ui-border)", color: "var(--ui-muted)" }
                           }
                         >
@@ -307,7 +315,7 @@ export default async function AcademiaXHomePage() {
         <div className="mx-auto max-w-7xl">
           <div className="mb-10 flex items-end justify-between">
             <div>
-              <p className="mb-2 text-sm font-semibold uppercase tracking-widest" style={{ color: "#6366f1" }}>
+              <p className="mb-2 text-sm font-semibold uppercase tracking-widest" style={{ color: "var(--ax-primary)" }}>
                 Lo más popular
               </p>
               <h2 className="text-3xl font-bold sm:text-4xl" style={{ color: "var(--ui-text)" }}>
@@ -316,8 +324,8 @@ export default async function AcademiaXHomePage() {
             </div>
             <Link
               href="/academiax/catalog"
-              className="hidden items-center gap-1.5 text-sm font-medium transition-colors hover:text-white sm:flex"
-              style={{ color: "#818cf8" }}
+              className="hidden items-center gap-1.5 text-sm font-medium transition-opacity hover:opacity-80 sm:flex"
+              style={{ color: "var(--ax-primary)" }}
             >
               Ver todos
               <svg
@@ -364,8 +372,8 @@ export default async function AcademiaXHomePage() {
                         USD {featuredCourses[0].priceUsd.toFixed(2)}
                       </span>
                       <span
-                        className="rounded-xl px-4 py-2 text-sm font-semibold text-white"
-                        style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
+                        className="rounded-xl px-4 py-2 text-sm font-semibold text-[var(--ui-on-primary)]"
+                        style={{ background: "linear-gradient(135deg,var(--ax-primary),var(--ax-violet))" }}
                       >
                         Ver curso
                       </span>
@@ -484,7 +492,7 @@ export default async function AcademiaXHomePage() {
         style={{ background: "var(--ui-surface-soft)", borderTop: "1px solid var(--ui-border)", borderBottom: "1px solid var(--ui-border)" }}
       >
         <div className="mx-auto max-w-7xl text-center">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-widest" style={{ color: "#6366f1" }}>
+          <p className="mb-2 text-sm font-semibold uppercase tracking-widest" style={{ color: "var(--ax-primary)" }}>
             Todo lo que necesitas
           </p>
           <h2 className="mb-10 text-3xl font-bold sm:text-4xl" style={{ color: "var(--ui-text)" }}>
@@ -503,8 +511,8 @@ export default async function AcademiaXHomePage() {
                   color: "var(--ui-muted)",
                 }}
               >
-                <AcademiaIcon name={cat.icon} className="h-4 w-4 transition-colors group-hover:text-white" />
-                <span className="group-hover:text-white transition-colors">{cat.label}</span>
+                <AcademiaIcon name={cat.icon} className="h-4 w-4 transition-colors group-hover:text-[var(--ax-primary)]" />
+                <span className="transition-colors group-hover:text-[var(--ax-primary)]">{cat.label}</span>
               </Link>
             ))}
           </div>
@@ -515,7 +523,7 @@ export default async function AcademiaXHomePage() {
       <section className="px-6 py-24" style={{ background: "var(--ui-bg)" }}>
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 text-center">
-            <p className="mb-2 text-sm font-semibold uppercase tracking-widest" style={{ color: "#6366f1" }}>
+            <p className="mb-2 text-sm font-semibold uppercase tracking-widest" style={{ color: "var(--ax-primary)" }}>
               Testimonios reales
             </p>
             <h2 className="text-3xl font-bold sm:text-4xl" style={{ color: "var(--ui-text)" }}>
@@ -523,7 +531,13 @@ export default async function AcademiaXHomePage() {
             </h2>
           </div>
 
-          <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4" style={{ scrollbarWidth: "none" }}>
+          <div
+            className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4"
+            style={{ scrollbarWidth: "none" }}
+            role="region"
+            aria-label="Testimonios de estudiantes"
+            tabIndex={0}
+          >
             {TESTIMONIALS.map((t) => (
               <div
                 key={t.name}
@@ -539,7 +553,7 @@ export default async function AcademiaXHomePage() {
                     <svg
                       key={i}
                       viewBox="0 0 24 24"
-                      fill="#f59e0b"
+                      fill="var(--ax-warning)"
                       className="h-4 w-4"
                     >
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -553,7 +567,7 @@ export default async function AcademiaXHomePage() {
 
                 <div className="mt-5 flex items-center gap-3">
                   <span
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-[var(--ui-on-primary)]"
                     style={{ background: t.gradient }}
                   >
                     {t.initials}

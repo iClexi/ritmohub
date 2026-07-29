@@ -94,15 +94,15 @@ export default async function RitmoHubAcademyDashboard() {
         >
           <div
             className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full opacity-30"
-            style={{ background: "radial-gradient(circle,#ef4444,transparent)" }}
+            style={{ background: "radial-gradient(circle,var(--ax-danger),transparent)" }}
           />
-          <p className="mb-1 text-sm font-medium" style={{ color: "#f87171" }}>
+          <p className="mb-1 text-sm font-medium" style={{ color: "var(--ax-danger)" }}>
             Panel de aprendizaje
           </p>
           <h1 className="text-3xl font-bold sm:text-4xl" style={{ color: "var(--ui-text)" }}>
             <span className="inline-flex items-center gap-3">
               Bienvenido de vuelta, {user.name.split(" ")[0]}
-              <AcademiaIcon name="spark" className="h-7 w-7 text-[#f87171]" />
+              <AcademiaIcon name="spark" className="h-7 w-7 text-[var(--ax-danger)]" />
             </span>
           </h1>
           <p className="mt-2 text-base" style={{ color: "var(--ui-muted)" }}>
@@ -117,25 +117,25 @@ export default async function RitmoHubAcademyDashboard() {
               label: "Cursos inscritos",
               value: enrolledCourses.length,
               icon: "book" as AcademiaIconName,
-              color: "#6366f1",
+              color: "var(--ax-primary)",
             },
             {
               label: "Completados",
               value: 0,
               icon: "award" as AcademiaIconName,
-              color: "#34d399",
+              color: "var(--ax-success)",
             },
             {
               label: "Horas aprendidas",
               value: `${totalHours.toFixed(0)}h`,
               icon: "clock" as AcademiaIconName,
-              color: "#f59e0b",
+              color: "var(--ax-warning)",
             },
             {
               label: "Racha actual",
               value: "5 días",
               icon: "flame" as AcademiaIconName,
-              color: "#ef4444",
+              color: "var(--ax-danger)",
             },
           ].map((stat) => (
             <div
@@ -167,7 +167,7 @@ export default async function RitmoHubAcademyDashboard() {
               <Link
                 href="/academiax/catalog"
                 className="text-sm font-medium"
-                style={{ color: "#818cf8" }}
+                style={{ color: "var(--ax-primary)" }}
               >
                 Ver todos →
               </Link>
@@ -198,7 +198,7 @@ export default async function RitmoHubAcademyDashboard() {
                         className="rounded-full px-2.5 py-1 text-xs font-semibold"
                         style={{
                           background: "rgba(99,102,241,0.15)",
-                          color: "#818cf8",
+                          color: "var(--ax-primary)",
                         }}
                       >
                         {course.level}
@@ -217,7 +217,7 @@ export default async function RitmoHubAcademyDashboard() {
                           style={{ color: "var(--ui-muted)" }}
                         >
                           <span>Progreso</span>
-                          <span style={{ color: "#818cf8" }}>{progress}%</span>
+                          <span style={{ color: "var(--ax-primary)" }}>{progress}%</span>
                         </div>
                         <div
                           className="h-1.5 overflow-hidden rounded-full"
@@ -227,7 +227,7 @@ export default async function RitmoHubAcademyDashboard() {
                             className="h-full rounded-full transition-all duration-700"
                             style={{
                               width: `${progress}%`,
-                              background: "linear-gradient(90deg,#ef4444,#dc2626)",
+                              background: "linear-gradient(90deg,var(--ax-danger),#dc2626)",
                             }}
                           />
                         </div>
@@ -235,8 +235,8 @@ export default async function RitmoHubAcademyDashboard() {
 
                       <Link
                         href={`/academiax/courses/${course.id}/learn`}
-                        className="mt-4 flex w-full items-center justify-center rounded-2xl py-2.5 text-xs font-semibold text-white transition-all hover:opacity-90"
-                        style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
+                        className="mt-4 flex w-full items-center justify-center rounded-2xl py-2.5 text-xs font-semibold text-[var(--ui-on-primary)] transition-all hover:opacity-90"
+                        style={{ background: "linear-gradient(135deg,var(--ax-primary),var(--ax-violet))" }}
                       >
                         Continuar
                       </Link>
@@ -255,7 +255,7 @@ export default async function RitmoHubAcademyDashboard() {
             >
               <span
                 className="flex h-16 w-16 items-center justify-center rounded-2xl"
-                style={{ background: "rgba(99,102,241,0.12)", color: "#818cf8" }}
+                style={{ background: "rgba(99,102,241,0.12)", color: "var(--ax-primary)" }}
               >
                 <AcademiaIcon name="book" className="h-8 w-8" />
               </span>
@@ -267,8 +267,8 @@ export default async function RitmoHubAcademyDashboard() {
               </p>
               <Link
                 href="/academiax/catalog"
-                className="mt-6 rounded-2xl px-7 py-3 text-sm font-semibold text-white"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
+                className="mt-6 rounded-2xl px-7 py-3 text-sm font-semibold text-[var(--ui-on-primary)]"
+                style={{ background: "linear-gradient(135deg,var(--ax-primary),var(--ax-violet))" }}
               >
                 Explorar cursos
               </Link>
@@ -295,13 +295,12 @@ export default async function RitmoHubAcademyDashboard() {
                     border: unlocked
                       ? "1px solid rgba(99,102,241,0.3)"
                       : "1px solid var(--ui-border)",
-                    opacity: unlocked ? 1 : 0.45,
                   }}
                 >
                   <AcademiaIcon
                     name={ach.icon}
                     className="h-7 w-7"
-                    style={{ color: unlocked ? "#818cf8" : "var(--ui-muted)" }}
+                    style={{ color: unlocked ? "var(--ax-primary)" : "var(--ui-muted)" }}
                   />
                   <p
                     className="mt-2 text-xs font-semibold"
@@ -315,7 +314,7 @@ export default async function RitmoHubAcademyDashboard() {
                   {unlocked && (
                     <span
                       className="mt-2 rounded-full px-2 py-0.5 text-[10px] font-bold"
-                      style={{ background: "rgba(99,102,241,0.25)", color: "#818cf8" }}
+                      style={{ background: "rgba(99,102,241,0.25)", color: "var(--ax-primary)" }}
                     >
                       ✓ Desbloqueado
                     </span>
@@ -366,11 +365,11 @@ export default async function RitmoHubAcademyDashboard() {
                             className="h-full rounded-full"
                             style={{
                               width: `${progress}%`,
-                              background: "linear-gradient(90deg,#ef4444,#dc2626)",
+                              background: "linear-gradient(90deg,var(--ax-danger),#dc2626)",
                             }}
                           />
                         </div>
-                        <span className="text-xs" style={{ color: "#818cf8" }}>
+                        <span className="text-xs" style={{ color: "var(--ax-primary)" }}>
                           {progress}%
                         </span>
                       </div>
@@ -380,15 +379,15 @@ export default async function RitmoHubAcademyDashboard() {
                         className="rounded-full px-2.5 py-0.5 text-xs font-medium"
                         style={{
                           background: "rgba(52,211,153,0.15)",
-                          color: "#34d399",
+                          color: "var(--ax-success)",
                         }}
                       >
                         Pagado
                       </span>
                       <Link
                         href={`/academiax/courses/${course.id}/learn`}
-                        className="rounded-xl px-4 py-1.5 text-xs font-semibold text-white"
-                        style={{ background: "rgba(99,102,241,0.4)" }}
+                        className="rounded-xl px-4 py-1.5 text-xs font-semibold text-[var(--ui-on-primary)]"
+                        style={{ background: "var(--ax-primary)" }}
                       >
                         Continuar
                       </Link>

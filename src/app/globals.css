@@ -4,19 +4,27 @@
 :root[data-theme="classic"] {
   --ui-bg: #f6f7eb;
   --ui-text: #27323a;
-  --ui-muted: #5d6971;
+  --ui-muted: #47545c;
   --ui-surface: rgba(255, 255, 255, 0.9);
   --ui-surface-soft: #eef2e8;
   --ui-border: rgba(57, 62, 65, 0.2);
-  --ui-primary: #3f88c5;
-  --ui-primary-hover: #3574a8;
-  --ui-accent: #44bba4;
-  --ui-danger: #e94f37;
-  --ui-on-primary: #f6f7eb;
+  --ui-primary: #25679a;
+  --ui-primary-hover: #1f5681;
+  --ui-accent: #147363;
+  --ui-danger: #b83222;
+  --ui-on-primary: #ffffff;
   --ui-on-danger: #fff4ee;
   --ui-glow-primary: 63 136 197;
   --ui-glow-accent: 68 187 164;
   --ui-glow-danger: 233 79 55;
+  --ax-primary: #4338ca;
+  --ax-violet: #6d28d9;
+  --ax-danger: #b91c1c;
+  --ax-success: #036b4f;
+  --ax-info: #1d4e89;
+  --ax-warning: #92400e;
+  --ax-cyan: #0e7490;
+  --ax-pink: #be185d;
   color-scheme: light;
 }
 
@@ -36,6 +44,14 @@
   --ui-glow-primary: 75 163 241;
   --ui-glow-accent: 69 201 172;
   --ui-glow-danger: 255 107 95;
+  --ax-primary: #a5b4fc;
+  --ax-violet: #c4b5fd;
+  --ax-danger: #fca5a5;
+  --ax-success: #6ee7b7;
+  --ax-info: #93c5fd;
+  --ax-warning: #fcd34d;
+  --ax-cyan: #67e8f9;
+  --ax-pink: #f9a8d4;
   color-scheme: dark;
 }
 
@@ -46,11 +62,11 @@
   --ui-surface: rgba(255, 255, 255, 0.9);
   --ui-surface-soft: #f8e6da;
   --ui-border: rgba(130, 92, 80, 0.25);
-  --ui-primary: #f08a5d;
-  --ui-primary-hover: #d97246;
+  --ui-primary: #a9441f;
+  --ui-primary-hover: #873717;
   --ui-accent: #b83b5e;
-  --ui-danger: #d84b39;
-  --ui-on-primary: #fff8f3;
+  --ui-danger: #aa3526;
+  --ui-on-primary: #ffffff;
   --ui-on-danger: #fff5f1;
   --ui-glow-primary: 240 138 93;
   --ui-glow-accent: 184 59 94;
@@ -67,9 +83,9 @@
   --ui-border: rgba(79, 97, 146, 0.22);
   --ui-primary: #5856d6;
   --ui-primary-hover: #4745b4;
-  --ui-accent: #00a896;
-  --ui-danger: #ff5d73;
-  --ui-on-primary: #f6f6ff;
+  --ui-accent: #08766c;
+  --ui-danger: #b91f46;
+  --ui-on-primary: #ffffff;
   --ui-on-danger: #fff3f6;
   --ui-glow-primary: 88 86 214;
   --ui-glow-accent: 0 168 150;
@@ -92,7 +108,8 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
 }
 
 * {
@@ -288,21 +305,15 @@ body.modal-open {
 }
 
 .reveal-on-scroll {
-  opacity: 0;
   transform: translate3d(0, 28px, 0) scale(0.985);
-  filter: blur(2px);
   transition:
-    opacity 760ms cubic-bezier(0.2, 0.85, 0.2, 1),
-    transform 760ms cubic-bezier(0.2, 0.85, 0.2, 1),
-    filter 760ms cubic-bezier(0.2, 0.85, 0.2, 1);
+    transform 760ms cubic-bezier(0.2, 0.85, 0.2, 1);
   transition-delay: var(--reveal-delay, 0ms);
-  will-change: opacity, transform, filter;
+  will-change: transform;
 }
 
 .reveal-on-scroll.is-visible {
-  opacity: 1;
   transform: translate3d(0, 0, 0) scale(1);
-  filter: blur(0);
 }
 
 html.lenis,
@@ -423,6 +434,7 @@ body.stage-scroll-locked {
 }
 
 .rh-btn-primary {
+  color: var(--ui-on-primary);
   border-radius: var(--radius-soft);
   transition:
     transform 220ms ease,
@@ -681,6 +693,25 @@ body.stage-scroll-locked {
 
 .landing-nav {
   animation: landingReveal 420ms cubic-bezier(0.2, 0.84, 0.24, 1) both;
+}
+
+.landing-nav a,
+.landing-nav button,
+.landing-nav summary {
+  min-height: 44px;
+  align-items: center;
+}
+
+.landing-mobile-menu summary {
+  list-style: none;
+}
+
+.landing-mobile-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.landing-mobile-menu[open] > summary {
+  border-color: rgb(var(--ui-glow-primary) / 0.58);
 }
 
 .landing-link {
@@ -1075,6 +1106,8 @@ body.stage-scroll-locked {
 }
 
 .showcase-card-media {
+  position: relative;
+  aspect-ratio: 4 / 5;
   overflow: hidden;
   border-radius: 1.15rem;
   border: 1px solid rgb(255 255 255 / 0.62);
@@ -1083,7 +1116,8 @@ body.stage-scroll-locked {
 }
 
 .showcase-card-media img {
-  aspect-ratio: 4 / 5;
+  width: 100%;
+  height: 100%;
   transition: transform 460ms cubic-bezier(0.2, 0.84, 0.24, 1);
 }
 
@@ -2006,10 +2040,9 @@ body.stage-scroll-locked {
   }
 }
 
-/* Forum/post images en mobile no deben causar overflow horizontal */
+/* Las imagenes no deben causar overflow; las utilidades controlan la altura. */
 img {
   max-width: 100%;
-  height: auto;
 }
 
 /* Anti-overflow global en cualquier seccion */

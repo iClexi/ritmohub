@@ -56,6 +56,7 @@ function formatDate(value: string | null) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString("es-DO", {
+    timeZone: "America/Santo_Domingo",
     month: "short",
     day: "2-digit",
     hour: "2-digit",
@@ -64,10 +65,10 @@ function formatDate(value: string | null) {
   });
 }
 
-function formatRelative(value: string) {
+function formatRelative(value: string, referenceTimeMs: number) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  const seconds = Math.max(0, Math.floor((referenceTimeMs - date.getTime()) / 1000));
   if (seconds < 10) return "ahora";
   if (seconds < 60) return `hace ${seconds}s`;
   const minutes = Math.floor(seconds / 60);
@@ -139,15 +140,18 @@ function browserAccent(index: number) {
   return tones[index % tones.length];
 }
 
-function getHourlyBuckets(visits: TrafficVisit[]) {
-  const now = new Date();
+function getHourlyBuckets(visits: TrafficVisit[], referenceTimeMs: number) {
+  const hourMs = 60 * 60 * 1000;
+  const roundedReferenceTimeMs = Math.floor(referenceTimeMs / hourMs) * hourMs;
   const buckets = Array.from({ length: 12 }).map((_, index) => {
-    const date = new Date(now);
-    date.setHours(now.getHours() - (11 - index), 0, 0, 0);
+    const date = new Date(roundedReferenceTimeMs - (11 - index) * hourMs);
     return {
-      label: date.toLocaleTimeString("es-DO", { hour: "2-digit" }),
+      label: date.toLocaleTimeString("es-DO", {
+        hour: "2-digit",
+        timeZone: "America/Santo_Domingo",
+      }),
       start: date.getTime(),
-      end: date.getTime() + 60 * 60 * 1000,
+      end: date.getTime() + hourMs,
       value: 0,
     };
   });
@@ -172,7 +176,7 @@ export function AdminTrafficPanel() {
 
   const loadTraffic = useCallback(async () => {
     try {
-      const response = await fetch("/api/admin/traffic?limit=220", { cache: "no-store" });
+      const response = await fetch("/api/admin/traffic?limit=60", { cache: "no-store" });
       const payload = (await response.json().catch(() => null)) as
         | { visits?: TrafficVisit[]; generatedAt?: string; message?: string }
         | null;
@@ -193,11 +197,16 @@ export function AdminTrafficPanel() {
   }, []);
 
   useEffect(() => {
-    void loadTraffic();
+    const kickoff = window.setTimeout(() => {
+      void loadTraffic();
+    }, 0);
     const timer = window.setInterval(() => {
       void loadTraffic();
     }, 8000);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearTimeout(kickoff);
+      window.clearInterval(timer);
+    };
   }, [loadTraffic]);
 
   useEffect(() => {
@@ -205,7 +214,6 @@ export function AdminTrafficPanel() {
     if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const nodes = root.querySelectorAll("[data-traffic-animate]");
     const animation = animate(nodes, {
-      opacity: [0, 1],
       translateY: [18, 0],
       scale: [0.98, 1],
       delay: stagger(48),
@@ -223,7 +231,6 @@ export function AdminTrafficPanel() {
     if (!root || !firstVisitId || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const rows = root.querySelectorAll("[data-live-row]");
     const animation = animate(rows, {
-      opacity: [0, 1],
       translateX: [10, 0],
       delay: stagger(20),
       duration: 420,
@@ -234,8 +241,13 @@ export function AdminTrafficPanel() {
     };
   }, [firstVisitId, visits.length]);
 
+  const referenceTimeMs = useMemo(() => {
+    const parsed = lastUpdate ? new Date(lastUpdate).getTime() : 0;
+    return Number.isFinite(parsed) ? parsed : 0;
+  }, [lastUpdate]);
+
   const stats = useMemo(() => {
-    const now = Date.now();
+    const now = referenceTimeMs;
     const recent = visits.filter((visit) => {
       const time = new Date(visit.occurredAt).getTime();
       return Number.isFinite(time) && now - time <= 15 * 60 * 1000;
@@ -256,12 +268,15 @@ export function AdminTrafficPanel() {
       countries: countries.size,
       bots,
     };
-  }, [visits]);
+  }, [referenceTimeMs, visits]);
 
   const countryRanks = useMemo(() => countBy(visits, (visit) => visit.country).slice(0, 5), [visits]);
   const browserRanks = useMemo(() => countBy(visits, (visit) => visit.browser).slice(0, 5), [visits]);
   const deviceRanks = useMemo(() => countBy(visits, (visit) => deviceLabel(visit.deviceType)).slice(0, 4), [visits]);
-  const hourlyBuckets = useMemo(() => getHourlyBuckets(visits), [visits]);
+  const hourlyBuckets = useMemo(
+    () => getHourlyBuckets(visits, referenceTimeMs),
+    [referenceTimeMs, visits],
+  );
   const latest = visits[0] ?? null;
 
   return (
@@ -425,7 +440,7 @@ export function AdminTrafficPanel() {
           ) : (
             <div className="divide-y divide-[color:var(--ui-border)]">
               {visits.map((visit) => (
-                <VisitRow key={visit.id} visit={visit} />
+                <VisitRow key={visit.id} visit={visit} referenceTimeMs={referenceTimeMs} />
               ))}
             </div>
           )}
@@ -581,18 +596,24 @@ function RankPanel({ title, items, total }: { title: string; items: RankItem[]; 
   );
 }
 
-function VisitRow({ visit }: { visit: TrafficVisit }) {
+function VisitRow({
+  visit,
+  referenceTimeMs,
+}: {
+  visit: TrafficVisit;
+  referenceTimeMs: number;
+}) {
   return (
     <article
       data-live-row
-      className="grid gap-4 px-4 py-4 transition hover:bg-[var(--ui-surface-soft)] sm:px-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.05fr)]"
+      className="grid gap-4 px-4 py-4 transition [content-visibility:auto] [contain-intrinsic-size:auto_220px] hover:bg-[var(--ui-surface-soft)] sm:px-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.05fr)]"
     >
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${sourceTone(visit.source)}`}>
             {sourceLabel(visit.source)}
           </span>
-          <span className="text-xs font-semibold text-[var(--ui-text)]">{formatRelative(visit.occurredAt)}</span>
+          <span className="text-xs font-semibold text-[var(--ui-text)]">{formatRelative(visit.occurredAt, referenceTimeMs)}</span>
           <span className="text-[11px] text-[var(--ui-muted)]">{formatDate(visit.occurredAt)}</span>
         </div>
         <div className="mt-3 flex min-w-0 items-center gap-3">
@@ -609,7 +630,7 @@ function VisitRow({ visit }: { visit: TrafficVisit }) {
         </p>
       </div>
 
-      <div className="grid content-start gap-1.5 text-xs text-[var(--ui-muted)]">
+      <dl className="grid content-start gap-1.5 text-xs text-[var(--ui-muted)]">
         <InfoLine label="IP" value={visit.ip || "-"} mono />
         <InfoLine label="Lugar" value={joinParts([visit.cityGeo, visit.region, visit.country])} />
         <InfoLine label="ISP" value={visit.isp || "-"} />
@@ -618,26 +639,26 @@ function VisitRow({ visit }: { visit: TrafficVisit }) {
           value={visit.geoLat !== null && visit.geoLon !== null ? `${visit.geoLat}, ${visit.geoLon}` : "-"}
           mono
         />
-      </div>
+      </dl>
 
-      <div className="grid content-start gap-1.5 text-xs text-[var(--ui-muted)]">
+      <dl className="grid content-start gap-1.5 text-xs text-[var(--ui-muted)]">
         <InfoLine label="Navegador" value={joinParts([visit.browser, visit.browserVersion])} />
         <InfoLine label="Sistema" value={joinParts([visit.os, visit.osVersion])} />
         <InfoLine label="Dispositivo" value={joinParts([deviceLabel(visit.deviceType), visit.deviceVendor])} />
         <InfoLine label="Pantalla" value={`${formatScreen(visit.screenWidth, visit.screenHeight)} - viewport ${formatScreen(visit.viewportWidth, visit.viewportHeight)}`} />
         <InfoLine label="Idioma/TZ" value={joinParts([visit.language, visit.timezone])} />
         <InfoLine label="Plataforma" value={joinParts([visit.platform, visit.connection])} />
-      </div>
+      </dl>
     </article>
   );
 }
 
 function InfoLine({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <p className="grid min-w-0 grid-cols-[5.9rem_minmax(0,1fr)] gap-2 sm:grid-cols-[6.8rem_minmax(0,1fr)]">
-      <span className="text-[var(--ui-muted)]/75">{label}</span>
-      <span className={`truncate text-[var(--ui-text)] ${mono ? "font-mono" : ""}`}>{value}</span>
-    </p>
+    <div className="grid min-w-0 grid-cols-[5.9rem_minmax(0,1fr)] gap-2 sm:grid-cols-[6.8rem_minmax(0,1fr)]">
+      <dt className="text-[var(--ui-muted)]">{label}</dt>
+      <dd className={`truncate text-[var(--ui-text)] ${mono ? "font-mono" : ""}`}>{value}</dd>
+    </div>
   );
 }
 

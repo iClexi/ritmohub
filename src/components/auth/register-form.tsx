@@ -49,7 +49,7 @@ export function RegisterForm() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    mode: "onChange",
+    mode: "onTouched",
     reValidateMode: "onChange",
     defaultValues: {
       firstName: "",
@@ -208,7 +208,7 @@ export function RegisterForm() {
       </label>
 
       <div className="space-y-2">
-        <span className="text-sm font-semibold text-[var(--ui-text)]">Celular</span>
+        <span id="register-phone-label" className="text-sm font-semibold text-[var(--ui-text)]">Celular</span>
         <Controller
           name="phone"
           control={control}
@@ -229,16 +229,20 @@ export function RegisterForm() {
               onBlur={field.onBlur}
               className="rh-phone-field"
               inputProps={{
+                id: "register-phone",
                 name: field.name,
                 autoComplete: "tel",
                 inputMode: "numeric",
+                "aria-labelledby": "register-phone-label",
+                "aria-describedby": errors.phone?.message ? "register-phone-error" : undefined,
+                "aria-invalid": Boolean(errors.phone?.message),
                 onKeyDown: preventNonNumericPhoneInput,
               }}
             />
           )}
         />
         <input type="hidden" {...register("phoneCountry")} />
-        {errors.phone?.message ? <p className="text-sm text-[var(--ui-danger)]">{errors.phone.message}</p> : null}
+        {errors.phone?.message ? <p id="register-phone-error" className="text-sm text-[var(--ui-danger)]" role="alert">{errors.phone.message}</p> : null}
       </div>
 
       <label className="block space-y-2">

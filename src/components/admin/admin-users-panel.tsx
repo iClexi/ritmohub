@@ -4,6 +4,8 @@ import { animate, stagger } from "animejs";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { getSafeExternalHref } from "@/lib/security/url";
+
 type AdminUser = {
   id: string;
   name: string;
@@ -223,10 +225,10 @@ function formatDate(value: string) {
   });
 }
 
-function formatRelative(value: string) {
+function formatRelative(value: string, referenceTimeMs: number) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  const diffMs = Date.now() - date.getTime();
+  const diffMs = Math.max(0, referenceTimeMs - date.getTime());
   const minutes = Math.floor(diffMs / 60_000);
   if (minutes < 1) return "ahora mismo";
   if (minutes < 60) return `hace ${minutes} min`;
@@ -409,6 +411,7 @@ export function AdminUsersPanel() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [detailVisits, setDetailVisits] = useState<AdminVisit[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [referenceTimeMs, setReferenceTimeMs] = useState(0);
 
   const hydrateDrafts = useCallback((items: AdminUser[]) => {
     const next: Record<string, UserDraft> = {};
@@ -430,7 +433,7 @@ export function AdminUsersPanel() {
         });
 
         const payload = (await response.json().catch(() => null)) as
-          | { message?: string; users?: AdminUser[] }
+          | { generatedAt?: string; message?: string; users?: AdminUser[] }
           | null;
 
         if (!response.ok || !payload?.users) {
@@ -442,6 +445,8 @@ export function AdminUsersPanel() {
 
         setUsers(payload.users);
         hydrateDrafts(payload.users);
+        const generatedAtMs = new Date(payload.generatedAt ?? "").getTime();
+        setReferenceTimeMs(Number.isFinite(generatedAtMs) ? generatedAtMs : new Date().getTime());
       } catch {
         setErrorMessage("No pudimos cargar los usuarios.");
         setUsers([]);
@@ -471,7 +476,6 @@ export function AdminUsersPanel() {
     if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const nodes = root.querySelectorAll("[data-admin-animate]");
     const animation = animate(nodes, {
-      opacity: [0, 1],
       translateY: [18, 0],
       scale: [0.98, 1],
       delay: stagger(55),
@@ -490,17 +494,17 @@ export function AdminUsersPanel() {
     const today = users.filter((u) => {
       const created = new Date(u.createdAt).getTime();
       if (Number.isNaN(created)) return false;
-      return Date.now() - created < 24 * 60 * 60 * 1000;
+      return referenceTimeMs - created < 24 * 60 * 60 * 1000;
     }).length;
-    const online = users.filter((u) => isOnline(u.lastSeenAt)).length;
+    const online = users.filter((u) => isOnline(u.lastSeenAt, referenceTimeMs)).length;
     const activeToday = users.filter((u) => {
       if (!u.lastSeenAt) return false;
       const t = new Date(u.lastSeenAt).getTime();
       if (Number.isNaN(t)) return false;
-      return Date.now() - t < 24 * 60 * 60 * 1000;
+      return referenceTimeMs - t < 24 * 60 * 60 * 1000;
     }).length;
     return { total, admins, oauth, today, online, activeToday };
-  }, [users]);
+  }, [referenceTimeMs, users]);
 
   const filteredUsers = useMemo(() => {
     if (filter === "all") return users;
@@ -513,7 +517,6 @@ export function AdminUsersPanel() {
     if (!root || isLoading || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const cards = root.querySelectorAll("[data-user-card]");
     const animation = animate(cards, {
-      opacity: [0, 1],
       translateY: [12, 0],
       delay: stagger(26),
       duration: 420,
@@ -530,46 +533,43 @@ export function AdminUsersPanel() {
   );
 
   useEffect(() => {
-    if (selectedUserId && !selectedUser) {
-      setSelectedUserId(null);
-    }
-  }, [selectedUser, selectedUserId]);
-
-  useEffect(() => {
-    if (!selectedUserId) {
-      setDetailVisits([]);
-      return;
-    }
-    setDetailTab("profile");
-    setConfirmDeleteId(null);
-    setDetailLoading(true);
+    if (!selectedUserId) return;
 
     let cancelled = false;
-    void (async () => {
-      try {
-        const response = await fetch(`/api/admin/users/${selectedUserId}`, { cache: "no-store" });
-        if (!response.ok) return;
-        const payload = (await response.json()) as { user?: AdminUser; visits?: AdminVisit[] };
-        if (cancelled) return;
-        if (payload.user) {
-          const fresh = payload.user;
-          setUsers((prev) => prev.map((u) => (u.id === fresh.id ? fresh : u)));
-          setDrafts((prev) => ({
-            ...prev,
-            [fresh.id]: { ...emptyDraftFromUser(fresh), password: "" },
-          }));
+    const kickoff = window.setTimeout(() => {
+      setDetailTab("profile");
+      setConfirmDeleteId(null);
+      setDetailVisits([]);
+      setDetailLoading(true);
+
+      void (async () => {
+        try {
+          const response = await fetch(`/api/admin/users/${selectedUserId}`, { cache: "no-store" });
+          if (!response.ok) return;
+          const payload = (await response.json()) as { user?: AdminUser; visits?: AdminVisit[] };
+          if (cancelled) return;
+          if (payload.user) {
+            const fresh = payload.user;
+            setUsers((prev) => prev.map((u) => (u.id === fresh.id ? fresh : u)));
+            setDrafts((prev) => ({
+              ...prev,
+              [fresh.id]: { ...emptyDraftFromUser(fresh), password: "" },
+            }));
+          }
+          if (Array.isArray(payload.visits)) {
+            setDetailVisits(payload.visits as AdminVisit[]);
+          }
+        } catch {
+          /* ignore */
+        } finally {
+          if (!cancelled) setDetailLoading(false);
         }
-        if (Array.isArray(payload.visits)) {
-          setDetailVisits(payload.visits as AdminVisit[]);
-        }
-      } catch {
-        /* ignore */
-      } finally {
-        if (!cancelled) setDetailLoading(false);
-      }
-    })();
+      })();
+    }, 0);
+
     return () => {
       cancelled = true;
+      window.clearTimeout(kickoff);
     };
   }, [selectedUserId]);
 
@@ -814,7 +814,7 @@ export function AdminUsersPanel() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <h3 className="truncate text-sm font-semibold text-[var(--ui-text)]">{item.name}</h3>
-                      {isOnline(item.lastSeenAt) ? (
+                      {isOnline(item.lastSeenAt, referenceTimeMs) ? (
                         <span
                           className="inline-flex h-2 w-2 shrink-0 animate-pulse rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgb(16_185_129_/_0.18)]"
                           title="En linea"
@@ -866,7 +866,9 @@ export function AdminUsersPanel() {
 
                 <div className="mt-3 flex items-center justify-between gap-2 border-t border-[color:var(--ui-border)] pt-3 text-[11px] text-[var(--ui-muted)]">
                   <span className="truncate">
-                    {item.lastSeenAt ? `Activo ${formatRelative(item.lastSeenAt)}` : `Actualizado ${formatRelative(item.updatedAt)}`}
+                    {item.lastSeenAt
+                      ? `Activo ${formatRelative(item.lastSeenAt, referenceTimeMs)}`
+                      : `Actualizado ${formatRelative(item.updatedAt, referenceTimeMs)}`}
                   </span>
                   <svg
                     viewBox="0 0 24 24"
@@ -968,11 +970,11 @@ export function AdminUsersPanel() {
 
             <div className="max-h-[58vh] overflow-y-auto px-4 pb-6 pt-4 sm:px-6 lg:px-8">
               {detailTab === "profile" ? (
-                <ProfileView user={selectedUser} />
+                <ProfileView user={selectedUser} referenceTimeMs={referenceTimeMs} />
               ) : detailTab === "tracking" ? (
                 <TrackingView user={selectedUser} />
               ) : detailTab === "visits" ? (
-                <VisitsView visits={detailVisits} loading={detailLoading} />
+                <VisitsView visits={detailVisits} loading={detailLoading} referenceTimeMs={referenceTimeMs} />
               ) : drafts[selectedUser.id] ? (
                 <EditView
                   draft={drafts[selectedUser.id]}
@@ -1055,11 +1057,11 @@ export function AdminUsersPanel() {
   );
 }
 
-function isOnline(lastSeenAt: string | null | undefined): boolean {
+function isOnline(lastSeenAt: string | null | undefined, referenceTimeMs: number): boolean {
   if (!lastSeenAt) return false;
   const ms = new Date(lastSeenAt).getTime();
   if (Number.isNaN(ms)) return false;
-  return Date.now() - ms < 5 * 60 * 1000;
+  return referenceTimeMs - ms < 5 * 60 * 1000;
 }
 
 function formatScreen(w: number | null, h: number | null): string {
@@ -1077,12 +1079,18 @@ function formatDateMaybe(value: string | null | undefined): string {
   return formatDate(value);
 }
 
-function formatRelativeMaybe(value: string | null | undefined): string {
+function formatRelativeMaybe(value: string | null | undefined, referenceTimeMs: number): string {
   if (!value) return "-";
-  return formatRelative(value);
+  return formatRelative(value, referenceTimeMs);
 }
 
-function ProfileView({ user }: { user: AdminUser }) {
+function ProfileView({
+  user,
+  referenceTimeMs,
+}: {
+  user: AdminUser;
+  referenceTimeMs: number;
+}) {
   const socials: Array<{ label: string; value: string; href: string }> = [];
   if (user.socialInstagram) socials.push({ label: "Instagram", value: user.socialInstagram, href: `https://instagram.com/${user.socialInstagram.replace(/^@/, "")}` });
   if (user.socialSpotify) socials.push({ label: "Spotify", value: user.socialSpotify, href: user.socialSpotify });
@@ -1162,15 +1170,15 @@ function ProfileView({ user }: { user: AdminUser }) {
       <Section title="Actividad">
         <DataCell
           label="Estado"
-          value={isOnline(user.lastSeenAt) ? "En linea" : "Inactivo"}
-          tone={isOnline(user.lastSeenAt) ? "ok" : "muted"}
+          value={isOnline(user.lastSeenAt, referenceTimeMs) ? "En linea" : "Inactivo"}
+          tone={isOnline(user.lastSeenAt, referenceTimeMs) ? "ok" : "muted"}
         />
         <DataCell label="Total visitas" value={String(user.visitCount ?? 0)} />
         <DataCell label="Primera vez" value={formatDateMaybe(user.firstSeenAt)} />
-        <DataCell label="Ultima vez" value={formatRelativeMaybe(user.lastSeenAt)} />
-        <DataCell label="Ultimo login" value={formatRelativeMaybe(user.lastLoginAt)} />
+        <DataCell label="Ultima vez" value={formatRelativeMaybe(user.lastSeenAt, referenceTimeMs)} />
+        <DataCell label="Ultimo login" value={formatRelativeMaybe(user.lastLoginAt, referenceTimeMs)} />
         <DataCell label="Registrado" value={formatDate(user.createdAt)} />
-        <DataCell label="Actualizado" value={formatRelative(user.updatedAt)} />
+        <DataCell label="Actualizado" value={formatRelative(user.updatedAt, referenceTimeMs)} />
       </Section>
     </div>
   );
@@ -1237,7 +1245,15 @@ function TrackingView({ user }: { user: AdminUser }) {
   );
 }
 
-function VisitsView({ visits, loading }: { visits: AdminVisit[]; loading: boolean }) {
+function VisitsView({
+  visits,
+  loading,
+  referenceTimeMs,
+}: {
+  visits: AdminVisit[];
+  loading: boolean;
+  referenceTimeMs: number;
+}) {
   if (loading && visits.length === 0) {
     return (
       <div className="space-y-2">
@@ -1281,7 +1297,7 @@ function VisitsView({ visits, loading }: { visits: AdminVisit[]; loading: boolea
                   {sourceLabel}
                 </span>
                 <span className="text-xs font-semibold text-[var(--ui-text)]">
-                  {formatRelative(v.occurred_at)}
+                  {formatRelative(v.occurred_at, referenceTimeMs)}
                 </span>
                 <span className="text-[10px] text-[var(--ui-muted)]">·</span>
                 <span className="text-[10px] text-[var(--ui-muted)]">{formatDate(v.occurred_at)}</span>
@@ -1334,6 +1350,10 @@ function DataCell({
   href?: string;
   tone?: "ok" | "warn" | "danger" | "muted";
 }) {
+  const safeHref =
+    href?.startsWith("mailto:") || href?.startsWith("tel:")
+      ? href
+      : getSafeExternalHref(href);
   const toneClass =
     tone === "ok"
       ? "border-[color:rgb(var(--ui-glow-accent)/0.45)] bg-[color:rgb(var(--ui-glow-accent)/0.10)]"
@@ -1352,9 +1372,9 @@ function DataCell({
   return (
     <div className={`rounded-2xl border px-3.5 py-2.5 ${toneClass}`}>
       <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--ui-muted)]">{label}</p>
-      {href && value !== "-" ? (
+      {safeHref && value !== "-" ? (
         <a
-          href={href}
+          href={safeHref}
           target="_blank"
           rel="noreferrer"
           className={`mt-1 block break-words text-sm font-medium text-[var(--ui-text)] hover:text-[var(--ui-primary)] ${mono ? "font-mono text-xs" : ""}`}

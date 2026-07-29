@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
+
 import { listCourses, listCoursePurchasesByUser } from "@/lib/db";
 import { getSessionFromCookie } from "@/lib/auth/session";
 import { CatalogClient } from "./catalog-client";
+
+export const metadata: Metadata = {
+  title: "Catálogo de cursos",
+  description: "Explora los cursos de RitmoHub Academy.",
+  alternates: { canonical: "/academiax/catalog" },
+};
 
 export default async function CatalogPage() {
   const [courses, session] = await Promise.all([listCourses(), getSessionFromCookie()]);

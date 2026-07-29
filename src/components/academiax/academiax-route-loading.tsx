@@ -14,7 +14,7 @@ export function AcademiaxRouteLoading({ title, subtitle }: Props) {
             borderColor: "var(--ui-border)",
           }}
         >
-          <p className="text-sm font-semibold uppercase tracking-[0.16em]" style={{ color: "#818cf8" }}>
+          <p className="text-sm font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--ax-primary)" }}>
             {title}
           </p>
           <h1 className="mt-2 text-2xl font-bold" style={{ color: "var(--ui-text)" }}>

@@ -9,6 +9,10 @@ import {
   listRecentForumCommentsByUser,
   listRecentForumPostsByUser,
 } from "@/lib/db";
+import {
+  getSafeExternalHref,
+  getSafeMediaSource,
+} from "@/lib/security/url";
 
 type ArtistProfilePageProps = {
   params: Promise<{ id: string }>;
@@ -138,7 +142,7 @@ export default async function ArtistProfilePage({ params, searchParams }: Artist
     },
     {
       label: "Spotify",
-      href: hasValue(user.socialSpotify) ? user.socialSpotify : "",
+      href: getSafeExternalHref(user.socialSpotify) ?? "",
       color: "#1DB954",
       icon: (
         <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
@@ -148,7 +152,7 @@ export default async function ArtistProfilePage({ params, searchParams }: Artist
     },
     {
       label: "YouTube",
-      href: hasValue(user.socialYoutube) ? user.socialYoutube : "",
+      href: getSafeExternalHref(user.socialYoutube) ?? "",
       color: "#FF0000",
       icon: (
         <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
@@ -176,15 +180,15 @@ export default async function ArtistProfilePage({ params, searchParams }: Artist
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="overflow-hidden rounded-3xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)]">
           <div className="relative h-44 bg-gradient-to-r from-[color:rgb(var(--ui-glow-primary)/0.42)] to-[color:rgb(var(--ui-glow-accent)/0.35)] sm:h-56">
-            {hasValue(user.coverUrl) ? (
-              <img src={user.coverUrl} alt={`Portada de ${user.name}`} className="h-full w-full object-cover" />
+            {getSafeMediaSource(user.coverUrl) ? (
+              <img src={getSafeMediaSource(user.coverUrl)} alt={`Portada de ${user.name}`} className="h-full w-full object-cover" />
             ) : null}
           </div>
 
           <div className="px-6 pb-8 sm:px-8">
             <div className="relative z-10 -mt-11 inline-flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-4 border-[var(--ui-surface)] bg-[var(--ui-primary)] text-2xl font-bold text-[var(--ui-on-primary)] shadow-lg">
-              {hasValue(user.avatarUrl) ? (
-                <img src={user.avatarUrl} alt={`Avatar de ${user.name}`} className="h-full w-full object-cover" />
+              {getSafeMediaSource(user.avatarUrl) ? (
+                <img src={getSafeMediaSource(user.avatarUrl)} alt={`Avatar de ${user.name}`} className="h-full w-full object-cover" />
               ) : (
                 initials
               )}

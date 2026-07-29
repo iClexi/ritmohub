@@ -14,13 +14,13 @@ type LandingShowcaseProps = {
 type BenefitIconKind = "panel" | "concerts" | "collab" | "visibility" | "community" | "workflow";
 
 const heroGallery = [
-  "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1400&q=80",
-  "https://images.unsplash.com/photo-1501612780327-45045538702b?auto=format&fit=crop&w=1400&q=80",
+  "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=480&q=68",
+  "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=480&q=68",
+  "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=480&q=68",
+  "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=480&q=68",
+  "https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?auto=format&fit=crop&w=480&q=68",
+  "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=480&q=68",
+  "https://images.unsplash.com/photo-1501612780327-45045538702b?auto=format&fit=crop&w=480&q=68",
 ];
 
 const collabPosts = [
@@ -31,7 +31,7 @@ const collabPosts = [
     tags: "Indie, Pop, Show en vivo",
     city: "Santo Domingo",
     image:
-      "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=480&q=68",
   },
   {
     id: "c-2",
@@ -40,7 +40,7 @@ const collabPosts = [
     tags: "Urbano, Produccion, Mezcla",
     city: "Santiago",
     image:
-      "https://images.unsplash.com/photo-1507838153414-b4b713384a76?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1507838153414-b4b713384a76?auto=format&fit=crop&w=480&q=68",
   },
   {
     id: "c-3",
@@ -49,7 +49,7 @@ const collabPosts = [
     tags: "Funk, Neo soul, Sesionista",
     city: "Punta Cana",
     image:
-      "https://images.unsplash.com/photo-1458560871784-56d23406c091?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1458560871784-56d23406c091?auto=format&fit=crop&w=480&q=68",
   },
   {
     id: "c-4",
@@ -58,7 +58,7 @@ const collabPosts = [
     tags: "Visuales, Live set, Gira",
     city: "La Vega",
     image:
-      "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=480&q=68",
   },
 ];
 
@@ -93,18 +93,18 @@ const platformBenefits: PlatformBenefit[] = [
     icon: "panel",
   },
   {
-    title: "Conciertos mas rapidos",
+    title: "Conciertos más rápidos",
     description: "Publica flyers, organiza fechas y coordina equipo sin salir de la plataforma.",
     icon: "concerts",
   },
   {
     title: "Colaboraciones activas",
-    description: "Encuentra vocalistas, productores y musicos por estilo, ciudad y disponibilidad.",
+    description: "Encuentra vocalistas, productores y músicos por estilo, ciudad y disponibilidad.",
     icon: "collab",
   },
   {
     title: "Visibilidad para tu proyecto",
-    description: "Muestra tu perfil artistico con media, historial y presencia profesional.",
+    description: "Muestra tu perfil artístico con media, historial y presencia profesional.",
     icon: "visibility",
   },
   {
@@ -153,6 +153,18 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
             </Link>
           </nav>
 
+          <details className="landing-mobile-menu relative md:hidden">
+            <summary className="landing-ghost-btn inline-flex min-h-11 cursor-pointer items-center rounded-2xl border border-[color:var(--ui-border)] px-3 text-xs font-semibold text-[var(--ui-text)]">
+              Menú
+            </summary>
+            <nav aria-label="Navegación móvil" className="absolute left-0 top-[calc(100%+0.55rem)] grid min-w-48 gap-1 rounded-2xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)] p-2 shadow-xl">
+              <a href="#colabs" className="landing-link min-h-11 px-3 py-3">Colaboraciones</a>
+              <a href="#historias" className="landing-link min-h-11 px-3 py-3">Ventajas</a>
+              <a href="#ciudades" className="landing-link min-h-11 px-3 py-3">Ciudades</a>
+              <Link href="/terminos" className="landing-link min-h-11 px-3 py-3">Términos</Link>
+            </nav>
+          </details>
+
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <span className="hidden sm:inline-flex">
               <ThemeToggle />
@@ -170,7 +182,7 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
                   href="/login"
                   className="landing-ghost-btn inline-flex items-center whitespace-nowrap rounded-2xl border border-[color:var(--ui-border)] px-2.5 py-1.5 text-[11px] font-semibold text-[var(--ui-text)] sm:px-4 sm:py-2 sm:text-sm"
                 >
-                  Iniciar sesion
+                  Iniciar sesión
                 </Link>
                 <Link
                   href="/register"
@@ -192,19 +204,28 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
                 src="https://randomuser.me/api/portraits/women/23.jpg"
                 alt="Miembro"
                 className="h-7 w-7 rounded-full border border-white object-cover"
+                loading="eager"
+                width={56}
+                height={56}
               />
               <LandingImage
                 src="https://randomuser.me/api/portraits/men/11.jpg"
                 alt="Miembro"
                 className="h-7 w-7 rounded-full border border-white object-cover"
+                loading="eager"
+                width={56}
+                height={56}
               />
               <LandingImage
                 src="https://randomuser.me/api/portraits/women/58.jpg"
                 alt="Miembro"
                 className="h-7 w-7 rounded-full border border-white object-cover"
+                loading="eager"
+                width={56}
+                height={56}
               />
             </div>
-            Musicos colaborando ahora mismo
+            Un espacio para conectar proyectos musicales
           </div>
 
           <h1 className="landing-title mt-6 text-center text-balance text-3xl leading-[1.08] font-semibold tracking-tight text-[var(--ui-text)] sm:text-6xl md:text-7xl">
@@ -225,11 +246,11 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
               href="/login"
               className="landing-ghost-btn rounded-2xl border border-[color:var(--ui-border)] px-6 py-3 text-base font-semibold text-[var(--ui-text)]"
             >
-              Ver demo privada
+              Iniciar sesión
             </Link>
           </div>
 
-          <p className="mt-6 text-sm text-[var(--ui-muted)]">1M+ creativos - 10M+ conexiones - 190 paises</p>
+          <p className="mt-6 text-sm text-[var(--ui-muted)]">Perfiles, colaboraciones y shows coordinados desde un mismo lugar.</p>
         </div>
       </section>
 
@@ -237,8 +258,8 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
         <div className="landing-marquee landing-marquee-right">
           <div className="landing-marquee-track">
             {[...heroGallery, ...heroGallery].map((image, index) => (
-              <article key={`gallery-top-${image}-${index}`} className="landing-media-tile">
-                <LandingImage src={image} alt={`Escena musical superior ${index + 1}`} className="h-full w-full object-cover" loading="eager" />
+              <article key={`gallery-top-${image}-${index}`} className="landing-media-tile" aria-hidden={index >= heroGallery.length}>
+                <LandingImage src={image} alt={index >= heroGallery.length ? "" : `Escena musical ${index + 1}`} className="h-full w-full object-cover" />
               </article>
             ))}
           </div>
@@ -247,8 +268,8 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
         <div className="landing-marquee landing-marquee-left mt-4">
           <div className="landing-marquee-track">
             {[...heroGallery.slice().reverse(), ...heroGallery.slice().reverse()].map((image, index) => (
-              <article key={`gallery-bottom-${image}-${index}`} className="landing-media-tile">
-                <LandingImage src={image} alt={`Escena musical inferior ${index + 1}`} className="h-full w-full object-cover" loading="eager" />
+              <article key={`gallery-bottom-${image}-${index}`} className="landing-media-tile" aria-hidden={index >= heroGallery.length}>
+                <LandingImage src={image} alt={index >= heroGallery.length ? "" : `Escena musical alternativa ${index + 1}`} className="h-full w-full object-cover" />
               </article>
             ))}
           </div>
@@ -259,21 +280,21 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
 
       <section className="landing-container py-14">
         <div className="grid gap-4 md:grid-cols-3">
-          <MetricCard value="129,319,896" label="Conexiones musicales activadas" />
-          <MetricCard value="10,420,725" label="Colaboraciones iniciadas" />
-          <MetricCard value="190" label="Ciudades y paises activos" />
+          <MetricCard value="Perfiles" label="Presenta tu proyecto y experiencia musical" />
+          <MetricCard value="Colaboraciones" label="Busca por estilo, ciudad y disponibilidad" />
+          <MetricCard value="Shows" label="Organiza conciertos, comunidad y conversaciones" />
         </div>
       </section>
 
       <section id="historias" className="landing-container py-6">
         <article className="landing-why-shell">
           <div className="landing-why-heading">
-            <span className="landing-kicker">Por que RitmoHub</span>
+            <span className="landing-kicker">Por qué RitmoHub</span>
             <h2 className="mt-3 text-4xl leading-tight font-semibold text-[var(--ui-text)]">
               Ventajas reales para crecer tu carrera musical.
             </h2>
             <p className="mt-4 text-base text-[var(--ui-muted)]">
-              RitmoHub centraliza tu operacion artistica para que inviertas menos tiempo en coordinar y mas tiempo en crear, ensayar y tocar en vivo.
+              RitmoHub centraliza tu operación artística para que inviertas menos tiempo en coordinar y más tiempo en crear, ensayar y tocar en vivo.
             </p>
           </div>
 
@@ -293,7 +314,7 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
 
           <div className="landing-why-footer mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)]/72 px-4 py-4">
             <p className="max-w-xl text-sm leading-relaxed text-[var(--ui-muted)]">
-              RitmoHub conecta colaboracion, produccion y shows en un solo flujo de trabajo para musicos independientes y bandas.
+              RitmoHub conecta colaboración, producción y shows en un solo flujo de trabajo para músicos independientes y bandas.
             </p>
             <div className="flex items-center gap-3">
               <Link
@@ -309,10 +330,11 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
 
       <section id="colabs" className="landing-container py-16">
         <div className="text-center">
-          <span className="landing-kicker">Colaboraciones</span>
+          <span className="landing-kicker">Ejemplos de colaboraciones</span>
           <h3 className="mt-3 text-4xl font-semibold tracking-tight text-[var(--ui-text)]">
-            Oportunidades activas en este momento
+            Así puede verse una oportunidad publicada
           </h3>
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-[var(--ui-muted)]">Contenido ilustrativo de la experiencia; inicia sesión para ver publicaciones reales disponibles.</p>
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -338,9 +360,9 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
 
       <section id="ciudades" className="landing-container py-10">
         <div className="text-center">
-          <span className="landing-kicker">Ciudades activas</span>
+          <span className="landing-kicker">Búsqueda por ciudad</span>
           <h3 className="mt-3 text-4xl font-semibold tracking-tight text-[var(--ui-text)]">
-            Encuentra musicos cerca de ti
+            Explora músicos cerca de ti
           </h3>
         </div>
 
@@ -367,10 +389,10 @@ export function LandingShowcase({ user }: LandingShowcaseProps) {
       <section id="final-cta" className="landing-container py-22 text-center">
         <article className="landing-final-cta">
           <h3 className="text-balance text-4xl font-semibold tracking-tight text-[var(--ui-text)] sm:text-5xl">
-            Tu proxima colaboracion empieza hoy.
+            Tu próxima colaboración empieza hoy.
           </h3>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-[var(--ui-muted)]">
-            Crea tu cuenta y entra a la version completa con tu banda, conciertos, comunidades, chats privados y oportunidades.
+            Crea tu cuenta y entra a la versión completa con tu banda, conciertos, comunidades, chats privados y oportunidades.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link

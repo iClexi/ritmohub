@@ -190,7 +190,7 @@ export function ProfileEditor({
     });
   };
 
-  const FErr = ({ field }: { field: string }) =>
+  const fieldError = (field: string) =>
     fieldErrors[field] ? (
       <span className="mt-0.5 block text-xs text-[var(--ui-danger)]">{fieldErrors[field]}</span>
     ) : null;
@@ -393,11 +393,12 @@ export function ProfileEditor({
     <div className="w-full overflow-hidden rounded-2xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)]">
 
       {/* ── Banner / cover ── full width, tall like Discord */}
-      <div className="group relative h-52 w-full cursor-pointer bg-gradient-to-br from-[color:rgb(var(--ui-glow-primary)/0.4)] to-[color:rgb(var(--ui-glow-accent)/0.25)]"
+      <button
+           type="button"
+           className="group relative h-52 w-full cursor-pointer border-0 bg-gradient-to-br from-[color:rgb(var(--ui-glow-primary)/0.4)] to-[color:rgb(var(--ui-glow-accent)/0.25)] p-0 text-left"
            onClick={() => !uploadingCover && coverInputRef.current?.click()}
-           role="button" tabIndex={0}
-           onKeyDown={(e) => e.key === "Enter" && coverInputRef.current?.click()}
-           title="Cambiar portada"
+           disabled={uploadingCover}
+           aria-label="Cambiar imagen de portada"
       >
         {coverPreview ? (
           <img src={coverPreview} alt="Portada" className="h-full w-full object-cover" />
@@ -412,8 +413,15 @@ export function ProfileEditor({
           <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           <span className="text-sm font-semibold text-white">{uploadingCover ? "Subiendo…" : "Cambiar portada"}</span>
         </div>
-        <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
-      </div>
+      </button>
+      <input
+        ref={coverInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        aria-label="Subir imagen de portada"
+        onChange={handleCoverChange}
+      />
 
       {/* ── Avatar row — overlaps cover ── */}
       <div className="relative px-6 pb-4">
@@ -439,7 +447,14 @@ export function ProfileEditor({
                 <span className="text-[10px] font-semibold text-white">{uploadingAvatar ? "…" : "Cambiar"}</span>
               </div>
             </button>
-            <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              aria-label="Subir foto de perfil"
+              onChange={handleAvatarChange}
+            />
           </div>
         </div>
 
@@ -502,7 +517,7 @@ export function ProfileEditor({
                 placeholder="Tu nombre"
                 maxLength={80}
               />
-              <FErr field="firstName" />
+              {fieldError("firstName")}
             </label>
             <label className="block space-y-1.5">
               <span className={labelClass}>Apellido <span className="text-[var(--ui-danger)]">*</span></span>
@@ -514,7 +529,7 @@ export function ProfileEditor({
                 placeholder="Tu apellido"
                 maxLength={80}
               />
-              <FErr field="lastName" />
+              {fieldError("lastName")}
             </label>
           </div>
 
@@ -528,7 +543,7 @@ export function ProfileEditor({
               placeholder="Ciudad, País"
               maxLength={80}
             />
-            <FErr field="location" />
+            {fieldError("location")}
           </label>
 
           <label className="block space-y-1.5">
@@ -561,7 +576,7 @@ export function ProfileEditor({
                 placeholder="Guitarra, Piano…"
                 maxLength={60}
               />
-              <FErr field="primaryInstrument" />
+              {fieldError("primaryInstrument")}
             </label>
           </div>
 
@@ -582,7 +597,7 @@ export function ProfileEditor({
                 placeholder="Conservatorio, Autodidacta…"
                 maxLength={120}
               />
-              <FErr field="studies" />
+              {fieldError("studies")}
             </label>
           </div>
 
@@ -597,7 +612,7 @@ export function ProfileEditor({
                 placeholder="Tu nombre de escenario"
                 maxLength={60}
               />
-              <FErr field="stageName" />
+              {fieldError("stageName")}
             </label>
             <label className="block space-y-1.5">
               <span className={labelClass}>Género musical</span>
@@ -609,7 +624,7 @@ export function ProfileEditor({
                 placeholder="Indie, Rock, Jazz…"
                 maxLength={60}
               />
-              <FErr field="genre" />
+              {fieldError("genre")}
             </label>
           </div>
 
@@ -623,7 +638,7 @@ export function ProfileEditor({
               placeholder="Una frase que te identifique"
               maxLength={140}
             />
-            <FErr field="tagline" />
+            {fieldError("tagline")}
           </label>
         </div>
 
@@ -645,7 +660,7 @@ export function ProfileEditor({
                 maxLength={200}
               />
             </div>
-            <FErr field="websiteUrl" />
+            {fieldError("websiteUrl")}
           </label>
 
           <label className="block space-y-1.5">
@@ -661,7 +676,7 @@ export function ProfileEditor({
                 maxLength={80}
               />
             </div>
-            <FErr field="socialInstagram" />
+            {fieldError("socialInstagram")}
           </label>
 
           <label className="block space-y-1.5">
@@ -678,7 +693,7 @@ export function ProfileEditor({
                 maxLength={400}
               />
             </div>
-            <FErr field="socialSpotify" />
+            {fieldError("socialSpotify")}
           </label>
 
           <label className="block space-y-1.5">
@@ -695,7 +710,7 @@ export function ProfileEditor({
                 maxLength={400}
               />
             </div>
-            <FErr field="socialYoutube" />
+            {fieldError("socialYoutube")}
           </label>
 
           {/* Stats summary */}

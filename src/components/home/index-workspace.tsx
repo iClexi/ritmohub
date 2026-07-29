@@ -12,6 +12,10 @@ import { ProfileEditor } from "@/components/profile/profile-editor";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import type { CurrentUser } from "@/lib/auth/current-user";
 import {
+  getSafeExternalHref,
+  getSafeMediaSource,
+} from "@/lib/security/url";
+import {
   avatarUploadSchema,
   applyJobFormDataSchema,
   applyJobSchema,
@@ -247,7 +251,6 @@ type CoursePreviewState = {
   instructorUser: {
     id: string;
     name: string;
-    email: string;
   } | null;
 };
 type ForumCategory = "General" | "Produccion" | "Conciertos" | "Colaboraciones" | "Gear";
@@ -599,7 +602,7 @@ const sectionData: Record<SectionId, SectionData> = {
     stats: [
       { label: "Cursos activos", value: "7" },
       { label: "Cursos premium", value: "7" },
-      { label: "Checkout listo", value: "Stripe + PayPal" },
+      { label: "Checkout listo", value: "Stripe" },
     ],
   },
 };
@@ -1039,17 +1042,32 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
   // Network search: debounced API call
   useEffect(() => {
     const q = netSearchQuery.trim();
-    if (q.length < 2) { setNetSearchResults(null); setNetSearchLoading(false); return; }
-    setNetSearchLoading(true);
-    const t = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-        const data = await res.json();
-        setNetSearchResults(data);
-      } catch { setNetSearchResults(null); }
-      finally { setNetSearchLoading(false); }
-    }, 280);
-    return () => clearTimeout(t);
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (q.length < 2) {
+        setNetSearchResults(null);
+        setNetSearchLoading(false);
+        return;
+      }
+
+      setNetSearchLoading(true);
+      void (async () => {
+        try {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+          const data = await res.json();
+          if (!cancelled) setNetSearchResults(data);
+        } catch {
+          if (!cancelled) setNetSearchResults(null);
+        } finally {
+          if (!cancelled) setNetSearchLoading(false);
+        }
+      })();
+    }, q.length < 2 ? 0 : 280);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, [netSearchQuery]);
 
   // Close search dropdown on outside click
@@ -1167,7 +1185,6 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
   const [deletingConcertId, setDeletingConcertId] = useState<string | null>(null);
   const [concertDeleteTargetId, setConcertDeleteTargetId] = useState<string | null>(null);
   const [concertDeleteError, setConcertDeleteError] = useState<string | null>(null);
-  const [paymentProvider, setPaymentProvider] = useState<"stripe" | "paypal">("stripe");
   const [purchaseLoading, setPurchaseLoading] = useState<string | null>(null);
   const [, setCourseError] = useState<string | null>(null);
   const [, setCourseSuccess] = useState<string | null>(null);
@@ -1448,7 +1465,8 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
     const validSectionIds: SectionId[] = ["band", "profile", "shows", "communities", "chats", "jobs", "courses"];
 
     if (validSectionIds.includes(section as SectionId)) {
-      setActiveSection(section as SectionId);
+      const timer = window.setTimeout(() => setActiveSection(section as SectionId), 0);
+      return () => window.clearTimeout(timer);
     }
   }, [searchParams]);
 
@@ -1740,51 +1758,56 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
   // Load band data whenever band section is active (always refresh)
   useEffect(() => {
     if (activeSection !== "band") return;
-    if (!isLoggedIn) {
-      setActiveSectionLoading(false);
-      setActiveSectionError(null);
-      return;
-    }
-
     let cancelled = false;
-    setBandLoading(true);
-    setActiveSectionLoading(true);
-    setActiveSectionError(null);
-    setBand(null);
-    setIncomingInvitations([]);
-    setSentInvitations([]);
-    fetch("/api/band", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((data) => {
-        if (cancelled) return;
-        const loadedBand = data.band ?? null;
-        setBand(loadedBand);
-        if (loadedBand) {
-          setBandBranding({
-            name: loadedBand.name ?? "",
-            genre: loadedBand.genre ?? "",
-            bio: loadedBand.bio ?? "",
-            logoUrl: loadedBand.logoUrl ?? "",
-            bannerUrl: loadedBand.bannerUrl ?? "",
-            bannerFit: loadedBand.bannerFit === "contain" ? "contain" : "cover",
-          });
-        }
-        setIncomingInvitations(data.incomingInvitations ?? []);
-        setSentInvitations(data.sentInvitations ?? []);
-        setIsSolo(data.isSolo ?? false);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setActiveSectionError("No se pudo cargar la información de tu banda. Intenta de nuevo.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setBandLoading(false);
-          setActiveSectionLoading(false);
-        }
-      });
-    return () => { cancelled = true; };
+    const kickoff = window.setTimeout(() => {
+      if (!isLoggedIn) {
+        setActiveSectionLoading(false);
+        setActiveSectionError(null);
+        return;
+      }
+
+      setBandLoading(true);
+      setActiveSectionLoading(true);
+      setActiveSectionError(null);
+      setBand(null);
+      setIncomingInvitations([]);
+      setSentInvitations([]);
+      fetch("/api/band", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((data) => {
+          if (cancelled) return;
+          const loadedBand = data.band ?? null;
+          setBand(loadedBand);
+          if (loadedBand) {
+            setBandBranding({
+              name: loadedBand.name ?? "",
+              genre: loadedBand.genre ?? "",
+              bio: loadedBand.bio ?? "",
+              logoUrl: loadedBand.logoUrl ?? "",
+              bannerUrl: loadedBand.bannerUrl ?? "",
+              bannerFit: loadedBand.bannerFit === "contain" ? "contain" : "cover",
+            });
+          }
+          setIncomingInvitations(data.incomingInvitations ?? []);
+          setSentInvitations(data.sentInvitations ?? []);
+          setIsSolo(data.isSolo ?? false);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setActiveSectionError("No se pudo cargar la información de tu banda. Intenta de nuevo.");
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setBandLoading(false);
+            setActiveSectionLoading(false);
+          }
+        });
+    }, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(kickoff);
+    };
   }, [activeSection, isLoggedIn]);
 
   // Refresh section data every time a section is opened.
@@ -1793,38 +1816,33 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
       return;
     }
 
-    if (activeSection === "profile") {
-      setActiveSectionLoading(false);
-      setActiveSectionError(null);
-      return;
-    }
-
-    if ((activeSection === "chats") && !isLoggedIn) {
-      setActiveSectionLoading(false);
-      setActiveSectionError(null);
-      return;
-    }
-
     let cancelled = false;
-    setActiveSectionLoading(true);
-    setActiveSectionError(null);
+    const kickoff = window.setTimeout(() => {
+      if (activeSection === "profile" || (activeSection === "chats" && !isLoggedIn)) {
+        setActiveSectionLoading(false);
+        setActiveSectionError(null);
+        return;
+      }
 
-    if (activeSection === "shows") {
-      setConcerts([]);
-    } else if (activeSection === "communities") {
-      setForumPosts([]);
-    } else if (activeSection === "jobs") {
-      setJobs([]);
-      setApplications({});
-    } else if (activeSection === "courses") {
-      setCourses([]);
-      setCoursePurchases([]);
-    } else if (activeSection === "chats") {
-      setThreads([]);
-      setActiveThreadId("");
-    }
+      setActiveSectionLoading(true);
+      setActiveSectionError(null);
 
-    const fetchSection = async () => {
+      if (activeSection === "shows") {
+        setConcerts([]);
+      } else if (activeSection === "communities") {
+        setForumPosts([]);
+      } else if (activeSection === "jobs") {
+        setJobs([]);
+        setApplications({});
+      } else if (activeSection === "courses") {
+        setCourses([]);
+        setCoursePurchases([]);
+      } else if (activeSection === "chats") {
+        setThreads([]);
+        setActiveThreadId("");
+      }
+
+      const fetchSection = async () => {
       try {
         const response = await fetch(`/api/workspace?sections=${activeSection}`, { cache: "no-store" });
         if (!response.ok) {
@@ -1924,12 +1942,14 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
           setActiveSectionLoading(false);
         }
       }
-    };
+      };
 
-    void fetchSection();
+      void fetchSection();
+    }, 0);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(kickoff);
     };
   }, [activeSection, isLoggedIn]);
 
@@ -2181,29 +2201,33 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
       return;
     }
 
-    setActiveThreadId(pendingThreadToOpen);
-    setThreads((prev) =>
-      prev.map((thread) => {
-        if (thread.id !== pendingThreadToOpen) {
-          return thread;
-        }
+    const threadId = pendingThreadToOpen;
+    const timer = window.setTimeout(() => {
+      setActiveThreadId(threadId);
+      setThreads((prev) =>
+        prev.map((thread) => {
+          if (thread.id !== threadId) {
+            return thread;
+          }
 
-        return {
-          ...thread,
-          messages: thread.messages.map((message) =>
-            message.sender === "them" ? { ...message, unread: false } : message,
-          ),
-        };
-      }),
-    );
+          return {
+            ...thread,
+            messages: thread.messages.map((message) =>
+              message.sender === "them" ? { ...message, unread: false } : message,
+            ),
+          };
+        }),
+      );
 
-    if (isLoggedIn) {
-      fetch(`/api/chats/threads/${pendingThreadToOpen}/read`, { method: "POST" }).catch(() => {
-        // ignore mark read error
-      });
-    }
+      if (isLoggedIn) {
+        fetch(`/api/chats/threads/${threadId}/read`, { method: "POST" }).catch(() => {
+          // ignore mark read error
+        });
+      }
 
-    setPendingThreadToOpen(null);
+      setPendingThreadToOpen(null);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [activeSection, isLoggedIn, pendingThreadToOpen, threads]);
 
   const upsertCoursePurchase = (purchase: CoursePurchaseItem) => {
@@ -2223,7 +2247,6 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
     const provider = searchParams.get("provider");
     const purchaseId = searchParams.get("purchase_id");
     const sessionId = searchParams.get("session_id");
-    const normalizedProvider = provider === "paypal" ? "paypal" : "stripe";
 
     const clearPaymentQuery = () => {
       const params = new URLSearchParams(searchParams.toString());
@@ -2236,26 +2259,28 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
     };
 
     if (paymentResult === "cancel") {
-      setCourseError("Pago cancelado. Puedes intentar nuevamente.");
-      setCourseSuccess(null);
-      clearPaymentQuery();
-      return;
+      const timer = window.setTimeout(() => {
+        setCourseError("Pago cancelado. Puedes intentar nuevamente.");
+        setCourseSuccess(null);
+        clearPaymentQuery();
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
 
-    if (paymentResult !== "success" || !purchaseId) {
+    if (paymentResult !== "success" || provider !== "stripe" || !purchaseId || !sessionId) {
       clearPaymentQuery();
       return;
     }
 
     let cancelled = false;
-    const providerLabel = normalizedProvider === "stripe" ? "Stripe" : "PayPal";
+    const providerLabel = "Stripe";
 
     const confirmCoursePayment = async () => {
       try {
         const parsed = confirmCourseCheckoutSchema.safeParse({
           purchaseId,
-          provider: normalizedProvider,
-          sessionId: normalizedProvider === "stripe" ? sessionId : undefined,
+          provider: "stripe",
+          sessionId,
         });
 
         if (!parsed.success) {
@@ -2536,14 +2561,14 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
     }
   };
 
-  const startCourseCheckout = async (courseId: string, provider: "stripe" | "paypal") => {
+  const startCourseCheckout = async (courseId: string) => {
     if (!isLoggedIn) {
       setCourseError("Debes iniciar sesion para comprar cursos.");
       setCourseSuccess(null);
       return;
     }
 
-    const parsed = createCourseCheckoutSchema.safeParse({ courseId, provider });
+    const parsed = createCourseCheckoutSchema.safeParse({ courseId, provider: "stripe" });
     if (!parsed.success) {
       setCourseError("Solicitud de pago invalida.");
       setCourseSuccess(null);
@@ -2591,7 +2616,16 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
         upsertCoursePurchase(payload.purchase as CoursePurchaseItem);
       }
 
-      window.location.href = payload.checkoutUrl;
+      try {
+        const checkoutUrl = new URL(payload.checkoutUrl);
+        if (checkoutUrl.protocol !== "https:" || checkoutUrl.hostname !== "checkout.stripe.com") {
+          throw new Error("URL de checkout invalida.");
+        }
+        window.location.assign(checkoutUrl.toString());
+      } catch {
+        setCourseError("Stripe devolvio una URL de checkout invalida.");
+        setPurchaseLoading(null);
+      }
     } catch {
       setCourseError("No se pudo iniciar el checkout.");
       setPurchaseLoading(null);
@@ -3356,14 +3390,16 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
     }
 
     const requestedDirection = parsedVote.data.direction;
+    if (requestedDirection === "none") {
+      return;
+    }
     const current = userVotes[postId];
     // Determine api direction and optimistic delta
-    let apiDirection: "up" | "down";
+    let apiDirection: "up" | "down" | "none";
     let delta: number;
 
     if (current === requestedDirection) {
-      // Same direction → unvote (cancel by sending opposite)
-      apiDirection = requestedDirection === "up" ? "down" : "up";
+      apiDirection = "none";
       delta = requestedDirection === "up" ? -1 : 1;
       setUserVotes((prev) => {
         const next = { ...prev };
@@ -3387,17 +3423,32 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
       prev.map((p) => p.id === postId ? { ...p, upvotes: p.upvotes + delta } : p),
     );
 
-    // Fire & forget — we already updated optimistically
-    fetch(`/api/forum/posts/${postId}/vote`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ direction: apiDirection }),
-    }).catch(() => {
-      // Revert optimistic update on error
-      setForumPosts((prev) =>
-        prev.map((p) => p.id === postId ? { ...p, upvotes: p.upvotes - delta } : p),
-      );
-    });
+    void (async () => {
+      try {
+        const response = await fetch(`/api/forum/posts/${postId}/vote`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ direction: apiDirection }),
+        });
+        const payload = (await response.json().catch(() => null)) as {
+          post?: ForumPostApiRecord;
+        } | null;
+        if (!response.ok || !payload?.post) {
+          throw new Error("No se pudo registrar el voto.");
+        }
+        setForumPosts((prev) =>
+          prev.map((post) =>
+            post.id === postId ? { ...post, upvotes: payload.post!.upvotes } : post,
+          ),
+        );
+      } catch {
+        setForumPosts((prev) =>
+          prev.map((post) =>
+            post.id === postId ? { ...post, upvotes: Math.max(0, post.upvotes - delta) } : post,
+          ),
+        );
+      }
+    })();
   };
 
   const addForumComment = async (postId: string) => {
@@ -4033,21 +4084,21 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                           {isLoggedIn ? post.body : "Inicia sesión para ver el contenido completo."}
                         </p>
                       )}
-                      {post.linkUrl && (
-                        <a href={post.linkUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] px-4 py-2.5 text-sm text-[var(--ui-muted)] transition hover:border-[color:rgb(var(--ui-glow-primary)/0.4)] hover:text-[var(--ui-text)]">
+                      {getSafeExternalHref(post.linkUrl) && (
+                        <a href={getSafeExternalHref(post.linkUrl)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] px-4 py-2.5 text-sm text-[var(--ui-muted)] transition hover:border-[color:rgb(var(--ui-glow-primary)/0.4)] hover:text-[var(--ui-text)]">
                           <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                           <span className="truncate max-w-sm">{post.linkUrl}</span>
                         </a>
                       )}
-                      {post.mediaType === "video" && post.mediaUrl && (
+                      {post.mediaType === "video" && getSafeMediaSource(post.mediaUrl) && (
                         <div className="overflow-hidden rounded-xl border border-[color:var(--ui-border)]">
-                          <video controls preload="metadata" className="max-h-[500px] w-full object-contain"><source src={post.mediaUrl} /></video>
+                          <video controls preload="metadata" className="max-h-[500px] w-full object-contain"><source src={getSafeMediaSource(post.mediaUrl)} /></video>
                         </div>
                       )}
-                      {post.mediaType === "audio" && post.mediaUrl && (
+                      {post.mediaType === "audio" && getSafeMediaSource(post.mediaUrl) && (
                         <div className="overflow-hidden rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] p-6">
                           <MediaImage src={getForumPostCoverImage(post)} alt={post.category} className="mb-4 h-48 w-full rounded-lg object-cover" />
-                          <audio controls preload="metadata" className="w-full"><source src={post.mediaUrl} /></audio>
+                          <audio controls preload="metadata" className="w-full"><source src={getSafeMediaSource(post.mediaUrl)} /></audio>
                         </div>
                       )}
                     </div>
@@ -4113,7 +4164,11 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                     </div>
 
                     {/* Comment list */}
-                    {post.comments.length === 0 ? (
+                    {!isLoggedIn && post.comments.length > 0 ? (
+                      <p className="py-3 text-center text-sm text-[var(--ui-muted)]">
+                        Inicia sesión para ver los comentarios.
+                      </p>
+                    ) : post.comments.length === 0 ? (
                       <p className="py-3 text-center text-sm text-[var(--ui-muted)]">Sé el primero en comentar.</p>
                     ) : (
                       <div className="space-y-4">
@@ -4431,6 +4486,7 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                               </label>
                             </div>
                             <select
+                              aria-label="Ajuste del banner de la banda"
                               value={bandBranding.bannerFit}
                               onChange={(e) => setBandBranding((p) => ({ ...p, bannerFit: e.target.value as BannerFitMode }))}
                               className="rh-input mt-2 w-full rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface)] px-3 py-2 text-sm text-[var(--ui-text)] outline-none focus:border-[var(--ui-primary)]"
@@ -4999,12 +5055,14 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
 
                   <div className="mt-4 grid gap-3 sm:grid-cols-3">
                     <input
+                      aria-label="Buscar conciertos"
                       value={concertSearch}
                       onChange={(event) => setConcertSearch(event.target.value)}
                       placeholder="Buscar por evento, venue o ciudad"
                       className="rh-input rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] px-3 py-2 text-sm text-[var(--ui-text)] outline-none"
                     />
                     <select
+                      aria-label="Filtrar conciertos por estado"
                       value={concertStatusFilter}
                       onChange={(event) => setConcertStatusFilter(event.target.value as ConcertStatus | "all")}
                       className="rh-input rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] px-3 py-2 text-sm text-[var(--ui-text)] outline-none"
@@ -5055,14 +5113,14 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                             {concert.venue} - {concert.city} - Cap. {concert.capacity}
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            <a
-                              href={concert.ticketUrl}
+                            {getSafeExternalHref(concert.ticketUrl) ? <a
+                              href={getSafeExternalHref(concert.ticketUrl)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="rh-btn-primary inline-flex items-center rounded-xl bg-[var(--ui-primary)] px-3 py-2 text-xs font-semibold text-[var(--ui-on-primary)]"
                             >
                               Ver ticket
-                            </a>
+                            </a> : null}
                             {(() => {
                               const canAdvanceStage = isLoggedIn && Boolean(user?.id) && concert.userId === user?.id;
                               const isDeleting = deletingConcertId === concert.id;
@@ -5744,6 +5802,7 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                       <div className="flex flex-1 items-center gap-2 rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] px-3 py-2 text-sm">
                         <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-[var(--ui-muted)]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                         <input
+                          aria-label="Buscar oportunidades de trabajo"
                           value={jobSearch}
                           onChange={(event) => setJobSearch(event.target.value)}
                           placeholder="Buscar oportunidades..."
@@ -5751,6 +5810,7 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                         />
                       </div>
                       <select
+                        aria-label="Filtrar oportunidades por ciudad"
                         value={jobCity}
                         onChange={(event) => setJobCity(event.target.value)}
                         className="rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] px-3 py-2 text-sm text-[var(--ui-text)] outline-none"
@@ -5761,6 +5821,7 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                         ))}
                       </select>
                       <select
+                        aria-label="Filtrar oportunidades por tipo"
                         value={jobType}
                         onChange={(event) => setJobType(event.target.value)}
                         className="rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] px-3 py-2 text-sm text-[var(--ui-text)] outline-none"
@@ -6053,17 +6114,9 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                         </select>
                       </label>
 
-                      <label className="space-y-1 pt-1">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)]">Proveedor</span>
-                        <select
-                          value={paymentProvider}
-                          onChange={(event) => setPaymentProvider(event.target.value as "stripe" | "paypal")}
-                          className="rh-input w-full rounded-xl border border-[color:var(--ui-border)] bg-[var(--ui-surface-soft)] px-3 py-2 text-sm font-semibold text-[var(--ui-text)] outline-none"
-                        >
-                          <option value="stripe">Stripe</option>
-                          <option value="paypal">PayPal</option>
-                        </select>
-                      </label>
+                      <p className="pt-1 text-xs font-semibold uppercase tracking-wide text-[var(--ui-muted)]">
+                        Pago seguro procesado por Stripe
+                      </p>
 
                       <button
                         type="button"
@@ -6254,7 +6307,7 @@ export function IndexWorkspace({ user }: IndexWorkspaceProps) {
                                 <button
                                   type="button"
                                   disabled={!isLoggedIn || isBuying}
-                                  onClick={() => void startCourseCheckout(course.id, paymentProvider)}
+                                  onClick={() => void startCourseCheckout(course.id)}
                                   className="rh-btn-primary flex-1 rounded-xl bg-[var(--ui-primary)] px-3 py-2 text-xs font-semibold text-[var(--ui-on-primary)] disabled:cursor-not-allowed disabled:opacity-55"
                                 >
                                   {isBuying
@@ -6508,7 +6561,7 @@ function resolveConcertCardFlyerUrl(rawFlyerUrl: string | null | undefined, conc
     return pickConcertCardFallbackFlyer(concertId);
   }
 
-  return flyerUrl;
+  return getSafeMediaSource(flyerUrl) ?? pickConcertCardFallbackFlyer(concertId);
 }
 
 function UserAvatar({
@@ -6522,7 +6575,7 @@ function UserAvatar({
   className: string;
   initialsClassName: string;
 }) {
-  const normalizedAvatarUrl = avatarUrl?.trim() ?? "";
+  const normalizedAvatarUrl = getSafeMediaSource(avatarUrl) ?? "";
 
   return (
     <span className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full ${className}`}>
@@ -6555,9 +6608,11 @@ function MediaImage({
   className: string;
   fallbackSrc?: string;
 }) {
+  const safeSrc = getSafeMediaSource(src) ?? getSafeMediaSource(fallbackSrc) ?? "/placeholders/media-fallback.svg";
+
   return (
     <img
-      src={src}
+      src={safeSrc}
       alt={alt}
       loading="lazy"
       className={className}
