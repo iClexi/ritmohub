@@ -1219,11 +1219,17 @@ body.stage-scroll-locked {
 }
 
 .artist-wave-curtain {
+  --artist-wave-base: color-mix(
+    in srgb,
+    var(--wave-secondary, #3b82f6) 58%,
+    var(--ui-bg) 42%
+  );
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--wave-secondary, #3b82f6) 58%, var(--ui-bg) 42%) 0%,
+    var(--artist-wave-base) 0%,
+    var(--artist-wave-base) 3rem,
     color-mix(in srgb, var(--wave-accent, #06b6d4) 66%, var(--ui-bg) 34%) 100%
   );
   will-change: transform;
@@ -1243,11 +1249,11 @@ body.stage-scroll-locked {
   left: 0;
   width: 100%;
   height: 128px;
-  opacity: 0.96;
-  filter: drop-shadow(0 -1px 5px rgb(0 0 0 / 0.08));
+  opacity: 1;
 }
 
 .stage-waves {
+  display: block;
   width: 100%;
   height: 100%;
   min-height: 112px;

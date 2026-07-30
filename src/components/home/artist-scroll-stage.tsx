@@ -599,7 +599,7 @@ export function ArtistScrollStage() {
                       <use href="#artist-wave-path" x="48" y="0" fill="color-mix(in srgb, var(--wave-secondary) 74%, var(--ui-bg) 26%)" />
                       <use href="#artist-wave-path" x="48" y="3" fill="color-mix(in srgb, var(--wave-accent) 62%, var(--ui-surface-soft) 38%)" />
                       <use href="#artist-wave-path" x="48" y="5" fill="color-mix(in srgb, var(--wave-secondary) 54%, var(--ui-surface-soft) 46%)" />
-                      <use href="#artist-wave-path" x="48" y="7" fill="color-mix(in srgb, var(--wave-accent) 82%, var(--ui-bg) 18%)" />
+                      <use href="#artist-wave-path" x="48" y="7" fill="var(--artist-wave-base)" />
                     </g>
                   </svg>
                 </div>
