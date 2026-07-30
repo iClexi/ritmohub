@@ -23,6 +23,8 @@ type ShowcaseItem = {
 const DEFAULT_ARTIST_IMAGE = "/artists/default-artist.svg";
 
 const WHEEL_GESTURE_END_MS = 320;
+const RAIL_SCROLL_SETTLE_MS = 560;
+const BOUNDARY_EXIT_ARM_MS = 700;
 const WAVE_MS = 860;
 const WAVE_HIDE_DELAY_MS = 150;
 const DETAIL_FADE_OUT_MS = 240;
@@ -141,8 +143,13 @@ type WavePhase = "idle" | "opening" | "closing";
 export function ArtistScrollStage() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const railRef = useRef<HTMLDivElement | null>(null);
+  const targetIndexRef = useRef(0);
+  const railAutoScrollingRef = useRef(false);
+  const railSettleTimerRef = useRef<number | null>(null);
   const wheelGestureHandledRef = useRef(false);
   const wheelGestureTimerRef = useRef<number | null>(null);
+  const boundaryExitArmedRef = useRef(false);
+  const boundaryExitTimerRef = useRef<number | null>(null);
   const openTimerRef = useRef<number | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const waveTimerRef = useRef<number | null>(null);
@@ -168,7 +175,28 @@ export function ArtistScrollStage() {
   const canGoPrev = currentIndex > 0;
   const canGoNext = currentIndex < showcaseItems.length - 1;
 
+  const disarmBoundaryExit = useCallback(() => {
+    if (boundaryExitTimerRef.current !== null) {
+      window.clearTimeout(boundaryExitTimerRef.current);
+      boundaryExitTimerRef.current = null;
+    }
+    boundaryExitArmedRef.current = false;
+  }, []);
+
+  const postponeBoundaryExit = useCallback(() => {
+    disarmBoundaryExit();
+    boundaryExitTimerRef.current = window.setTimeout(() => {
+      boundaryExitArmedRef.current = true;
+      boundaryExitTimerRef.current = null;
+    }, BOUNDARY_EXIT_ARM_MS);
+  }, [disarmBoundaryExit]);
+
   const clearTimers = useCallback(() => {
+    if (railSettleTimerRef.current !== null) {
+      window.clearTimeout(railSettleTimerRef.current);
+      railSettleTimerRef.current = null;
+    }
+    railAutoScrollingRef.current = false;
     if (wheelGestureTimerRef.current !== null) {
       window.clearTimeout(wheelGestureTimerRef.current);
       wheelGestureTimerRef.current = null;
@@ -186,7 +214,8 @@ export function ArtistScrollStage() {
       window.clearTimeout(waveTimerRef.current);
       waveTimerRef.current = null;
     }
-  }, []);
+    disarmBoundaryExit();
+  }, [disarmBoundaryExit]);
 
   const keepWheelGestureLocked = useCallback(() => {
     if (wheelGestureTimerRef.current !== null) {
@@ -200,18 +229,52 @@ export function ArtistScrollStage() {
 
   const moveToIndex = useCallback((nextIndex: number) => {
     const clamped = Math.max(0, Math.min(showcaseItems.length - 1, nextIndex));
+    targetIndexRef.current = clamped;
+    railAutoScrollingRef.current = true;
     setCurrentIndex(clamped);
+
     const rail = railRef.current;
-    if (!rail) return;
+    if (!rail) {
+      railAutoScrollingRef.current = false;
+      return;
+    }
+
+    const centerCard = (target: HTMLElement, behavior: ScrollBehavior) => {
+      const railRect = rail.getBoundingClientRect();
+      const cardRect = target.getBoundingClientRect();
+      const delta =
+        cardRect.left + cardRect.width / 2 - (railRect.left + railRect.width / 2);
+      rail.scrollTo({ left: rail.scrollLeft + delta, behavior });
+    };
+
     const target = rail.querySelector<HTMLElement>(
       `[data-showcase-index="${clamped}"]`,
     );
-    if (!target) return;
-    const railRect = rail.getBoundingClientRect();
-    const cardRect = target.getBoundingClientRect();
-    const delta =
-      cardRect.left + cardRect.width / 2 - (railRect.left + railRect.width / 2);
-    rail.scrollTo({ left: rail.scrollLeft + delta, behavior: "smooth" });
+    if (!target) {
+      railAutoScrollingRef.current = false;
+      return;
+    }
+
+    if (railSettleTimerRef.current !== null) {
+      window.clearTimeout(railSettleTimerRef.current);
+    }
+
+    centerCard(target, "smooth");
+    railSettleTimerRef.current = window.setTimeout(() => {
+      const settledIndex = targetIndexRef.current;
+      const settledTarget = rail.querySelector<HTMLElement>(
+        `[data-showcase-index="${settledIndex}"]`,
+      );
+
+      railAutoScrollingRef.current = false;
+      if (settledTarget) {
+        centerCard(settledTarget, "auto");
+      }
+      setCurrentIndex((previous) =>
+        previous === settledIndex ? previous : settledIndex,
+      );
+      railSettleTimerRef.current = null;
+    }, RAIL_SCROLL_SETTLE_MS);
   }, []);
 
   const isSectionActiveInViewport = useCallback(() => {
@@ -288,6 +351,7 @@ export function ArtistScrollStage() {
     if (!rail) return;
     let timer: number | null = null;
     const sync = () => {
+      if (railAutoScrollingRef.current) return;
       const cards = Array.from(rail.querySelectorAll<HTMLElement>("[data-showcase-index]"));
       if (cards.length === 0) return;
       const railRect = rail.getBoundingClientRect();
@@ -307,9 +371,11 @@ export function ArtistScrollStage() {
           nearest = n;
         }
       }
+      targetIndexRef.current = nearest;
       setCurrentIndex((prev) => (prev === nearest ? prev : nearest));
     };
     const onScroll = () => {
+      if (railAutoScrollingRef.current) return;
       if (timer !== null) window.clearTimeout(timer);
       timer = window.setTimeout(() => {
         sync();
@@ -324,6 +390,24 @@ export function ArtistScrollStage() {
   }, []);
 
   useEffect(() => {
+    const isAtBoundary =
+      currentIndex === 0 || currentIndex === showcaseItems.length - 1;
+
+    if (!isStageHijackActive || !isAtBoundary) {
+      disarmBoundaryExit();
+      return;
+    }
+
+    postponeBoundaryExit();
+    return disarmBoundaryExit;
+  }, [
+    currentIndex,
+    disarmBoundaryExit,
+    isStageHijackActive,
+    postponeBoundaryExit,
+  ]);
+
+  useEffect(() => {
     const onWheel = (event: WheelEvent) => {
       if (!isStageHijackActive) {
         return;
@@ -335,17 +419,26 @@ export function ArtistScrollStage() {
       }
 
       const direction = event.deltaY > 0 ? 1 : -1;
-      const isAtLast = currentIndex >= showcaseItems.length - 1;
-      const isAtFirst = currentIndex <= 0;
+      const interactionIndex = targetIndexRef.current;
+      const isAtLast = interactionIndex >= showcaseItems.length - 1;
+      const isAtFirst = interactionIndex <= 0;
       const isLeavingAfterLast = direction > 0 && isAtLast;
       const isLeavingBeforeFirst = direction < 0 && isAtFirst;
 
       if (isLeavingAfterLast || isLeavingBeforeFirst) {
-        if (wheelGestureHandledRef.current || magnitude < 6) {
+        const canLeaveBoundary =
+          boundaryExitArmedRef.current &&
+          !wheelGestureHandledRef.current &&
+          magnitude >= 6;
+
+        if (!canLeaveBoundary) {
           event.preventDefault();
           keepWheelGestureLocked();
+          postponeBoundaryExit();
           return;
         }
+
+        disarmBoundaryExit();
         if (isLeavingAfterLast) {
           setHasCompletedStage(true);
         }
@@ -360,7 +453,7 @@ export function ArtistScrollStage() {
       }
 
       wheelGestureHandledRef.current = true;
-      moveToIndex(currentIndex + direction);
+      moveToIndex(interactionIndex + direction);
     };
 
     const options: AddEventListenerOptions = { passive: false, capture: true };
@@ -368,7 +461,13 @@ export function ArtistScrollStage() {
     return () => {
       window.removeEventListener("wheel", onWheel, options);
     };
-  }, [currentIndex, isStageHijackActive, keepWheelGestureLocked, moveToIndex]);
+  }, [
+    disarmBoundaryExit,
+    isStageHijackActive,
+    keepWheelGestureLocked,
+    moveToIndex,
+    postponeBoundaryExit,
+  ]);
 
   const openDetail = useCallback(
     (index: number) => {
@@ -491,7 +590,7 @@ export function ArtistScrollStage() {
                     if (!canGoPrev) {
                       return;
                     }
-                    moveToIndex(currentIndex - 1);
+                    moveToIndex(targetIndexRef.current - 1);
                   }}
                   disabled={!canGoPrev}
                   aria-disabled={!canGoPrev}
@@ -515,7 +614,7 @@ export function ArtistScrollStage() {
                     if (!canGoNext) {
                       return;
                     }
-                    moveToIndex(currentIndex + 1);
+                    moveToIndex(targetIndexRef.current + 1);
                   }}
                   disabled={!canGoNext}
                   aria-disabled={!canGoNext}
